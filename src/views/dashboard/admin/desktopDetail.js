@@ -1,38 +1,28 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
-import * as Yup from 'yup';
-import axios from "axios";
 
-import Header from "../../../components/header";
+import Header from '../../../components/header';
 
-import {DEVELOPMENT_INTERN} from "../../../constants/constants";
+import { getDesktop } from '../../../api/desktops';
 
 function DesktopDetail() {
     const [allDesktopDetails, setAllDesktopDetails] = useState({});
     const params = useParams(); // Example: {params.id}
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
+
+    const fetchDesktopDetail = useCallback(() => {
+        getDesktop(params.id)
+            .then(setAllDesktopDetails)
+            .catch((e) => {
+                console.log(e);
+            });
+    }, [params.id]);
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        axios.get(DEVELOPMENT_INTERN + '/desktop/' + params.id, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            setAllDesktopDetails(response.data);
-            console.log(response)
-        })
-        .catch(e => {
-            console.log(e)
-        });
-    }, []);
+        fetchDesktopDetail();
+    }, [fetchDesktopDetail]);
 
     return (
         <>

@@ -30,8 +30,8 @@ RUN npm install
 # Copy app files
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application (disable ESLint plugin to avoid jest/globals env error)
+RUN DISABLE_ESLINT_PLUGIN=true npm run build
 
 # ------------------------------------------------
 

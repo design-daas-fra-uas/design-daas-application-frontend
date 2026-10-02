@@ -1,102 +1,79 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
-import * as Yup from 'yup';
-import axios from "axios";
+import { useParams } from 'react-router-dom';
 
-import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, DEVELOPMENT_INTERN, TEST_INTERN, LIVE_INTERN} from "../../../constants/constants";
+import Header from '../../../components/header';
 
-import Header from "../../../components/header";
+import { getAdmins } from '../../../api/admins';
 
 function SettingsAdminsDetails() {
-    const params = useParams(); // Example: {params.id}
-    const [adminUserData, setAdminUserData] = useState({});
-    const { t, i18n } = useTranslation();
+  const { id } = useParams();
+  const { t } = useTranslation();
+  const [adminUserData, setAdminUserData] = useState(null);
 
-    useEffect(() => {
-        const token = localStorage.getItem("userToken");
+  useEffect(() => {
+    let isMounted = true;
 
-        axios.get(DEVELOPMENT_INTERN + '/admins', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            if(response.status === 200){
-                console.log(response.data);
-                {
-                    response.data.filter(
-                        userAdminData => {
-                            if(userAdminData.name == params.id){
-                                setAdminUserData(userAdminData)
-                                console.log(userAdminData)
-                            }
-                        }
-                    );
-                }
-            }
-        })
-        .catch(e => {
-            console.log(e)
-        });
-    }, []);
+    getAdmins()
+      .then((admins) => {
+        if (!isMounted) {
+          return;
+        }
 
-    const goToSettingsUserBaseImage = (id) => {
-        window.location.href = "/dashboard/settings/" + id;
+        const admin = admins.find((candidate) => candidate.name === id);
+        setAdminUserData(admin ?? null);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    return () => {
+      isMounted = false;
     };
+  }, [id]);
 
-    const backToDashboard = () => {
-        window.location.href = "/dashboard/settings/admins";
-    };
+  const backToDashboard = () => {
+    window.location.href = '/dashboard/admin/settings/admins';
+  };
 
-    return (
-        <>
-            <Header/>
-            <ReactBootstrap.Container id="settingsOverviewAdmins">
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12} className="text-center">
-                        <div>
-                            <h2>
-                                {t('user-management')}
-                            </h2>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                        <div>
-                            <ul>
-                                <li>
-                                    <span>
-                                        {t('username')}: {adminUserData.name}
-                                    </span>
-                                </li>
-                                <li>
-                                    <span>
-                                        {t('email')}: {adminUserData.email}
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div className="link-daas-design" onClick={backToDashboard}>
-                            <div>
-                                {t('back-link')}
-                            </div>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-            </ReactBootstrap.Container>
-        </>
-    );
+  return (
+    <>
+      <Header />
+      <ReactBootstrap.Container id="settingsOverviewAdmins">
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12} className="text-center">
+            <h2>{t('user-management')}</h2>
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
+
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12}>
+            <ul>
+              <li>
+                <span>
+                  {t('username')}: {adminUserData?.name}
+                </span>
+              </li>
+              <li>
+                <span>
+                  {t('email')}: {adminUserData?.email}
+                </span>
+              </li>
+            </ul>
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
+
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
+            <div className="link-daas-design" onClick={backToDashboard}>
+              <div>{t('back-link')}</div>
+            </div>
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
+      </ReactBootstrap.Container>
+    </>
+  );
 }
 
 export default SettingsAdminsDetails;

@@ -1,174 +1,66 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
-import {useTranslation} from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
+import { useTranslation } from 'react-i18next';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import axios from "axios";
-import {useMediaQuery} from "react-responsive";
+import { useMediaQuery}  from 'react-responsive';
 
-import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, DEVELOPMENT_INTERN, TEST_INTERN, LIVE_INTERN} from "../../../constants/constants";
+import { getUsers, updateUser, disableUser, enableUser } from '../../../api/users';
 
-import Header from "../../../components/header";
-import {use} from "i18next";
+import Header from '../../../components/header';
 
 function SettingsUsersDetail() {
     const [userDataInformation, setUserDataInformation] = useState({});
-    const [userDataInformationUpdating, setUserDataInformationUpdating] = useState({});
-    const [usernameData, setUsernameData] = useState("");
-    const [emailData, setEmailData] = useState("");
-    const [userIDData, setUserIDData] = useState("");
     const params = useParams(); // Example: {params.id}
-    const {t, i18n} = useTranslation();
+    const navigate = useNavigate();
+    const {t} = useTranslation();
 
     const isSmall = useMediaQuery({
         query: '(max-width: 576px)'
     })
 
-    const goToSettingsUserBaseImage = (id) => {
-        window.location.href = "/dashboard/settings/" + id;
-    };
-
     const backToDashboard = () => {
-        window.location.href = "/dashboard/settings/users";
+        navigate("/dashboard/settings/users");
     };
 
-    const changeUsernameData = event => {
-        setUsernameData(event.target.value);
-    };
-    const changeEmailData = event => {
-        setEmailData(event.target.value);
-    };
-
-    useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        axios.get(DEVELOPMENT_INTERN + '/users', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            if(response.status === 200){
-                console.log(response);
-                {
-                    response.data.filter(
-                        userData => {
-                            if(userData.id == params.id){
-                                setUserDataInformation(userData)
-                                setUserDataInformationUpdating(userData)
-                                setUserIDData(userData.id)
-                                setUsernameData(userData.name)
-                                setEmailData(userData.email)
-                                console.log(userData)
-                            }
-                        }
-                    );
-                }
-            }
-        })
-        .catch(e => {
-            console.log(e)
-        });
-    }, []);
-
-    const updateUserAccount = (event) => {
-        event.preventDefault();
-        const token = localStorage.getItem("userToken");
-        axios.patch(DEVELOPMENT_INTERN + '/user/' + userIDData, {
-            name: usernameData,
-            email: emailData,
-        }, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                if(response.status === 200){
-                    console.log(response);
-                    axios.get(DEVELOPMENT_INTERN + '/users', {
-                        headers: {
-                            Authorization: token,
-                            'Access-Control-Allow-Origin': '*',
-                            'Access-Control-Allow-Headers': '*',
-                        },
-                        //withCredentials: true,
-                    })
-                        .then(response => {
-                            if(response.status === 200){
-                                console.log(response);
-                                {
-                                    response.data.filter(
-                                        userData => {
-                                            if(userData.id == params.id){
-                                                setUserDataInformation(userData)
-                                                setUserDataInformationUpdating(userData)
-                                                setUserIDData(userData.id)
-                                                setUsernameData(userData.name)
-                                                setEmailData(userData.email)
-                                                console.log(userData)
-                                            }
-                                        }
-                                    );
-                                }
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
+    const fetchUserData = useCallback(() => {
+        getUsers()
+            .then(users => {
+                const userData = users.find(user => String(user.id) === String(params.id));
+                if (userData) {
+                    setUserDataInformation(userData);
                 }
             })
             .catch(e => {
                 console.log(e)
             });
+    }, [params.id]);
+
+    useEffect(() => {
+        fetchUserData();
+    }, [fetchUserData]);
+
+    const updateUserAccount = (values, { setSubmitting }) => {
+        updateUser(userDataInformation.id, {
+            name: values.name,
+            email: values.email,
+        })
+            .then(() => {
+                fetchUserData();
+            })
+            .catch(e => {
+                console.log(e)
+            })
+            .finally(() => {
+                setSubmitting(false);
+            });
     };
 
     const disableUserAccount = (id) => {
-        const token = localStorage.getItem("userToken");
-        axios.post(DEVELOPMENT_INTERN + '/user/' + id + '/disable', {}, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            if(response.status === 200){
-                console.log(response);
-                axios.get(DEVELOPMENT_INTERN + '/users', {
-                    headers: {
-                        Authorization: token,
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        if(response.status === 200){
-                            console.log(response);
-                            {
-                                response.data.filter(
-                                    userData => {
-                                        if(userData.id == params.id){
-                                            setUserDataInformation(userData)
-                                            setUserDataInformationUpdating(userData)
-                                            console.log(userData)
-                                        }
-                                    }
-                                );
-                            }
-                        }
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-            }
+        disableUser(id)
+        .then(() => {
+            fetchUserData();
         })
         .catch(e => {
             console.log(e)
@@ -176,46 +68,9 @@ function SettingsUsersDetail() {
     };
 
     const enableUserAccount = (id) => {
-        const token = localStorage.getItem("userToken");
-        axios.post(DEVELOPMENT_INTERN + '/user/' + id + '/enable', {}, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                if(response.status === 200){
-                    console.log(response);
-                    axios.get(DEVELOPMENT_INTERN + '/users', {
-                        headers: {
-                            Authorization: token,
-                            'Access-Control-Allow-Origin': '*',
-                            'Access-Control-Allow-Headers': '*',
-                        },
-                        //withCredentials: true,
-                    })
-                        .then(response => {
-                            if(response.status === 200){
-                                console.log(response);
-                                {
-                                    response.data.filter(
-                                        userData => {
-                                            if(userData.id == params.id){
-                                                setUserDataInformation(userData)
-                                                setUserDataInformationUpdating(userData)
-                                                console.log(userData)
-                                            }
-                                        }
-                                    );
-                                }
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
-                }
+        enableUser(id)
+            .then(() => {
+                fetchUserData();
             })
             .catch(e => {
                 console.log(e)
@@ -224,10 +79,10 @@ function SettingsUsersDetail() {
 
     const updateUserSchema = Yup.object().shape({
         name: Yup.string()
-            .email('Invalid username')
-            .required('Username invalid'),
+            .required(t('error-name') || 'Username invalid'),
         email: Yup.string()
-            .required(t('Password invalid'))
+            .email(t('error-email') || 'Invalid email')
+            .required(t('error-email') || 'Email invalid'),
     });
 
     return (
@@ -290,29 +145,27 @@ function SettingsUsersDetail() {
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
                         <Formik
+                            key={userDataInformation.id}
+                            enableReinitialize
                             initialValues={{
-                                name: '',
-                                email: '',
+                                name: userDataInformation.name || '',
+                                email: userDataInformation.email || '',
                             }}
                             validationSchema={updateUserSchema}
-                            onSubmit={values => {
-                                console.log(values.text);
-                            }}
+                            onSubmit={updateUserAccount}
                         >
-                            {({ errors, touched }) => (
-                                <Form onSubmit={updateUserAccount}>
+                            {({ isValid, isSubmitting }) => (
+                                <Form>
                                     <ReactBootstrap.Row id="updating-user-data">
                                         <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
                                             <div>
                                                 <label htmlFor="name">{t('username')}</label>
                                             </div>
                                             <div>
-                                                <Field type="text" id="name" name="name" value={usernameData} onChange={changeUsernameData}/>
+                                                <Field type="text" id="name" name="name" className="form-control" />
                                             </div>
                                             <div className="error-text">
-                                                {t('error-name')}
-                                                {/*<ErrorMessage name="username">
-                                                </ErrorMessage>*/}
+                                                <ErrorMessage name="name" />
                                             </div>
                                         </ReactBootstrap.Col>
                                         <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
@@ -320,12 +173,10 @@ function SettingsUsersDetail() {
                                                 <label htmlFor="email">{t('email')}</label>
                                             </div>
                                             <div>
-                                                <Field type="email" id="email" name="email" value={emailData} onChange={changeEmailData}/>
+                                                <Field type="email" id="email" name="email" className="form-control" />
                                             </div>
                                             <div className="error-text">
-                                                {t('error-password')}
-                                                {/*<ErrorMessage name="password">
-                                                </ErrorMessage>*/}
+                                                <ErrorMessage name="email" />
                                             </div>
                                         </ReactBootstrap.Col>
                                     </ReactBootstrap.Row>
@@ -335,7 +186,7 @@ function SettingsUsersDetail() {
                                                 type="submit"
                                                 variant="primary"
                                                 id="submit"
-                                                disabled={usernameData.length > 0 && emailData.length > 0 ? false : true}>
+                                                disabled={!isValid || isSubmitting}>
                                                 {t('submit')}
                                             </ReactBootstrap.Button>
                                         </ReactBootstrap.Col>

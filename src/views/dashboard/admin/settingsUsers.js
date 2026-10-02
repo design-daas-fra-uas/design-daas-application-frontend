@@ -1,14 +1,15 @@
-import React, {useEffect, useState} from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import axios from "axios";
 
-import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, DEVELOPMENT_INTERN, TEST_INTERN, LIVE_INTERN} from "../../../constants/constants";
+import { getUsers, createUser } from '../../../api/users';
 
-import Header from "../../../components/header";
+import Header from '../../../components/header';
+import EntityPreviewList from '../../../components/EntityPreviewList';
+import FormField from '../../../components/FormField';
 
 function SettingsUsers() {
     const [createUserModal, setCreateUserModal] = useState(false);
@@ -16,30 +17,20 @@ function SettingsUsers() {
     const [deleteUserModal, setDeleteUserModal] = useState(false);
     const [userDataID, setUserDataID] = useState("");
     const [userDataEmail, setUserDataEmail] = useState("");
-    const [usernameData, setUsernameData] = useState("");
-    const [passwordData, setPasswordData] = useState("");
-    const [fullnameData, setFullnameData] = useState("");
-    const [emailData, setEmailData] = useState("");
     const [allUsers, setAllUsers] = useState([]);
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+
+    const fetchUsers = () => {
+        getUsers()
+            .then(setAllUsers)
+            .catch((e) => {
+                console.log(e);
+            });
+    };
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        axios.get(DEVELOPMENT_INTERN + '/users', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            setAllUsers(response.data);
-            console.log(response)
-        })
-        .catch(e => {
-            console.log(e)
-        });
+        fetchUsers();
     }, []);
     const showCreateUserModal = () => {
         setCreateUserModal(true);
@@ -68,60 +59,44 @@ function SettingsUsers() {
         setUserDataEmail("");
     };
 
-    const changeUsernameData = event => {
-        setUsernameData(event.target.value);
-    };
-    const changePasswordData = event => {
-        setPasswordData(event.target.value);
-    };
-    const changeFullnameData = event => {
-        setFullnameData(event.target.value);
-    };
-    const changeEmailData = event => {
-        setEmailData(event.target.value);
-    };
-
     const goToSettingsUser = (id) => {
-        window.location.href = "/dashboard/settings/users/" + id;
+        navigate("/dashboard/settings/users/" + id);
     };
 
     const backToDashboard = () => {
-        window.location.href = "/dashboard/admin";
+        navigate("/dashboard/admin");
     };
 
-    const createUserValidation = (event) => {
-        event.preventDefault();
-        if (usernameData.length > 0 && passwordData.length > 0 && fullnameData.length > 0 && emailData.length > 0) {
-            document.getElementsByClassName("error-text")[0].style.display = "none";
-            document.getElementsByClassName("error-text")[0].classList.remove('show-error');
-            document.getElementsByClassName("error-text")[1].style.display = "none";
-            document.getElementsByClassName("error-text")[1].classList.remove('show-error');
-            document.getElementsByClassName("error-text")[2].style.display = "none";
-            document.getElementsByClassName("error-text")[2].classList.remove('show-error');
-            document.getElementsByClassName("error-text")[3].style.display = "none";
-            document.getElementsByClassName("error-text")[3].classList.remove('show-error');
-        } else {
-            document.getElementsByClassName("error-text")[0].classList.add('show-error');
-            document.getElementsByClassName("error-text")[0].style.display = "block";
-            document.getElementsByClassName("error-text")[1].classList.add('show-error');
-            document.getElementsByClassName("error-text")[1].style.display = "block";
-            document.getElementsByClassName("error-text")[2].classList.add('show-error');
-            document.getElementsByClassName("error-text")[2].style.display = "block";
-            document.getElementsByClassName("error-text")[3].classList.add('show-error');
-            document.getElementsByClassName("error-text")[3].style.display = "block";
-        }
+    const submitCreateUser = (values, { setSubmitting, resetForm }) => {
+        createUser({
+            name: values.username,
+            password: values.password,
+            fullname: values.fullname,
+            email: values.email,
+        })
+            .then(() => {
+                fetchUsers();
+                resetForm();
+                closeCreateUserModal();
+            })
+            .catch((e) => {
+                console.log(e);
+            })
+            .finally(() => {
+                setSubmitting(false);
+            });
     };
 
     const createUserSchema = Yup.object().shape({
         username: Yup.string()
-            .required('Username invalid'),
+            .required(t('error-username') || 'Username invalid'),
         password: Yup.string()
-            .required(t('Password invalid')),
+            .required(t('error-password') || 'Password invalid'),
         fullname: Yup.string()
-            .required(t('Fullname invalid')),
+            .required(t('error-fullname') || 'Fullname invalid'),
         email: Yup.string()
-            .email('Invalid email')
-            .required(t('Email invalid'))
+            .email(t('error-email') || 'Invalid email')
+            .required(t('error-email') || 'Email invalid'),
     });
 
     return (
@@ -145,28 +120,11 @@ function SettingsUsers() {
                     </ReactBootstrap.Col>
                     <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
                         <div>
-                            <ul>
-                                {
-                                    allUsers.map(user => {
-                                        return (
-                                            <li>
-                                                <span>
-                                                    {user.name}
-                                                </span>
-                                                <span onClick={() => goToSettingsUser(user.id)}>
-                                                    <i className="fa-solid fa-gear"></i>
-                                                </span>
-                                                <span onClick={() => showGetUserModal(user.name, user.email)}>
-                                                    <i className="fa-solid fa-circle-info"></i>
-                                                </span>
-                                                {/*<span onClick={() => showDeleteUserModal(user.name)}>
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </span>*/}
-                                            </li>
-                                        )
-                                    })
-                                }
-                            </ul>
+                            <EntityPreviewList
+                                items={allUsers}
+                                onSettings={(user) => goToSettingsUser(user.id)}
+                                onInfo={(user) => showGetUserModal(user.name, user.email)}
+                            />
                         </div>
                     </ReactBootstrap.Col>
                 </ReactBootstrap.Row>
@@ -178,13 +136,13 @@ function SettingsUsers() {
                             </div>
                         </div>
                     </ReactBootstrap.Col>
-                    {/* <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
+                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
                         <div className="link-daas-design" onClick={showCreateUserModal}>
                             <div>
                                 {t('create-user')}
                             </div>
                         </div>
-                    </ReactBootstrap.Col>*/}
+                    </ReactBootstrap.Col>
                 </ReactBootstrap.Row>
                 <ReactBootstrap.Modal
                     show={createUserModal}
@@ -200,6 +158,7 @@ function SettingsUsers() {
                     </ReactBootstrap.Modal.Header>
                     <ReactBootstrap.Modal.Body>
                         <Formik
+                            key={createUserModal}
                             initialValues={{
                                 username: '',
                                 password: '',
@@ -207,57 +166,15 @@ function SettingsUsers() {
                                 email: '',
                             }}
                             validationSchema={createUserSchema}
-                            onSubmit={values => {
-                                console.log(values.text);
-                            }}
+                            onSubmit={submitCreateUser}
                         >
-                            {({ errors, touched }) => (
-                                <Form onSubmit={createUserValidation}>
+                            {({ isValid, dirty, isSubmitting }) => (
+                                <Form>
                                     <ReactBootstrap.Row>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <label htmlFor="username">{t('username')}</label>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <Field type="text" id="username" name="username" value={usernameData} onChange={changeUsernameData}/>
-                                        </ReactBootstrap.Col>
-                                        <div className="error-text">
-                                            {t('error-username')}
-                                            {/*<ErrorMessage name="username">
-                                            </ErrorMessage>*/}
-                                        </div>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <label htmlFor="password">{t('password')}</label>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <Field type="password" id="password" name="password" value={passwordData} onChange={changePasswordData}/>
-                                        </ReactBootstrap.Col>
-                                        <div className="error-text">
-                                            {t('error-password')}
-                                            {/*<ErrorMessage name="password">
-                                            </ErrorMessage>*/}
-                                        </div>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <label htmlFor="fullname">{t('fullname')}</label>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <Field type="text" id="fullname" name="fullname" value={fullnameData} onChange={changeFullnameData}/>
-                                        </ReactBootstrap.Col>
-                                        <div className="error-text">
-                                            {t('error-fullname')}
-                                            {/*<ErrorMessage name="password">
-                                            </ErrorMessage>*/}
-                                        </div>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <label htmlFor="email">{t('email')}</label>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <Field type="text" id="email" name="email" value={emailData} onChange={changeEmailData}/>
-                                        </ReactBootstrap.Col>
-                                        <div className="error-text">
-                                            {t('error-email')}
-                                            {/*<ErrorMessage name="password">
-                                            </ErrorMessage>*/}
-                                        </div>
+                                        <FormField name="username" label={t('username')} />
+                                        <FormField name="password" label={t('password')} type="password" />
+                                        <FormField name="fullname" label={t('fullname')} />
+                                        <FormField name="email" label={t('email')} />
                                     </ReactBootstrap.Row>
                                     <ReactBootstrap.Row>
                                         <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -265,8 +182,7 @@ function SettingsUsers() {
                                                 type="submit"
                                                 variant="primary"
                                                 id="submit"
-                                                disabled={usernameData.length > 0 && passwordData.length > 0 && fullnameData.length > 0 && emailData.length > 0 ? false : true}
-                                                onClick={closeCreateUserModal}>
+                                                disabled={!isValid || !dirty || isSubmitting}>
                                                 {t('submit')}
                                             </ReactBootstrap.Button>
                                         </ReactBootstrap.Col>

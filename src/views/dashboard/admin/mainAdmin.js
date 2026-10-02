@@ -1,1087 +1,490 @@
-import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
-import {useTranslation} from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
+import { useTranslation } from 'react-i18next';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import axios from "axios";
 
-import {
-    DEVELOPMENT,
-    TEST,
-    LIVE,
-    USERNAME,
-    PASSWORD,
-    DEVELOPMENT_INTERN,
-    TEST_INTERN,
-    LIVE_INTERN,
-    URL_SYSTEM
-} from "../../../constants/constants";
+import Header from '../../../components/header';
+import EntityPreviewList from '../../../components/EntityPreviewList';
+import FormField from '../../../components/FormField';
 
-import Header from "../../../components/header";
+import { getAdmins, createAdmin } from '../../../api/admins';
+import { getUsers, createUser } from '../../../api/users';
+import { getUserGroups, createUserGroup, updateUserGroup } from '../../../api/userGroups';
+
+// Quick-link tiles rendered at the bottom of the dashboard. Centralizing them
+// here avoids ~150 lines of near-identical <Link> JSX blocks.
+const QUICK_LINKS = [
+  { to: '/dashboard/admin/settings/desktops', labelKeys: ['desktops'] },
+  { to: '/dashboard/admin/settings/desktop-groups', labelKeys: ['desktop-groups'] },
+  { to: '/dashboard/admin/monitoring', labelKeys: ['monitoring'] },
+  { to: '/dashboard/admin/limitation', labelKeys: ['limitation'] },
+  { to: '/dashboard/admin/tasks', labelKeys: ['tasks'] },
+  { to: '/dashboard/admin/settings/vm-environment', labelKeys: ['vm-setup'] },
+  { to: '/dashboard/admin/settings/node-configuration', labelKeys: ['vm-node-dhcp', 'vm-node-iptables'] },
+  { to: '/dashboard/admin/settings/connections', labelKeys: ['viewer-check'] },
+  { to: '/dashboard/admin/settings/instances', labelKeys: ['vm-instance'] },
+  { to: '/dashboard/admin/settings/docker', labelKeys: ['vm-docker'] },
+  { to: '/dashboard/admin/settings/phases', labelKeys: ['vm-phases'] },
+  { to: '/dashboard/admin/settings/admin-assign', labelKeys: ['admin-assign-object-app'] },
+  { to: '/dashboard/admin/settings/apps', labelKeys: ['app-configuration'] },
+  { to: '/dashboard/admin/settings/files', labelKeys: ['file-configuration'] },
+  { to: '/dashboard', labelKeys: ['dashboard-back'] },
+];
+
+const fetchAdmins = async () => (await getAdmins()).reverse();
+
+const fetchUsers = async () => (await getUsers()).reverse();
+
+const fetchGroups = async () => getUserGroups();
 
 function MainAdmin() {
-    const [createUserModal, setCreateUserModal] = useState(false);
-    const [getUserDataModal, setGetUserDataModal] = useState(false);
-    const [deleteUserModal, setDeleteUserModal] = useState(false);
-    const [createUpdateModal, setCreateUpdateModal] = useState(false);
-    const [successfulCreateAccount, setSuccessfulCreateAccount] = useState(false);
-    const [userDataID, setUserDataID] = useState("");
-    const [userDataEmail, setUserDataEmail] = useState("");
-    const [usernameData, setUsernameData] = useState("");
-    const [passwordData, setPasswordData] = useState("");
-    const [groupData, setGroupData] = useState("");
-    const [emailData, setEmailData] = useState("");
-    const [usernameDataAdmin, setUsernameDataAdmin] = useState("");
-    const [passwordDataAdmin, setPasswordDataAdmin] = useState("");
-    const [emailDataAdmin, setEmailDataAdmin] = useState("");
-    const [groupDataNew, setGroupDataNew] = useState("");
-    const [groupDataUpdate, setGroupDataUpdate] = useState("");
-    const [selectedGroup, setSelectedGroup] = useState("0");
-    const [allAdmins, setAllAdmins] = useState([]);
-    const [allUsers, setAllUsers] = useState([]);
-    const [allGroups, setAllGroups] = useState([]);
-    const [selectedGroupData, setSelectedGroupData] = useState([]);
-    const [selectedGroupDataID, setSelectedGroupDataID] = useState(0);
-    const {t, i18n} = useTranslation();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        console.log(localStorage.getItem("userData"))
-        const token = localStorage.getItem("userToken");
-        axios.get(DEVELOPMENT_INTERN + '/admins', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                const newestAdminTop = response.data.reverse();
-                setAllAdmins(newestAdminTop);
-                console.log(response)
-            })
-            .catch(e => {
-                console.log(e)
-            });
-        axios.get(DEVELOPMENT_INTERN + '/users', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                const newestUsersTop = response.data.reverse();
-                setAllUsers(newestUsersTop);
-            })
-            .catch(e => {
-                console.log(e)
-            });
-        axios.get(DEVELOPMENT_INTERN + '/user_groups', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                setAllGroups(response.data);
-                console.log(response.data)
-            })
-            .catch(e => {
-                console.log(e)
-            });
-    }, []);
-    const showCreateUserModal = () => {
-        setCreateUserModal(true);
-    };
-    const closeCreateUserModal = () => {
-        setCreateUserModal(false);
+  const [allAdmins, setAllAdmins] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
 
-        setUsernameData("")
-        setEmailData("")
-        setSelectedGroup("0")
-        setSelectedGroupData([]);
-        setSelectedGroupDataID(0);
+  const [createUserModal, setCreateUserModal] = useState(false);
+  const [createUpdateModal, setCreateUpdateModal] = useState(false);
+  const [getUserDataModal, setGetUserDataModal] = useState(false);
+  const [deleteUserModal, setDeleteUserModal] = useState(false);
 
-        setUsernameDataAdmin("")
-        setEmailDataAdmin("")
-        setPasswordDataAdmin("")
-    };
-    const showGetUserModal = (id, mail) => {
-        setGetUserDataModal(true);
-        setUserDataID(id);
-        setUserDataEmail(mail);
-    };
-    const closeGetUserModal = () => {
-        setGetUserDataModal(false);
-        setUserDataID("");
-        setUserDataEmail("");
-    };
-    const showDeleteUserModal = (id) => {
-        setDeleteUserModal(true);
-        setUserDataID(id);
-        setUserDataEmail("");
-    };
-    const closeDeleteUserModal = () => {
-        setDeleteUserModal(false);
-        setUserDataID("");
-        setUserDataEmail("");
-    };
-    const showCreateUpdateModal = () => {
-        setCreateUpdateModal(true);
-    };
-    const closeCreateUpdateModal = () => {
-        setCreateUpdateModal(false);
+  const [userDataID, setUserDataID] = useState('');
+  const [userDataEmail, setUserDataEmail] = useState('');
 
-        setGroupDataNew("");
-        setGroupDataUpdate("")
-        setSelectedGroup("0")
-    };
+  // Group currently picked in the "update group" select, used to prefill the
+  // Formik form (via enableReinitialize) with that group's description.
+  const [groupToUpdate, setGroupToUpdate] = useState(null);
 
-    const changeUsernameData = event => {
-        setUsernameData(event.target.value);
-    };
-    const changePasswordData = event => {
-        setPasswordData(event.target.value);
-    };
-    const changeGroupData = event => {
-        setGroupData(event.target.value);
-    };
-    const changeEmailData = event => {
-        setEmailData(event.target.value);
-    };
+  // Brief inline feedback shown after a create/update action, e.g. { text: 'group-created', success: true }.
+  const [actionNotice, setActionNotice] = useState(null);
 
-    const changeUsernameDataAdmin = event => {
-        setUsernameDataAdmin(event.target.value);
-    };
-    const changePasswordDataAdmin = event => {
-        setPasswordDataAdmin(event.target.value);
-    };
-    const changeEmailDataAdmin = event => {
-        setEmailDataAdmin(event.target.value);
-    };
+  const notifyAndCloseModal = (closeModal) => {
+    setActionNotice({ text: 'request-successful', success: true });
+    setTimeout(() => setActionNotice(null), 2000);
+    closeModal();
+  };
 
-    const changeGroupDataNew = event => {
-        setGroupDataNew(event.target.value);
-    };
+  const notifyError = () => {
+    setActionNotice({ text: 'request-failed', success: false });
+    setTimeout(() => setActionNotice(null), 2000);
+  };
 
-    const changeGroupDataUpdate = event => {
-        setGroupDataUpdate(event.target.value);
-    };
+  const loadDashboardData = useCallback(async () => {
+    try {
+      const [admins, users, groups] = await Promise.all([fetchAdmins(), fetchUsers(), fetchGroups()]);
+      setAllAdmins(admins);
+      setAllUsers(users);
+      setAllGroups(groups);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
 
-    const selectExistingGroup = e => {
-        const token = localStorage.getItem("userToken");
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
-        setSelectedGroup(e.target.value)
+  const openCreateUserModal = () => setCreateUserModal(true);
+  const closeCreateUserModal = () => setCreateUserModal(false);
 
-        console.log(typeof e.target.value)
+  const openCreateUpdateModal = () => setCreateUpdateModal(true);
+  const closeCreateUpdateModal = () => {
+    setCreateUpdateModal(false);
+    setGroupToUpdate(null);
+  };
 
-        if (e.target.value !== "0") {
-            axios.get(DEVELOPMENT_INTERN + '/user_groups', {
-                headers: {
-                    Authorization: token,
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': '*',
-                },
-                //withCredentials: true,
-            })
-                .then(response => {
-                    if (response.status === 200) {
-                        console.log(response.data);
-                        {
-                            response.data.filter(
-                                userData => {
-                                    if (userData.id == Number(e.target.value)) {
-                                        setSelectedGroupData(userData)
-                                        setSelectedGroupDataID(userData.id)
-                                        setGroupDataUpdate(userData.description);
-                                        console.log(userData)
-                                    }
-                                }
-                            );
-                        }
-                    }
-                })
-                .catch(e => {
-                    console.log(e)
-                });
-        } else {
-            console.log("No request")
-        }
-    };
+  const openGetUserModal = ({ name, email }) => {
+    setUserDataID(name);
+    setUserDataEmail(email);
+    setGetUserDataModal(true);
+  };
+  const closeGetUserModal = () => {
+    setGetUserDataModal(false);
+    setUserDataID('');
+    setUserDataEmail('');
+  };
 
-    const goToSettingsUser = (id) => {
-        window.location.href = "/dashboard/admin/settings/users/" + id;
-    };
+  // Reserved for a future delete-trash icon (disabled in the original UI pending a delete API).
+  // eslint-disable-next-line no-unused-vars
+  const openDeleteUserModal = ({ id }) => {
+    setUserDataID(id);
+    setDeleteUserModal(true);
+  };
+  const closeDeleteUserModal = () => {
+    setDeleteUserModal(false);
+    setUserDataID('');
+  };
 
-    const goToSettingsAdmin = (id) => {
-        window.location.href = "/dashboard/admin/settings/admins/" + id;
-    };
+  const goToSettingsUser = (id) => {
+    navigate(`/dashboard/admin/settings/users/${id}`);
+  };
+  const goToSettingsAdmin = (id) => {
+    navigate(`/dashboard/admin/settings/admins/${id}`);
+  };
 
-    const goToSettingsAdminOverview = () => {
-        window.location.href = "/dashboard/admin/settings/admins";
-    };
+  const onSelectGroupToUpdate = (event) => {
+    const groupId = event.target.value;
 
-    const goToSettingsUserOverview = () => {
-        window.location.href = "/dashboard/admin/settings/users";
-    };
+    if (groupId === '0') {
+      setGroupToUpdate(null);
+      return;
+    }
 
-    const createUserValidation = (event) => {
-        event.preventDefault();
+    const group = allGroups.find((candidate) => String(candidate.id) === groupId);
+    setGroupToUpdate(group ?? null);
+  };
 
-        const token = localStorage.getItem("userToken");
+  const createGroupSchema = Yup.object().shape({
+    description: Yup.string().required(t('error-create-group-new') || 'Description is required'),
+  });
 
-        if (selectedGroupDataID !== "0" || selectedGroupDataID !== 0 || selectedGroupDataID !== undefined) {
-            axios.post(DEVELOPMENT_INTERN + '/user', {
-                name: usernameData,
-                email: emailData,
-                groups: [Number(selectedGroupDataID)],
-                password: passwordData,
-            }, {
-                headers: {
-                    Authorization: token,
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': '*',
-                },
-                //withCredentials: true,
-            })
-                .then(response => {
-                    console.log(response.data);
+  const updateGroupSchema = Yup.object().shape({
+    description: Yup.string().required(t('error-update-group-new') || 'Description is required'),
+  });
 
-                    setUsernameData("")
-                    setEmailData("")
-                    setPasswordData("")
-                    setSelectedGroup("0")
-                    setSelectedGroupData([]);
-                    setSelectedGroupDataID(0);
+  const createUserSchema = Yup.object().shape({
+    name: Yup.string().required(t('error-username') || 'Username is required'),
+    email: Yup.string().email(t('error-email') || 'Invalid email').required(t('error-email') || 'Email is required'),
+    password: Yup.string().required(t('error-password') || 'Password is required'),
+    group: Yup.string().notOneOf(['0'], t('error-group') || 'Group is required').required(t('error-group') || 'Group is required'),
+  });
 
-                    closeCreateUserModal();
+  const createAdminSchema = Yup.object().shape({
+    name: Yup.string().required(t('error-username-admin') || 'Username is required'),
+    email: Yup.string().email(t('error-email-admin') || 'Invalid email').required(t('error-email-admin') || 'Email is required'),
+    password: Yup.string().required(t('error-password-admin') || 'Password is required'),
+  });
 
-                    axios.get(DEVELOPMENT_INTERN + '/users', {
-                        headers: {
-                            Authorization: token,
-                            'Access-Control-Allow-Origin': '*',
-                            'Access-Control-Allow-Headers': '*',
-                        },
-                        //withCredentials: true,
-                    })
-                        .then(response => {
-                            const newestUsersTop = response.data.reverse();
-                            setAllUsers(newestUsersTop);
-                            console.log(response)
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
-                    //document.getElementsByClassName("error-text")[0].style.display = "none";
-                    //document.getElementsByClassName("error-text")[0].classList.remove('show-error');
-                    //document.getElementsByClassName("error-text")[1].style.display = "none";
-                    //document.getElementsByClassName("error-text")[1].classList.remove('show-error');
-                    //document.getElementsByClassName("error-text")[2].style.display = "none";
-                    //document.getElementsByClassName("error-text")[2].classList.remove('show-error');
-                })
-                .catch(e => {
-                    console.log(e)
-                    //document.getElementsByClassName("error-text")[0].classList.add('show-error');
-                    //document.getElementsByClassName("error-text")[0].style.display = "block";
-                    //document.getElementsByClassName("error-text")[1].classList.add('show-error');
-                    //document.getElementsByClassName("error-text")[1].style.display = "block";
-                    //document.getElementsByClassName("error-text")[2].classList.add('show-error');
-                    //document.getElementsByClassName("error-text")[2].style.display = "block";
-                });
-        } else {
-            console.log("No request")
-        }
-    };
+  const submitCreateGroup = async ({ description }, { resetForm }) => {
+    try {
+      await createUserGroup({ description });
+      setAllGroups(await fetchGroups());
+      resetForm();
+      notifyAndCloseModal(closeCreateUpdateModal);
+    } catch (error) {
+      console.error(error);
+      notifyError();
+    }
+  };
 
-    const createAdminValidation = (event) => {
-        event.preventDefault();
-        const token = localStorage.getItem("userToken");
-        axios.post(DEVELOPMENT_INTERN + '/admin', {
-            name: usernameDataAdmin,
-            email: emailDataAdmin,
-            password: passwordDataAdmin,
-        }, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                console.log(response.data);
-                setUsernameDataAdmin("")
-                setEmailDataAdmin("")
-                setPasswordDataAdmin("")
+  const submitUpdateGroup = async ({ description }) => {
+    if (!groupToUpdate) {
+      return;
+    }
 
-                closeCreateUserModal();
+    try {
+      await updateUserGroup(groupToUpdate.id, { description });
+      setAllGroups(await fetchGroups());
+      notifyAndCloseModal(closeCreateUpdateModal);
+    } catch (error) {
+      console.error(error);
+      notifyError();
+    }
+  };
 
-                axios.get(DEVELOPMENT_INTERN + '/admins', {
-                    headers: {
-                        Authorization: token,
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        const newestAdminTop = response.data.reverse();
-                        setAllAdmins(newestAdminTop);
-                        console.log(response)
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-                //document.getElementsByClassName("error-text")[3].style.display = "none";
-                //document.getElementsByClassName("error-text")[3].classList.remove('show-error');
-                //document.getElementsByClassName("error-text")[4].style.display = "none";
-                //document.getElementsByClassName("error-text")[4].classList.remove('show-error');
-                //document.getElementsByClassName("error-text")[5].style.display = "none";
-                //document.getElementsByClassName("error-text")[5].classList.remove('show-error');
-            })
-            .catch(e => {
-                console.log(e)
-                //document.getElementsByClassName("error-text")[3].classList.add('show-error');
-                //document.getElementsByClassName("error-text")[3].style.display = "block";
-                //document.getElementsByClassName("error-text")[4].classList.add('show-error');
-                //document.getElementsByClassName("error-text")[4].style.display = "block";
-                //document.getElementsByClassName("error-text")[5].classList.add('show-error');
-                //document.getElementsByClassName("error-text")[5].style.display = "block";
-            });
-    };
+  const submitCreateUser = async ({ name, email, password, group }, { resetForm }) => {
+    try {
+      await createUser({ name, email, password, groups: [Number(group)] });
+      setAllUsers(await fetchUsers());
+      resetForm();
+      notifyAndCloseModal(closeCreateUserModal);
+    } catch (error) {
+      console.error(error);
+      notifyError();
+    }
+  };
 
-    const createGroupValidation = (event) => {
-        event.preventDefault();
-        const token = localStorage.getItem("userToken");
-        axios.post(DEVELOPMENT_INTERN + '/user_group', {
-            description: groupDataNew,
-        }, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                console.log(response.data);
-                setGroupDataNew("");
-                axios.get(DEVELOPMENT_INTERN + '/user_groups', {
-                    headers: {
-                        Authorization: token,
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        if (response.status === 200) {
-                            setAllGroups(response.data);
-                        }
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-                //document.getElementsByClassName("error-text")[0].style.display = "none";
-                //document.getElementsByClassName("error-text")[0].classList.remove('show-error');
-            })
-            .catch(e => {
-                console.log(e)
-                //document.getElementsByClassName("error-text")[0].classList.add('show-error');
-                //document.getElementsByClassName("error-text")[0].style.display = "block";
-            });
-    };
+  const submitCreateAdmin = async ({ name, email, password }, { resetForm }) => {
+    try {
+      await createAdmin({ name, email, password });
+      setAllAdmins(await fetchAdmins());
+      resetForm();
+      notifyAndCloseModal(closeCreateUserModal);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    const updateGroupValidation = (event) => {
-        event.preventDefault();
-        const token = localStorage.getItem("userToken");
+  return (
+    <>
+      <Header />
+      <ReactBootstrap.Container id="dashboardAdmin">
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12} className="text-center">
+            <h2>{t('user-management')}</h2>
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
 
-        axios.patch(DEVELOPMENT_INTERN + '/user_group/' + selectedGroupDataID, {
-            description: groupDataUpdate,
-        }, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-            .then(response => {
-                console.log(response.data);
-                setGroupDataUpdate("")
-                //document.getElementsByClassName("error-text")[0].style.display = "none";
-                //document.getElementsByClassName("error-text")[0].classList.remove('show-error');
-            })
-            .catch(e => {
-                console.log(e)
-                //document.getElementsByClassName("error-text")[0].classList.add('show-error');
-                //document.getElementsByClassName("error-text")[0].style.display = "block";
-            });
-    };
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12}>
+            <ReactBootstrap.Row>
+              <ReactBootstrap.Col xs={9}>
+                <h4>{t('admins')}</h4>
+              </ReactBootstrap.Col>
+              <ReactBootstrap.Col xs={3} className="text-end text-decoration-underline all-data">
+                <Link to="/dashboard/admin/settings/admins">
+                  <h4>{t('all')}</h4>
+                </Link>
+              </ReactBootstrap.Col>
+            </ReactBootstrap.Row>
+          </ReactBootstrap.Col>
+          <ReactBootstrap.Col xs={12}>
+            <EntityPreviewList
+              items={allAdmins}
+              limit={3}
+              onSettings={(admin) => goToSettingsAdmin(admin.name)}
+              onInfo={openGetUserModal}
+            />
+          </ReactBootstrap.Col>
 
-    /*const createUpdateValidation = (event) => {
-      event.preventDefault();
-      if (groupDataNew.length > 0) {
-        //document.getElementsByClassName("error-text")[0].style.display = "none";
-        //document.getElementsByClassName("error-text")[0].classList.remove('show-error');
-        console.log("True");
-      } else {
-        //document.getElementsByClassName("error-text")[0].classList.add('show-error');
-        //document.getElementsByClassName("error-text")[0].style.display = "block";
-        console.log("False");
-      }
-    };*/
+          <ReactBootstrap.Col xs={12}>
+            <ReactBootstrap.Row>
+              <ReactBootstrap.Col xs={9}>
+                <h4>{t('users')}</h4>
+              </ReactBootstrap.Col>
+              <ReactBootstrap.Col xs={3} className="text-end text-decoration-underline all-data">
+                <Link to="/dashboard/admin/settings/users">
+                  <h4>{t('all')}</h4>
+                </Link>
+              </ReactBootstrap.Col>
+            </ReactBootstrap.Row>
+          </ReactBootstrap.Col>
+          <ReactBootstrap.Col xs={12}>
+            <EntityPreviewList
+              items={allUsers}
+              limit={3}
+              onSettings={(user) => goToSettingsUser(user.id)}
+              onInfo={openGetUserModal}
+            />
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
 
-    const createGroupSchema = Yup.object().shape({
-        description: Yup.string()
-            .required('Group description invalid'),
-    });
-
-    const updateGroupSchema = Yup.object().shape({
-        description: Yup.string()
-            .required('Group description invalid'),
-    });
-
-    const createAdminSchema = Yup.object().shape({
-        name: Yup.string()
-            .required('Username invalid'),
-        password: Yup.string()
-            .required(t('Password invalid')),
-        email: Yup.string()
-            .email('Invalid email')
-            .required(t('Email invalid'))
-    });
-
-    const createUserSchema = Yup.object().shape({
-        name: Yup.string()
-            .required('Username invalid'),
-        email: Yup.string()
-            .email('Invalid email')
-            .required(t('Email invalid')),
-        password: Yup.string()
-            .required(t('Password invalid')),
-        groups: Yup.string()
-            .max(1, 'Only one choice possible')
-            .required(t('Email invalid'))
-    });
-
-    return (
-        <>
-            <Header/>
-            <ReactBootstrap.Container id="dashboardAdmin">
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12} className="text-center">
-                        <div>
-                            <h2>
-                                {t('user-management')}
-                            </h2>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                        <ReactBootstrap.Row>
-                            <ReactBootstrap.Col xs={9} sm={9} md={9} lg={9} xl={9}>
-                                <h4>
-                                    {t('admins')}
-                                </h4>
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={3} sm={3} md={3} lg={3} xl={3}
-                                                className="text-end text-decoration-underline all-data">
-                                <h4 onClick={goToSettingsAdminOverview}>
-                                    {t('all')}
-                                </h4>
-                            </ReactBootstrap.Col>
-                        </ReactBootstrap.Row>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                        <div>
-                            <ul>
-                                {
-                                    allAdmins.slice(0, 3).map(admin => {
-                                        return (
-                                            <li>
-                          <span>
-                            {admin.name}
-                          </span>
-                                                <span onClick={() => goToSettingsAdmin(admin.name)}>
-                            <i className="fa-solid fa-gear"></i>
-                          </span>
-                                                <span onClick={() => showGetUserModal(admin.name, admin.email)}>
-                            <i className="fa-solid fa-circle-info"></i>
-                          </span>
-                                                {/*<span onClick={() => showDeleteUserModal(admin.name)}>
-                            <i className="fa-solid fa-trash"></i>
-                          </span>*/}
-                                            </li>
-                                        )
-                                    })
-                                }
-                            </ul>
-                        </div>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                        <ReactBootstrap.Row>
-                            <ReactBootstrap.Col xs={9} sm={9} md={9} lg={9} xl={9}>
-                                <h4>
-                                    {t('users')}
-                                </h4>
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={3} sm={3} md={3} lg={3} xl={3}
-                                                className="text-end text-decoration-underline all-data">
-                                <h4 onClick={goToSettingsUserOverview}>
-                                    {t('all')}
-                                </h4>
-                            </ReactBootstrap.Col>
-                        </ReactBootstrap.Row>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                        <div>
-                            <ul>
-                                {
-                                    allUsers.slice(0, 3).map(user => {
-                                        return (
-                                            <li>
-                          <span>
-                            {user.name}
-                          </span>
-                                                <span onClick={() => goToSettingsUser(user.id)}>
-                            <i className="fa-solid fa-gear"></i>
-                          </span>
-                                                <span onClick={() => showGetUserModal(user.name, user.email)}>
-                            <i className="fa-solid fa-circle-info"></i>
-                          </span>
-                                                {/*<span onClick={() => showDeleteUserModal(user.id)}>
-                            <i className="fa-solid fa-trash"></i>
-                          </span>*/}
-                                            </li>
-                                        )
-                                    })
-                                }
-                            </ul>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div className="link-daas-design" onClick={showCreateUpdateModal}>
-                            <div>
-                                {t('create-update-group')}
-                            </div>
-                        </div>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div className="link-daas-design" onClick={showCreateUserModal}>
-                            <div>
-                                {t('create-user')}
-                            </div>
-                        </div>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/desktops" className="link-daas-design">
-                            <div>
-                                {t('desktops')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/desktop-groups" className="link-daas-design">
-                            <div>
-                                {t('desktop-groups')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/monitoring" className="link-daas-design">
-                            <div>
-                                {t('monitoring')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/limitation" className="link-daas-design">
-                            <div>
-                                {t('limitation')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/tasks" className="link-daas-design">
-                            <div>
-                                {t('tasks')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/vm-environment" className="link-daas-design">
-                            <div>
-                                {t('vm-setup')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/node-configuration" className="link-daas-design">
-                            <div>
-                                {t('vm-node-dhcp')} / {t('vm-node-iptables')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/connections" className="link-daas-design">
-                            <div>
-                                {t('viewer-check')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    {/*<ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/authentification" className="link-daas-design">
-                            <div>
-                                {t('authentification')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>*/}
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/instances" className="link-daas-design">
-                            <div>
-                                {t('vm-instance')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/docker" className="link-daas-design">
-                            <div>
-                                {t('vm-docker')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/phases" className="link-daas-design">
-                            <div>
-                                {t('vm-phases')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/admin-assign" className="link-daas-design">
-                            <div>
-                                {t('admin-assign-object-app')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/apps" className="link-daas-design">
-                            <div>
-                                {t('app-configuration')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard/admin/settings/files" className="link-daas-design">
-                            <div>
-                                {t('file-configuration')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <Link to="/dashboard" className="link-daas-design">
-                            <div>
-                                {t('dashboard-back')}
-                            </div>
-                        </Link>
-                    </ReactBootstrap.Col>
-                    {/*<ReactBootstrap.Col xs={12} sm={12} md={12} lg={4} xl={4}>
-            <Link to="/dashboard/admin/demo" className="link-daas-design">
-              <div>
-                {t('demo')}
+        {actionNotice && (
+          <ReactBootstrap.Row>
+            <ReactBootstrap.Col xs={12}>
+              <div className={actionNotice.success ? 'request-success-alert' : 'request-fail-alert'}>
+                {t(actionNotice.text)}
               </div>
-            </Link>
-          </ReactBootstrap.Col>*/}
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Modal
-                    show={createUpdateModal}
-                    onHide={closeCreateUpdateModal}
-                    size="md"
-                    aria-labelledby="contained-modal-title-vcenter"
-                    centered
+            </ReactBootstrap.Col>
+          </ReactBootstrap.Row>
+        )}
+
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
+            <div className="link-daas-design" onClick={openCreateUpdateModal}>
+              <div>{t('create-update-group')}</div>
+            </div>
+          </ReactBootstrap.Col>
+          <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
+            <div className="link-daas-design" onClick={openCreateUserModal}>
+              <div>{t('create-user')}</div>
+            </div>
+          </ReactBootstrap.Col>
+          {QUICK_LINKS.map(({ to, labelKeys }) => (
+            <ReactBootstrap.Col key={to} xs={12} sm={12} md={6} lg={4} xl={4}>
+              <Link to={to} className="link-daas-design">
+                <div>{labelKeys.map((key) => t(key)).join(' / ')}</div>
+              </Link>
+            </ReactBootstrap.Col>
+          ))}
+        </ReactBootstrap.Row>
+
+        <ReactBootstrap.Modal show={createUpdateModal} onHide={closeCreateUpdateModal} size="md" centered>
+          <ReactBootstrap.Modal.Header closeButton>
+            <ReactBootstrap.Modal.Title>{t('create-update-group')}</ReactBootstrap.Modal.Title>
+          </ReactBootstrap.Modal.Header>
+          <ReactBootstrap.Modal.Body>
+            <ReactBootstrap.Tabs defaultActiveKey="create-group" id="create-update-group">
+              <ReactBootstrap.Tab eventKey="create-group" title={t('create-group')}>
+                <Formik
+                  initialValues={{ description: '' }}
+                  validationSchema={createGroupSchema}
+                  onSubmit={submitCreateGroup}
                 >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {t('create-update-group')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <ReactBootstrap.Tabs defaultActiveKey="create-group" id="create-update-group">
-                            <ReactBootstrap.Tab eventKey="create-group" title={t('create-group')}>
-                                <Formik
-                                    initialValues={{
-                                        description: '',
-                                    }}
-                                    validationSchema={createGroupSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createGroupValidation}>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="create-group-new">{t('description-group')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="text" id="create-group-new" name="create-group-new"
-                                                           value={groupDataNew} onChange={changeGroupDataNew}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-group-new')}
-                                                    {/*<ErrorMessage name="create-group-new">
-                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={groupDataNew.length > 0 ? false : true}
-                                                        onClick={closeCreateUpdateModal}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
-                            </ReactBootstrap.Tab>
-                            <ReactBootstrap.Tab eventKey="update-group" title={t('update-group')}>
-                                <Formik
-                                    initialValues={{
-                                        description: '',
-                                    }}
-                                    validationSchema={updateGroupSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={updateGroupValidation}>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="update-group-new-select">{t('group-choice')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field as="select" id="update-group-new-select"
-                                                           name="update-group-new-select" className="select-field"
-                                                           onChange={selectExistingGroup}>
-                                                        <option value="0">{t('select-group')}</option>
-                                                        {
-                                                            allGroups.map(group => {
-                                                                return (
-                                                                    <option
-                                                                        value={group.id}>{group.description}</option>
-                                                                )
-                                                            })
-                                                        }
-                                                    </Field>
-                                                </ReactBootstrap.Col>
-                                                {
-                                                    selectedGroup === "0" ? (
-                                                        <></>
-                                                    ) : (
-                                                        <>
-                                                            <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                                <label
-                                                                    htmlFor="update-group-new">{t('description-group')}</label>
-                                                            </ReactBootstrap.Col>
-                                                            <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                                <Field type="text" id="update-group-new"
-                                                                       name="update-group-new" value={groupDataUpdate}
-                                                                       onChange={changeGroupDataUpdate}/>
-                                                            </ReactBootstrap.Col>
-                                                            <div className="error-text">
-                                                                {t('error-update-group-new')}
-                                                                {/*<ErrorMessage name="update-group-new">
-                                    </ErrorMessage>*/}
-                                                            </div>
-                                                        </>
-                                                    )
-                                                }
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={groupDataUpdate.length > 0 ? false : true}
-                                                        onClick={closeCreateUserModal}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
-                            </ReactBootstrap.Tab>
-                        </ReactBootstrap.Tabs>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-                <ReactBootstrap.Modal
-                    show={createUserModal}
-                    onHide={closeCreateUserModal}
-                    size="md"
-                    aria-labelledby="contained-modal-title-vcenter"
-                    centered
+                  {({ isValid, dirty }) => (
+                    <Form>
+                      <ReactBootstrap.Row>
+                        <FormField name="description" label={t('description-group')} htmlFor="create-group-description" />
+                      </ReactBootstrap.Row>
+                      <ReactBootstrap.Row>
+                        <ReactBootstrap.Col xs={12}>
+                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={!isValid || !dirty}>
+                            {t('submit')}
+                          </ReactBootstrap.Button>
+                        </ReactBootstrap.Col>
+                      </ReactBootstrap.Row>
+                    </Form>
+                  )}
+                </Formik>
+              </ReactBootstrap.Tab>
+              <ReactBootstrap.Tab eventKey="update-group" title={t('update-group')}>
+                <Formik
+                  enableReinitialize
+                  initialValues={{ description: groupToUpdate?.description ?? '' }}
+                  validationSchema={updateGroupSchema}
+                  onSubmit={submitUpdateGroup}
                 >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {t('create-user')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <ReactBootstrap.Tabs defaultActiveKey="user" id="user-admin-creator">
-                            <ReactBootstrap.Tab eventKey="user" title={t('user')}>
-                                <Formik
-                                    initialValues={{
-                                        name: '',
-                                        email: '',
-                                        groups: '',
-                                        password: '',
-                                    }}
-                                    validationSchema={createUserSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createUserValidation}>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="username">{t('username')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="text" id="username" name="username"
-                                                           value={usernameData} onChange={changeUsernameData}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-username')}
-                                                    {/*<ErrorMessage name="username">
-                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="email">{t('email')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="text" id="email" name="email" value={emailData}
-                                                           onChange={changeEmailData}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-email')}
-                                                    {/*<ErrorMessage name="password">
-                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="password">{t('password')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="password" id="password" name="password"
-                                                           value={passwordData} onChange={changePasswordData}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-password')}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <div>
-                                                        {t('password-detail-info')}
-                                                    </div>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="group">{t('group')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field as="select" id="group" name="group" className="select-field"
-                                                           onChange={selectExistingGroup}>
-                                                        <option value="0">{t('select-group')}</option>
-                                                        {
-                                                            allGroups.map(group => {
-                                                                return (
-                                                                    <option
-                                                                        value={group.id}>{group.description}</option>
-                                                                )
-                                                            })
-                                                        }
-                                                    </Field>
-                                                    {/*<Field type="text" id="group" name="group" value={groupData} onChange={changeGroupData}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-group')}
-                                                    {/*<ErrorMessage name="password">
-                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={usernameData.length > 0 && selectedGroupDataID !== 0 && emailData.length > 0 && passwordData.length > 0 ? false : true}
-                                                        onClick={createUserValidation}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
-                            </ReactBootstrap.Tab>
-                            <ReactBootstrap.Tab eventKey="admin" title={t('admin')}>
-                                <Formik
-                                    initialValues={{
-                                        name: '',
-                                        email: '',
-                                        password: '',
-                                    }}
-                                    validationSchema={createAdminSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createAdminValidation}>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="username-admin">{t('username')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="text" id="username-admin" name="username-admin"
-                                                           value={usernameDataAdmin}
-                                                           onChange={changeUsernameDataAdmin}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-username-admin')}
-                                                    {/*<ErrorMessage name="username">
-                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="email-admin">{t('email')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="text" id="email-admin" name="email-admin"
-                                                           value={emailDataAdmin} onChange={changeEmailDataAdmin}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-email-admin')}
-                                                    {/*<ErrorMessage name="password">
-                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <label htmlFor="password-admin">{t('password')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <Field type="password" id="password-admin" name="password-admin"
-                                                           value={passwordDataAdmin}
-                                                           onChange={changePasswordDataAdmin}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-password-admin')}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <div>
-                                                        {t('password-detail-info')}
-                                                    </div>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={usernameDataAdmin.length > 0 && passwordDataAdmin.length > 0 && emailDataAdmin.length > 0 ? false : true}
-                                                        //onClick={closeCreateUserModal}
-                                                    >
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
-                            </ReactBootstrap.Tab>
-                        </ReactBootstrap.Tabs>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-                <ReactBootstrap.Modal
-                    show={getUserDataModal}
-                    onHide={closeGetUserModal}
-                    size="lg"
-                    aria-labelledby="contained-modal-title-vcenter"
-                    centered
+                  {({ isValid, dirty }) => (
+                    <Form>
+                      <ReactBootstrap.Row>
+                        <ReactBootstrap.Col xs={12}>
+                          <label htmlFor="update-group-select">{t('group-choice')}</label>
+                        </ReactBootstrap.Col>
+                        <ReactBootstrap.Col xs={12}>
+                          <select id="update-group-select" className="select-field" onChange={onSelectGroupToUpdate} defaultValue="0">
+                            <option value="0">{t('select-group')}</option>
+                            {allGroups.map((group) => (
+                              <option key={group.id} value={group.id}>
+                                {group.description}
+                              </option>
+                            ))}
+                          </select>
+                        </ReactBootstrap.Col>
+
+                        {groupToUpdate && (
+                          <FormField name="description" label={t('description-group')} htmlFor="update-group-description" />
+                        )}
+                      </ReactBootstrap.Row>
+                      <ReactBootstrap.Row>
+                        <ReactBootstrap.Col xs={12}>
+                          <ReactBootstrap.Button
+                            type="submit"
+                            variant="primary"
+                            id="submit"
+                            disabled={!groupToUpdate || !isValid || !dirty}
+                          >
+                            {t('submit')}
+                          </ReactBootstrap.Button>
+                        </ReactBootstrap.Col>
+                      </ReactBootstrap.Row>
+                    </Form>
+                  )}
+                </Formik>
+              </ReactBootstrap.Tab>
+            </ReactBootstrap.Tabs>
+          </ReactBootstrap.Modal.Body>
+        </ReactBootstrap.Modal>
+
+        <ReactBootstrap.Modal show={createUserModal} onHide={closeCreateUserModal} size="md" centered>
+          <ReactBootstrap.Modal.Header closeButton>
+            <ReactBootstrap.Modal.Title>{t('create-user')}</ReactBootstrap.Modal.Title>
+          </ReactBootstrap.Modal.Header>
+          <ReactBootstrap.Modal.Body>
+            <ReactBootstrap.Tabs defaultActiveKey="user" id="user-admin-creator">
+              <ReactBootstrap.Tab eventKey="user" title={t('user')}>
+                <Formik
+                  initialValues={{ name: '', email: '', password: '', group: '0' }}
+                  validationSchema={createUserSchema}
+                  onSubmit={submitCreateUser}
                 >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {userDataID} - {t('information')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <ReactBootstrap.Row>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                {t('email')}
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                {userDataEmail}
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                {t('group')}
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                {t('group')} X
-                            </ReactBootstrap.Col>
-                        </ReactBootstrap.Row>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-                <ReactBootstrap.Modal
-                    show={deleteUserModal}
-                    onHide={closeDeleteUserModal}
-                    size="md"
-                    aria-labelledby="contained-modal-title-vcenter"
-                    centered
+                  {({ isValid, dirty }) => (
+                    <Form>
+                      <ReactBootstrap.Row>
+                        <FormField name="name" label={t('username')} htmlFor="username" />
+                        <FormField name="email" label={t('email')} htmlFor="email" />
+                        <FormField name="password" label={t('password')} htmlFor="password" type="password" />
+                        <ReactBootstrap.Col xs={12}>
+                          <div>{t('password-detail-info')}</div>
+                        </ReactBootstrap.Col>
+
+                        <FormField name="group" label={t('group')} htmlFor="group" as="select">
+                          <option value="0">{t('select-group')}</option>
+                          {allGroups.map((group) => (
+                            <option key={group.id} value={group.id}>
+                              {group.description}
+                            </option>
+                          ))}
+                        </FormField>
+                      </ReactBootstrap.Row>
+                      <ReactBootstrap.Row>
+                        <ReactBootstrap.Col xs={12}>
+                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={!isValid || !dirty}>
+                            {t('submit')}
+                          </ReactBootstrap.Button>
+                        </ReactBootstrap.Col>
+                      </ReactBootstrap.Row>
+                    </Form>
+                  )}
+                </Formik>
+              </ReactBootstrap.Tab>
+              <ReactBootstrap.Tab eventKey="admin" title={t('admin')}>
+                <Formik
+                  initialValues={{ name: '', email: '', password: '' }}
+                  validationSchema={createAdminSchema}
+                  onSubmit={submitCreateAdmin}
                 >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {userDataID} - {t('delete')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <ReactBootstrap.Row>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                <ReactBootstrap.Button
-                                    type="submit"
-                                    variant="primary"
-                                    onClick={closeDeleteUserModal}>
-                                    {t('no')}
-                                </ReactBootstrap.Button>
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                <ReactBootstrap.Button
-                                    type="submit"
-                                    variant="danger"
-                                    onClick={closeDeleteUserModal}>
-                                    {t('yes')}
-                                </ReactBootstrap.Button>
-                            </ReactBootstrap.Col>
-                        </ReactBootstrap.Row>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-            </ReactBootstrap.Container>
-        </>
-    );
+                  {({ isValid, dirty }) => (
+                    <Form>
+                      <ReactBootstrap.Row>
+                        <FormField name="name" label={t('username')} htmlFor="username-admin" />
+                        <FormField name="email" label={t('email')} htmlFor="email-admin" />
+                        <FormField name="password" label={t('password')} htmlFor="password-admin" type="password" />
+                        <ReactBootstrap.Col xs={12}>
+                          <div>{t('password-detail-info')}</div>
+                        </ReactBootstrap.Col>
+                      </ReactBootstrap.Row>
+                      <ReactBootstrap.Row>
+                        <ReactBootstrap.Col xs={12}>
+                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={!isValid || !dirty}>
+                            {t('submit')}
+                          </ReactBootstrap.Button>
+                        </ReactBootstrap.Col>
+                      </ReactBootstrap.Row>
+                    </Form>
+                  )}
+                </Formik>
+              </ReactBootstrap.Tab>
+            </ReactBootstrap.Tabs>
+          </ReactBootstrap.Modal.Body>
+        </ReactBootstrap.Modal>
+
+        <ReactBootstrap.Modal show={getUserDataModal} onHide={closeGetUserModal} size="lg" centered>
+          <ReactBootstrap.Modal.Header closeButton>
+            <ReactBootstrap.Modal.Title>
+              {userDataID} - {t('information')}
+            </ReactBootstrap.Modal.Title>
+          </ReactBootstrap.Modal.Header>
+          <ReactBootstrap.Modal.Body>
+            <ReactBootstrap.Row>
+              <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                {t('email')}
+              </ReactBootstrap.Col>
+              <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                {userDataEmail}
+              </ReactBootstrap.Col>
+            </ReactBootstrap.Row>
+          </ReactBootstrap.Modal.Body>
+        </ReactBootstrap.Modal>
+
+        {/* TODO: wire up a real delete-user API call once the endpoint is available. */}
+        <ReactBootstrap.Modal show={deleteUserModal} onHide={closeDeleteUserModal} size="md" centered>
+          <ReactBootstrap.Modal.Header closeButton>
+            <ReactBootstrap.Modal.Title>
+              {userDataID} - {t('delete')}
+            </ReactBootstrap.Modal.Title>
+          </ReactBootstrap.Modal.Header>
+          <ReactBootstrap.Modal.Body>
+            <ReactBootstrap.Row>
+              <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                <ReactBootstrap.Button variant="primary" onClick={closeDeleteUserModal}>
+                  {t('no')}
+                </ReactBootstrap.Button>
+              </ReactBootstrap.Col>
+              <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                <ReactBootstrap.Button variant="danger" onClick={closeDeleteUserModal}>
+                  {t('yes')}
+                </ReactBootstrap.Button>
+              </ReactBootstrap.Col>
+            </ReactBootstrap.Row>
+          </ReactBootstrap.Modal.Body>
+        </ReactBootstrap.Modal>
+      </ReactBootstrap.Container>
+    </>
+  );
 }
 
 export default MainAdmin;

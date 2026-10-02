@@ -1,54 +1,32 @@
-import React, {useEffect, useState} from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import axios from "axios";
 
-import Header from "../../../components/header";
+import Header from '../../../components/header';
+import FormField from '../../../components/FormField';
 
-import {DEVELOPMENT_INTERN} from "../../../constants/constants";
+import { getDesktops, createDesktop } from '../../../api/desktops';
 
 function Desktops() {
     const [allDesktops, setAllDesktops] = useState([]);
     const [createDesktopModal, setCreateDesktopModal] = useState(false);
-    const [mainDesktopDescription, setMainDesktopDescription] = useState("");
-    const [subDesktopDescription, setSubDesktopDescription] = useState("");
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+
+    const fetchDesktops = useCallback(() => {
+        getDesktops()
+            .then(setAllDesktops)
+            .catch((e) => {
+                console.log(e);
+            });
+    }, []);
 
     useEffect(() => {
-        const token = localStorage.getItem("userToken");
-        axios.get(DEVELOPMENT_INTERN + '/desktops', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            setAllDesktops(response.data);
-            console.log(response)
-        })
-        .catch(e => {
-            console.log(e)
-        });
-        /*axios.get(DEVELOPMENT_INTERN + '/desktop/2', {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
-        })
-        .then(response => {
-            console.log(response)
-        })
-        .catch(e => {
-            console.log(e)
-        });*/
-    }, []);
+        fetchDesktops();
+    }, [fetchDesktops]);
 
     const showModalCreateDesktop = () => {
         setCreateDesktopModal(true);
@@ -56,74 +34,38 @@ function Desktops() {
     const closeModalCreateDesktop = () => {
         setCreateDesktopModal(false);
     };
-    const closeAndSaveModalCreateDesktop = () => {
-        setCreateDesktopModal(false);
-        setMainDesktopDescription("");
-        setSubDesktopDescription("");
-    };
 
     const goToDetailView = (id) => {
-        window.location.href = "/dashboard/settings/desktops/" + id;
+        navigate("/dashboard/settings/desktops/" + id);
     };
 
-    const changeMainDesktopDescription = event => {
-        setMainDesktopDescription(event.target.value);
-    };
-
-    const changeSubDesktopDescription = event => {
-        setSubDesktopDescription(event.target.value);
-    };
-
-    const createDesktopValidation = (event) => {
-        event.preventDefault();
-        const token = localStorage.getItem("userToken");
-        axios.post(DEVELOPMENT_INTERN + '/desktop', {
-            description: mainDesktopDescription,
+    const submitCreateDesktop = (values, { setSubmitting, resetForm }) => {
+        createDesktop({
+            description: values.description,
             groups: [
                 {
-                    description: subDesktopDescription,
+                    description: values.detail_description,
                 }
             ]
-        }, {
-            headers: {
-                Authorization: token,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*',
-            },
-            //withCredentials: true,
         })
-        .then(response => {
-            console.log(response.data);
-            axios.get(DEVELOPMENT_INTERN + '/desktops', {
-                headers: {
-                    Authorization: token,
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': '*',
-                },
-                //withCredentials: true,
-            })
-            .then(response => {
-                setAllDesktops(response.data);
-                console.log(response);
-
-                setCreateDesktopModal(false);
-                setMainDesktopDescription("");
-                setSubDesktopDescription("");
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        .then(() => {
+            fetchDesktops();
+            resetForm();
+            closeModalCreateDesktop();
         })
         .catch(e => {
             console.log(e)
+        })
+        .finally(() => {
+            setSubmitting(false);
         });
     };
 
     const createDesktopValidationSchema = Yup.object().shape({
         description: Yup.string()
-            .required('Desktop main description invalid'),
+            .required(t('error-desktop-main-description') || 'Desktop main description invalid'),
         detail_description: Yup.string()
-            .required('Desktop sub description invalid'),
+            .required(t('error-desktop-sub-description') || 'Desktop sub description invalid'),
     });
 
     return (
@@ -211,50 +153,34 @@ function Desktops() {
                     </ReactBootstrap.Modal.Header>
                     <ReactBootstrap.Modal.Body>
                         <Formik
+                            key={createDesktopModal}
                             initialValues={{
                                 description: '',
                                 detail_description: '',
                             }}
                             validationSchema={createDesktopValidationSchema}
-                            onSubmit={values => {
-                                console.log(values.text);
-                            }}
+                            onSubmit={submitCreateDesktop}
                         >
-                            {({ errors, touched }) => (
-                                <Form onSubmit={createDesktopValidation}>
+                            {({ isValid, dirty, isSubmitting }) => (
+                                <Form>
                                     <ReactBootstrap.Row>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <label htmlFor="desktop-main-description">{t('desktop-main-description')}</label>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <Field type="text" id="desktop-main-description" name="desktop-main-description" value={mainDesktopDescription} onChange={changeMainDesktopDescription}/>
-                                        </ReactBootstrap.Col>
-                                        <div className="error-text">
-                                            {t('error-desktop-main-description')}
-                                            {/*<ErrorMessage name="desktop-main-description">
-                                            </ErrorMessage>*/}
-                                        </div>
+                                        <FormField
+                                            name="description"
+                                            label={t('desktop-main-description')}
+                                        />
                                     </ReactBootstrap.Row>
                                     <ReactBootstrap.Row>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <label htmlFor="desktop-sub-description">{t('desktop-sub-description')}</label>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <Field type="text" id="desktop-sub-description" name="desktop-sub-description" value={subDesktopDescription} onChange={changeSubDesktopDescription}/>
-                                        </ReactBootstrap.Col>
-                                        <div className="error-text">
-                                            {t('error-desktop-sub-description')}
-                                            {/*<ErrorMessage name="desktop-sub-description">
-                                            </ErrorMessage>*/}
-                                        </div>
+                                        <FormField
+                                            name="detail_description"
+                                            label={t('desktop-sub-description')}
+                                        />
                                     </ReactBootstrap.Row>
                                     <ReactBootstrap.Row>
                                         <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
                                             <ReactBootstrap.Button
                                                 type="submit"
                                                 variant="primary"
-                                                disabled={mainDesktopDescription.length > 0 && subDesktopDescription.length > 0 ? false : true}
-                                                //onClick={closeAndSaveModalCreateDesktop}
+                                                disabled={!isValid || !dirty || isSubmitting}
                                                 >
                                                 {t('submit')}
                                             </ReactBootstrap.Button>
