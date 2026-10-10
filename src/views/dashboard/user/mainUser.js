@@ -1,14 +1,61 @@
-import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import axios from "axios";
-import {DEVELOPMENT, DEVELOPMENT_INTERN, PASSWORD, URL_SYSTEM, USERNAME} from "../../../constants/constants";
-import {Field, Form, Formik} from "formik";
-import app from "../../../App";
-import * as Yup from "yup";
-import {useMediaQuery} from "react-responsive";
+import { DEVELOPMENT, DEVELOPMENT_INTERN, PASSWORD, URL_SYSTEM, USERNAME } from "../../../constants/constants";
+import { Field, Form, Formik } from "formik";
+import { useMediaQuery } from "react-responsive";
 import Logo from "../../../assets/images/png/DESIGNLogoColouredWhiteFont.png";
+import { requestApplicationAdminSchema, createAppSchema, updateAppSchema, createFileSchema, updateFileSchema, phasesBaseimageCreateContainerSchema, phasesBaseimageCreateVMSchema, phasesBaseimageCloneSchema, vmDataSchema, containerDataSchema } from "./mainUserSchemas";
+
+const LOGOUT_STORAGE_KEYS = [
+    "role",
+    "language",
+    "userData",
+    "userDataID",
+    "objectSharedApp",
+    "objectUserID",
+    "application",
+    "app-data",
+    "app-data-option",
+    "instance-object-id",
+    "instance-env",
+    "env-object-id",
+    "env-name",
+    "connection-object-id",
+    "connection-env",
+    "connection-shared-object-id",
+    "connection-shared-env",
+    "object-id",
+    "object-env-name",
+    "object-state",
+    "messageError",
+    "userDataName",
+    "userToken",
+    "userTimeToken",
+    "userRefreshToken",
+    "user-group-id",
+    "desktop-group-id",
+    "selected-environment-id",
+    "selected-environment-name",
+    "selected-instance-id",
+    "selected-instance-env-name",
+    "selected-environment-envname",
+    "selected-connection-index",
+    "selected-object-id",
+    "selected-object-env-name",
+    "selected-object-state",
+    "expert-mode-baseimage",
+    "expert-mode-environment",
+    "expert-mode-environment-id",
+    "expert-mode-environment-env",
+    "timeUser",
+    "application-viewer-id",
+    "environment-viewer-id",
+    "object-viewer-id",
+    "dashboard-info",
+    "environment-type-mode",
+];
 
 const bindValue = setter => event => setter(event.target.value);
 
