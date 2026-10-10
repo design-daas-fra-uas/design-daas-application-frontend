@@ -921,7 +921,14 @@ label {
 }
 
 .error-text {
-    display: none;
+    color: #dc3545;
+    font-size: 0.875rem;
+    min-height: 1.25rem;
+}
+
+.form-control.is-invalid,
+.select-field.is-invalid {
+    border-color: #dc3545;
 }
 
 #login > div:nth-child(1) > div > h2,
