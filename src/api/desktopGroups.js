@@ -1,11 +1,10 @@
 import apiClient from './client';
 
-export const getDesktopGroups = () => apiClient.get('/desktop_groups').then((response) => response.data);
+export const getDesktopGroups = ({ signal } = {}) => apiClient.get('/desktop_groups', { signal });
 
 export const createDesktopGroup = (payload) =>
-    apiClient.post('/desktop_group', payload).then((response) => response.data);
+    apiClient.post('/desktop_group', payload);
 
 export const addUserGroupToDesktopGroup = (desktopGroupId, userGroupId) =>
     apiClient
-        .post(`/desktop_group/${desktopGroupId}/user_group/${userGroupId}`, {})
-        .then((response) => response.data);
+        .post(`/desktop_group/${desktopGroupId}/user_group/${userGroupId}`, {});

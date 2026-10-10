@@ -1,7 +1,7 @@
 import apiClient from './client';
 
-export const getDesktops = () => apiClient.get('/desktops').then((response) => response.data);
+export const getDesktops = ({ signal } = {}) => apiClient.get('/desktops', { signal });
 
-export const getDesktop = (id) => apiClient.get(`/desktop/${id}`).then((response) => response.data);
+export const getDesktop = (id, { signal } = {}) => apiClient.get(`/desktop/${id}`, { signal });
 
-export const createDesktop = (payload) => apiClient.post('/desktop', payload).then((response) => response.data);
+export const createDesktop = (payload) => apiClient.post('/desktop', payload);
