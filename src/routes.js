@@ -15,6 +15,8 @@ export const ROUTES = {
     connectionRun: '/dashboard/connectionRun',
     sharedRun: '/dashboard/sharedRun',
     monitoring: '/dashboard/monitoring',
+    startApplication: '/dashboard/startApplication',
+    instanceRun: '/dashboard/instanceRun',
     expertBaseImage: '/dashboard/expert-mode-base-image',
     expertEnvironment: '/dashboard/expert-mode-environment',
     expertEnvironmentEdit: '/dashboard/expert-mode-environment-edit',

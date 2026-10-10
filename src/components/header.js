@@ -7,6 +7,7 @@ import {useMediaQuery} from "react-responsive";
 import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, URL_SYSTEM} from "../constants/constants";
 
 import Logo from './../assets/images/png/DESIGNLogoColouredWhiteFont.png';
+import {ROUTES} from "../routes";
 
 function Header() {
     const [sharedData, setSharedData] = useState([]);
@@ -195,7 +196,7 @@ function Header() {
             await servicePartnerAuthLogout();
         }, 1000);
         setTimeout(() => {
-            window.location.href = "/";
+            window.location.href = ROUTES.login;
         }, 2000);
     };
 
@@ -284,7 +285,7 @@ function Header() {
             });
 
         setTimeout(() => {
-            window.location.href = "/dashboard/connectionRun";
+            window.location.href = ROUTES.user.connectionRun;
         }, 2000)
     }
 
@@ -301,7 +302,7 @@ function Header() {
                             {
                                 userToken ? (
                                     <>
-                                        <ReactBootstrap.Nav.Link href="/dashboard">
+                                        <ReactBootstrap.Nav.Link href={ROUTES.dashboard}>
                                             {t('home')}
                                         </ReactBootstrap.Nav.Link>
                                         <ReactBootstrap.NavDropdown title={t('available_connections')}
