@@ -1,25 +1,10 @@
-import React, { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
 
-/* Dashboard */
-import MainUser from "./user/mainUser";
+import MainUser from './user/mainUser';
 
+// The route is already guarded in App.js, so this only renders the user dashboard.
 function Dashboard() {
-  const { t } = useTranslation();
-
-  let userToken = localStorage.getItem("role");
-
-  useEffect(() => {
-    if (!userToken) {
-      window.location.href = "/";
-    }
-  }, [userToken]);
-
-  return (
-    <>
-      <MainUser />
-    </>
-  );
+  return <MainUser />;
 }
 
 export default Dashboard;
