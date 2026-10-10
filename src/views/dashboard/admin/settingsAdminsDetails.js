@@ -16,13 +16,13 @@ const findAdminByName = async (name) => (await getAdmins()).find((admin) => admi
 function SettingsAdminsDetails() {
   const { id } = useParams();
   const { t } = useTranslation();
-  const { data: admin, status } = useResource(() => findAdminByName(id), [id]);
+  const { data: admin, status, reload } = useResource(() => findAdminByName(id), [id]);
 
   return (
     <PageLayout id="settingsOverviewAdmins" title={t('user-management')}>
       <Row>
         <Col xs={12}>
-          <AsyncContent status={status} notFoundText={t('admin-not-found', 'Administrator not found.')}>
+          <AsyncContent status={status} onRetry={reload} notFoundText={t('admin-not-found', 'Administrator not found.')}>
             {() => (
               <ul>
                 <li>
