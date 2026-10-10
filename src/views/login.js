@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
 
 import Header from '../components/header';
+import { ROUTES } from '../routes';
 
 import { loginWithPassword } from '../api/auth';
 import { clearSession, getRole, setSession } from '../auth/tokenManager';
@@ -25,11 +24,8 @@ function Login() {
 
   useEffect(() => {
     if (getRole()) {
-      navigate('/dashboard', { replace: true });
-      return;
+      navigate(ROUTES.dashboard, { replace: true });
     }
-
-    setActiveTab('user');
   }, [navigate]);
 
 
@@ -71,8 +67,7 @@ function Login() {
           : t('login-error-generic', 'Login failed. Please try again later.')
       );
     }
-
-    setIsSubmitting(false);
+    navigate(ROUTES.dashboard, { replace: true });
   };
 
   const renderLoginForm = ({ role }) => (
