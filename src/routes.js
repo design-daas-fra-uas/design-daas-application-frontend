@@ -9,8 +9,23 @@ export const ROUTES = {
   login: '/',
   registration: '/registration',
   dashboard: '/dashboard',
+  user: {
+    applicationRun: '/dashboard/applicationRun',
+    environmentRun: '/dashboard/environmentRun',
+    connectionRun: '/dashboard/connectionRun',
+    sharedRun: '/dashboard/sharedRun',
+    monitoring: '/dashboard/monitoring',
+    expertBaseImage: '/dashboard/expert-mode-base-image',
+    expertEnvironment: '/dashboard/expert-mode-environment',
+    expertEnvironmentEdit: '/dashboard/expert-mode-environment-edit',
+    expertStartSystem: '/dashboard/expert-mode-start-system',
+  },
+  expert: {
+    startEnvironment: '/dashboard/startEnvironment',
+  },
   admin: {
     root: ADMIN,
+    settings: ADMIN_SETTINGS,
     monitoring: `${ADMIN}/monitoring`,
     limitation: `${ADMIN}/limitation`,
     tasks: `${ADMIN}/tasks`,
