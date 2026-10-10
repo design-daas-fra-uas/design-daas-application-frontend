@@ -10,6 +10,8 @@ import * as Yup from "yup";
 import {useMediaQuery} from "react-responsive";
 import Logo from "../../../assets/images/png/DESIGNLogoColouredWhiteFont.png";
 
+const bindValue = setter => event => setter(event.target.value);
+
 function MainUser() {
     const [baseimageCreate, setBaseimageCreate] = useState(false);
     const [environmentCreate, setEnvironmentCreate] = useState(false);
@@ -206,37 +208,47 @@ function MainUser() {
     const showInfoModal = () => {
         setInfoModal(true);
     };
+
     const closeInfoModal = () => {
         setInfoModal(false);
     };
+
     const showApplicationModal = () => {
         setApplicationModal(true);
     };
+
     const closeApplicationModal = () => {
         setApplicationModal(false);
         setRequestMessage("");
     };
+
     const showRequestModal = () => {
         setRequestModal(true);
     };
+
     const closeRequestModal = () => {
         setRequestModal(false);
         setRequestMessage("");
     };
+
     const showFileModal = () => {
         setFileModal(true);
     };
+
     const closeFileModal = () => {
         setFileModal(false);
         setRequestMessage("");
     };
+
     const showFileDetailsModal = () => {
         setFileDetailsModal(true);
     };
+
     const closeFileDetailsModal = () => {
         setFileDetailsModal(false);
         setRequestMessage("");
     };
+
     const getFileDetailsModal = (id) => {
         setFileDetailsModal(true);
 
@@ -288,9 +300,8 @@ function MainUser() {
                 }, 2000);
             });
     };
-    const changeRequestMessage = event => {
-        setRequestMessage(event.target.value);
-    };
+
+    const changeRequestMessage = bindValue(setRequestMessage);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -1705,78 +1716,37 @@ function MainUser() {
         }, 2000)
     }
 
-    const requestApplicationAdminSchema = Yup.object().shape({
-        /*id: Yup.string()
-            .required('ID invalid'),
-        username: Yup.string()
-            .required('Username invalid'),
-        appname: Yup.string()
-            .required('Application name invalid'),*/
-    });
+    const changeVMCreateUpdateAppID = bindValue(setVMCreateUpdateAppID);
 
-    const changeVMCreateUpdateAppID = event => {
-        setVMCreateUpdateAppID(event.target.value);
-    };
+    const changeVMCreateUpdateAppName = bindValue(setVMCreateUpdateAppName);
 
-    const changeVMCreateUpdateAppName = event => {
-        setVMCreateUpdateAppName(event.target.value);
-    };
+    const changeVMCreateUpdateAppIDFile = bindValue(setVMCreateUpdateAppIDFile);
 
-    const changeVMCreateUpdateAppIDFile = event => {
-        setVMCreateUpdateAppIDFile(event.target.value);
-    };
+    const changeVMCreateUpdateAppIDTemplate = bindValue(setVMCreateUpdateAppIDTemplate);
 
-    const changeVMCreateUpdateAppIDTemplate = event => {
-        setVMCreateUpdateAppIDTemplate(event.target.value);
-    };
+    const changeVMCreateUpdateAppOSType = bindValue(setVMCreateUpdateAppOSType);
 
-    const changeVMCreateUpdateAppOSType = event => {
-        setVMCreateUpdateAppOSType(event.target.value);
-    };
+    const changeVMCreateUpdateAppInstaller = bindValue(setVMCreateUpdateAppInstaller);
 
-    const changeVMCreateUpdateAppInstaller = event => {
-        setVMCreateUpdateAppInstaller(event.target.value);
-    };
+    const changeVMCreateUpdateAppInstallerARGS = bindValue(setVMCreateUpdateAppInstallerARGS);
 
-    const changeVMCreateUpdateAppInstallerARGS = event => {
-        setVMCreateUpdateAppInstallerARGS(event.target.value);
-    };
+    const changeVMCreateUpdateAppInstallerType = bindValue(setVMCreateUpdateAppInstallerType);
 
-    const changeVMCreateUpdateAppInstallerType = event => {
-        setVMCreateUpdateAppInstallerType(event.target.value);
-    };
+    const changeVMCreateUpdateAppTarget = bindValue(setVMCreateUpdateAppTarget);
 
-    const changeVMCreateUpdateAppTarget = event => {
-        setVMCreateUpdateAppTarget(event.target.value);
-    };
+    const changeVMCreateUpdateAppTargetARGS = bindValue(setVMCreateUpdateAppTargetARGS);
 
-    const changeVMCreateUpdateAppTargetARGS = event => {
-        setVMCreateUpdateAppTargetARGS(event.target.value);
-    };
+    const changeVMCreateUpdateAppVersion = bindValue(setVMCreateUpdateAppVersion);
 
-    const changeVMCreateUpdateAppVersion = event => {
-        setVMCreateUpdateAppVersion(event.target.value);
-    };
+    const changeVMFileUploadAppID = bindValue(setVMFileUploadAppID);
 
-    const changeVMFileUploadAppID = event => {
-        setVMFileUploadAppID(event.target.value);
-    };
+    const changeVMFileUploadAppName = bindValue(setVMFileUploadAppName);
 
-    const changeVMFileUploadAppName = event => {
-        setVMFileUploadAppName(event.target.value);
-    };
+    const changeVMFileUploadAppPath = bindValue(setVMFileUploadAppPath);
 
-    const changeVMFileUploadAppPath = event => {
-        setVMFileUploadAppPath(event.target.value);
-    };
+    const changeVMFileUploadAppOSType = bindValue(setVMFileUploadAppOSType);
 
-    const changeVMFileUploadAppOSType = event => {
-        setVMFileUploadAppOSType(event.target.value);
-    };
-
-    const changeVMFileUploadAppVersion = event => {
-        setVMFileUploadAppVersion(event.target.value);
-    };
+    const changeVMFileUploadAppVersion = bindValue(setVMFileUploadAppVersion);
 
     const changeVMFileUploadAppSelectFile = event => {
         if (event.target.files) {
@@ -1784,21 +1754,13 @@ function MainUser() {
         }
     };
 
-    const changeVMPhasesIDBaseimageCreate = event => {
-        setVMIDPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesIDBaseimageCreate = bindValue(setVMIDPhasesBaseimageCreate);
 
-    const changeVMPhasesObjectTypeBaseimageCreate = event => {
-        setVMObjectTypePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesObjectTypeBaseimageCreate = bindValue(setVMObjectTypePhasesBaseimageCreate);
 
-    const changeVMPhasesNameBaseimageCreate = event => {
-        setVMNamePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesNameBaseimageCreate = bindValue(setVMNamePhasesBaseimageCreate);
 
-    const changeVMPhasesRootImageBaseimageCreate = event => {
-        setVMRootImagePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesRootImageBaseimageCreate = bindValue(setVMRootImagePhasesBaseimageCreate);
 
     const changeVMPhasesDockerfileBaseimageCreate = event => {
         if (event.target.files) {
@@ -1839,29 +1801,17 @@ function MainUser() {
         }
     };
 
-    const changeVMPhasesNameVMBaseimageCreate = event => {
-        setVMNameVMPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesNameVMBaseimageCreate = bindValue(setVMNameVMPhasesBaseimageCreate);
 
-    const changeVMPhasesOSTypeBaseimageCreate = event => {
-        setVMOSTypePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesOSTypeBaseimageCreate = bindValue(setVMOSTypePhasesBaseimageCreate);
 
-    const changeVMPhasesCoresBaseimageCreate = event => {
-        setVMCoresPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesCoresBaseimageCreate = bindValue(setVMCoresPhasesBaseimageCreate);
 
-    const changeVMPhasesMemorySizeBaseimageCreate = event => {
-        setVMMemorySizePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesMemorySizeBaseimageCreate = bindValue(setVMMemorySizePhasesBaseimageCreate);
 
-    const changeVMPhasesDiskSizeBaseimageCreate = event => {
-        setVMDiskSizePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesDiskSizeBaseimageCreate = bindValue(setVMDiskSizePhasesBaseimageCreate);
 
-    const changeVMPhasesKeyboardBaseimageCreate = event => {
-        setVMKeyboardPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesKeyboardBaseimageCreate = bindValue(setVMKeyboardPhasesBaseimageCreate);
 
     const changeVMPhasesCephPoolBaseimageCreate = event => {
         //setVMCephPoolPhasesBaseimageCreate(event.target.value);
@@ -1874,18 +1824,10 @@ function MainUser() {
         }
     };
 
-    const changeVMResolutionPhasesBaseimageCreate = event => {
-        setVMResolutionPhasesBaseimageCreate(event.target.value);
-    };
-    const changeVMContypePhasesBaseimageCreate = event => {
-        setVMContypePhasesBaseimageCreate(event.target.value);
-    };
-    const changeVMResizePhasesBaseimageCreate = event => {
-        setVMResizePhasesBaseimageCreate(event.target.value);
-    };
-    const changeVMScalePhasesBaseimageCreate = event => {
-        setVMScalePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMResolutionPhasesBaseimageCreate = bindValue(setVMResolutionPhasesBaseimageCreate);
+    const changeVMContypePhasesBaseimageCreate = bindValue(setVMContypePhasesBaseimageCreate);
+    const changeVMResizePhasesBaseimageCreate = bindValue(setVMResizePhasesBaseimageCreate);
+    const changeVMScalePhasesBaseimageCreate = bindValue(setVMScalePhasesBaseimageCreate);
     const changeVMScalePhasesBaseimageCreateChecked = () => {
         setVMScalePhasesBaseimageCreateChecked(!vmScalePhasesBaseimageCreateChecked)
 
@@ -1896,17 +1838,11 @@ function MainUser() {
         }
     };
 
-    const changeVMPhasesIDBaseimageClone = event => {
-        setVMIDPhasesBaseimageClone(event.target.value);
-    };
+    const changeVMPhasesIDBaseimageClone = bindValue(setVMIDPhasesBaseimageClone);
 
-    const changeVMPhasesNameBaseimageClone = event => {
-        setVMNamePhasesBaseimageClone(event.target.value);
-    };
+    const changeVMPhasesNameBaseimageClone = bindValue(setVMNamePhasesBaseimageClone);
 
-    const changeVMPhasesNewIDBaseimageClone = event => {
-        setVMNewIDPhasesBaseimageClone(event.target.value);
-    };
+    const changeVMPhasesNewIDBaseimageClone = bindValue(setVMNewIDPhasesBaseimageClone);
 
     const excludeColumns = ["id_file", "id_owner", "id_template", "installer_type", "version"];
 
