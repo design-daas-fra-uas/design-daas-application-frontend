@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Alert, Button, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,8 @@ function SettingsUsersDetail() {
     const { id } = useParams();
     const { t } = useTranslation();
     const [isToggling, setIsToggling] = useState(false);
+    const mounted = useRef(true);
+    useEffect(() => () => { mounted.current = false; }, []);
     const [actionError, setActionError] = useState('');
     const { data: user, status, reload } = useResource(() => findUserById(id), [id]);
 
@@ -31,18 +33,22 @@ function SettingsUsersDetail() {
     }), [t]);
 
     // Saving and refreshing share one error message; the refresh is silent so the form stays mounted.
+    // `reload` reports failure by returning false instead of throwing.
     const runAction = async (action) => {
         setActionError('');
         try {
             await action();
-            await reload({ silent: true });
+            if (!(await reload({ silent: true }))) {
+                throw new Error('Refresh after save failed');
+            }
         } catch (e) {
             console.error(e);
             setActionError(t('update-error', 'The request failed. Please try again.'));
         }
     };
 
-    const updateUserAccount = ({ name, email }) => runAction(() => updateUser(user.id, { name, email }));
+    const updateUserAccount = ({ name, email }) =>
+        runAction(() => updateUser(user.id, { name: name.trim(), email: email.trim() }));
 
     const toggleUserAccount = async (action) => {
         if (isToggling) {
@@ -50,12 +56,14 @@ function SettingsUsersDetail() {
         }
         setIsToggling(true);
         await runAction(() => action(user.id));
-        setIsToggling(false);
+        if (mounted.current) {
+            setIsToggling(false);
+        }
     };
 
     return (
         <PageLayout id="settingsOverviewUsers" title={t('user-management')} wrapTitle>
-            <AsyncContent status={status} notFoundText={t('user-not-found', 'User not found.')}>
+            <AsyncContent status={status} onRetry={reload} notFoundText={t('user-not-found', 'User not found.')}>
                 {() => (
                     <>
                         {actionError && <Alert variant="danger">{actionError}</Alert>}
@@ -103,7 +111,7 @@ function SettingsUsersDetail() {
                                     validationSchema={updateUserSchema}
                                     onSubmit={updateUserAccount}
                                 >
-                                    {({ isValid, isSubmitting }) => (
+                                    {({ isValid, dirty, isSubmitting }) => (
                                         <Form>
                                             <Row id="updating-user-data">
                                                 <FormField name="name" label={t('username')} />
@@ -111,7 +119,7 @@ function SettingsUsersDetail() {
                                             </Row>
                                             <Row>
                                                 <Col xs={12}>
-                                                    <Button type="submit" variant="primary" className="submit-full-width" disabled={!isValid || isSubmitting}>
+                                                    <Button type="submit" variant="primary" className="submit-full-width" disabled={!isValid || !dirty || isSubmitting}>
                                                         {t('submit')}
                                                     </Button>
                                                 </Col>
