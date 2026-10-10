@@ -103,9 +103,7 @@ function MainUser() {
         query: '(max-width: 767px)'
     })
 
-    const refreshDashboard = event => {
-        event.preventDefault();
-
+    const fetchDashboardInfo = () => {
         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
             headers: {
                 Authorization: localStorage.getItem("userToken"),
@@ -187,6 +185,12 @@ function MainUser() {
             .catch(e => {
                 console.log(e)
             });
+    };
+
+    const refreshDashboard = event => {
+        event.preventDefault();
+
+        fetchDashboardInfo();
     }
 
     const chooseApplication = (applicationNameText) => {
@@ -343,87 +347,7 @@ function MainUser() {
                 console.log(e)
             });
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         /*axios.post(DEVELOPMENT + '/phases/environments_get', {
             id: "",
@@ -609,87 +533,7 @@ function MainUser() {
                         setRequestAlert(true);
                         setRequestAlertMessage(true);
 
-                        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
-                            // withCredentials: true,
-                        })
-                            .then(response => {
-                                console.log(response);
-                                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                let newArrayApps = [];
-
-                                arrayApplications.map(data => {
-                                    newArrayApps.push(data)
-                                })
-
-                                setSearchFilterData(newArrayApps)
-                                setSearchFilterDataShared(newArrayApps)
-                                setDataListShared(newArrayApps)
-                                setDataList(newArrayApps)
-
-                                setConnectionDataNewer(arrayConnection)
-
-                                let newArrConnection = [];
-                                let newInstanceFilterData = [];
-
-                                for (let i = 0; i < arrayConnection.length; i++) {
-                                    for (let j = 0; j < arrayInstances.length; j++) {
-                                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                            newArrConnection.push(arrayInstances[j]);
-                                        }
-                                    }
-                                }
-
-                                arrayInstances.map(instanceObjectData => {
-                                    newInstanceFilterData.push({
-                                        "ID_Instance": instanceObjectData.id_instance,
-                                        "ID_Object": instanceObjectData.id_object,
-                                        "Env_Name": instanceObjectData.name_env
-                                    })
-                                })
-
-                                setInstanceStopData(newInstanceFilterData)
-                                console.log(newInstanceFilterData)
-
-                                setConnectionDataNew(newArrConnection)
-
-                                if (response.status === 200 && response.data.response_code === 200) {
-                                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnApplication(filterOwnData)
-
-                                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnFiles(filterOwnFile)
-
-                                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == 0
-                                    });
-
-                                    setSharedFiles(filterSharedFile)
-                                }
-                            })
-                            .catch(e => {
-                                console.log(e)
-                            });
+                        fetchDashboardInfo();
 
                         localStorage.setItem("object-id-instance", response.data.id_instance)
 
@@ -741,87 +585,7 @@ function MainUser() {
                         setRequestAlert(true);
                         setRequestAlertMessage(true);
 
-                        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
-                            // withCredentials: true,
-                        })
-                            .then(response => {
-                                console.log(response);
-                                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                let newArrayApps = [];
-
-                                arrayApplications.map(data => {
-                                    newArrayApps.push(data)
-                                })
-
-                                setSearchFilterData(newArrayApps)
-                                setSearchFilterDataShared(newArrayApps)
-                                setDataListShared(newArrayApps)
-                                setDataList(newArrayApps)
-
-                                setConnectionDataNewer(arrayConnection)
-
-                                let newArrConnection = [];
-                                let newInstanceFilterData = [];
-
-                                for (let i = 0; i < arrayConnection.length; i++) {
-                                    for (let j = 0; j < arrayInstances.length; j++) {
-                                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                            newArrConnection.push(arrayInstances[j]);
-                                        }
-                                    }
-                                }
-
-                                arrayInstances.map(instanceObjectData => {
-                                    newInstanceFilterData.push({
-                                        "ID_Instance": instanceObjectData.id_instance,
-                                        "ID_Object": instanceObjectData.id_object,
-                                        "Env_Name": instanceObjectData.name_env
-                                    })
-                                })
-
-                                setInstanceStopData(newInstanceFilterData)
-                                console.log(newInstanceFilterData)
-
-                                setConnectionDataNew(newArrConnection)
-
-                                if (response.status === 200 && response.data.response_code === 200) {
-                                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnApplication(filterOwnData)
-
-                                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnFiles(filterOwnFile)
-
-                                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == 0
-                                    });
-
-                                    setSharedFiles(filterSharedFile)
-                                }
-                            })
-                            .catch(e => {
-                                console.log(e)
-                            });
+                        fetchDashboardInfo();
 
                         localStorage.setItem("object-id-instance", response.data.id_instance)
 
@@ -1157,87 +921,7 @@ function MainUser() {
                     setRequestAlert(true);
                     setRequestAlertMessage(true);
 
-                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
-                        // withCredentials: true,
-                    })
-                        .then(response => {
-                            console.log(response);
-                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                            let newArrayApps = [];
-
-                            arrayApplications.map(data => {
-                                newArrayApps.push(data)
-                            })
-
-                            setSearchFilterData(newArrayApps)
-                            setSearchFilterDataShared(newArrayApps)
-                            setDataListShared(newArrayApps)
-                            setDataList(newArrayApps)
-
-                            setConnectionDataNewer(arrayConnection)
-
-                            let newArrConnection = [];
-                            let newInstanceFilterData = [];
-
-                            for (let i = 0; i < arrayConnection.length; i++) {
-                                for (let j = 0; j < arrayInstances.length; j++) {
-                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                        newArrConnection.push(arrayInstances[j]);
-                                    }
-                                }
-                            }
-
-                            arrayInstances.map(instanceObjectData => {
-                                newInstanceFilterData.push({
-                                    "ID_Instance": instanceObjectData.id_instance,
-                                    "ID_Object": instanceObjectData.id_object,
-                                    "Env_Name": instanceObjectData.name_env
-                                })
-                            })
-
-                            setInstanceStopData(newInstanceFilterData)
-                            console.log(newInstanceFilterData)
-
-                            setConnectionDataNew(newArrConnection)
-
-                            if (response.status === 200 && response.data.response_code === 200) {
-                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnFiles(filterOwnFile)
-
-                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == 0
-                                });
-
-                                setSharedFiles(filterSharedFile)
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
+                    fetchDashboardInfo();
 
                     setTimeout(() => {
                         setRequestAlert(false);
@@ -1308,87 +992,7 @@ function MainUser() {
                                     setRequestAlert(true);
                                     setRequestAlertMessage(true);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
+                                    fetchDashboardInfo();
 
 
                                     setTimeout(() => {
@@ -1400,87 +1004,7 @@ function MainUser() {
                                     setRequestAlert(true);
                                     setRequestAlertMessage(false);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
+                                    fetchDashboardInfo();
 
                                     setTimeout(() => {
                                         setRequestAlert(false);
@@ -1518,87 +1042,7 @@ function MainUser() {
                                     setRequestAlert(true);
                                     setRequestAlertMessage(true);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
+                                    fetchDashboardInfo();
 
 
                                     setTimeout(() => {
@@ -1610,87 +1054,7 @@ function MainUser() {
                                     setRequestAlert(true);
                                     setRequestAlertMessage(false);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
+                                    fetchDashboardInfo();
 
                                     setTimeout(() => {
                                         setRequestAlert(false);
@@ -1739,87 +1103,7 @@ function MainUser() {
                         setRequestAlert(true);
                         setRequestAlertMessage(true);
 
-                        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
-                            // withCredentials: true,
-                        })
-                            .then(response => {
-                                console.log(response);
-                                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                let newArrayApps = [];
-
-                                arrayApplications.map(data => {
-                                    newArrayApps.push(data)
-                                })
-
-                                setSearchFilterData(newArrayApps)
-                                setSearchFilterDataShared(newArrayApps)
-                                setDataListShared(newArrayApps)
-                                setDataList(newArrayApps)
-
-                                setConnectionDataNewer(arrayConnection)
-
-                                let newArrConnection = [];
-                                let newInstanceFilterData = [];
-
-                                for (let i = 0; i < arrayConnection.length; i++) {
-                                    for (let j = 0; j < arrayInstances.length; j++) {
-                                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                            newArrConnection.push(arrayInstances[j]);
-                                        }
-                                    }
-                                }
-
-                                arrayInstances.map(instanceObjectData => {
-                                    newInstanceFilterData.push({
-                                        "ID_Instance": instanceObjectData.id_instance,
-                                        "ID_Object": instanceObjectData.id_object,
-                                        "Env_Name": instanceObjectData.name_env
-                                    })
-                                })
-
-                                setInstanceStopData(newInstanceFilterData)
-                                console.log(newInstanceFilterData)
-
-                                setConnectionDataNew(newArrConnection)
-
-                                if (response.status === 200 && response.data.response_code === 200) {
-                                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnApplication(filterOwnData)
-
-                                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnFiles(filterOwnFile)
-
-                                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == 0
-                                    });
-
-                                    setSharedFiles(filterSharedFile)
-                                }
-                            })
-                            .catch(e => {
-                                console.log(e)
-                            });
+                        fetchDashboardInfo();
 
                         localStorage.setItem("test", "")
                         setTimeout(() => {
@@ -1856,87 +1140,7 @@ function MainUser() {
         localStorage.setItem("app-data", dataID)
         localStorage.setItem("app-data-option", selectOption)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/applicationRun";
@@ -1947,87 +1151,7 @@ function MainUser() {
         localStorage.setItem("instance-object-id", objectID)
         localStorage.setItem("instance-env", selectEnv)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/instanceRun";
@@ -2040,87 +1164,7 @@ function MainUser() {
 
         localStorage.setItem("environment-type-mode", modeType)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/environmentRun";
@@ -2277,87 +1321,7 @@ function MainUser() {
         localStorage.setItem("env-tasks", selectTasks)
         localStorage.setItem("env-target", selectTarget)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             localStorage.setItem("expert-mode-baseimage", "true")
@@ -2387,87 +1351,7 @@ function MainUser() {
                     setRequestAlert(true);
                     setRequestAlertMessage(true);
 
-                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
-                        // withCredentials: true,
-                    })
-                        .then(response => {
-                            console.log(response);
-                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                            let newArrayApps = [];
-
-                            arrayApplications.map(data => {
-                                newArrayApps.push(data)
-                            })
-
-                            setSearchFilterData(newArrayApps)
-                            setSearchFilterDataShared(newArrayApps)
-                            setDataListShared(newArrayApps)
-                            setDataList(newArrayApps)
-
-                            setConnectionDataNewer(arrayConnection)
-
-                            let newArrConnection = [];
-                            let newInstanceFilterData = [];
-
-                            for (let i = 0; i < arrayConnection.length; i++) {
-                                for (let j = 0; j < arrayInstances.length; j++) {
-                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                        newArrConnection.push(arrayInstances[j]);
-                                    }
-                                }
-                            }
-
-                            arrayInstances.map(instanceObjectData => {
-                                newInstanceFilterData.push({
-                                    "ID_Instance": instanceObjectData.id_instance,
-                                    "ID_Object": instanceObjectData.id_object,
-                                    "Env_Name": instanceObjectData.name_env
-                                })
-                            })
-
-                            setInstanceStopData(newInstanceFilterData)
-                            console.log(newInstanceFilterData)
-
-                            setConnectionDataNew(newArrConnection)
-
-                            if (response.status === 200 && response.data.response_code === 200) {
-                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnFiles(filterOwnFile)
-
-                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == 0
-                                });
-
-                                setSharedFiles(filterSharedFile)
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
+                    fetchDashboardInfo();
 
                     setTimeout(() => {
                         setRequestAlert(false);
@@ -2556,174 +1440,14 @@ function MainUser() {
                 }, 2000);
             });
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
     }
 
     const connectionSharedData = (objectID, selectEnv) => {
         localStorage.setItem("connection-shared-object-id", objectID)
         localStorage.setItem("connection-shared-env", selectEnv)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/sharedRun";
@@ -2734,87 +1458,7 @@ function MainUser() {
         localStorage.setItem("connection-object-id", objectID)
         localStorage.setItem("connection-env", selectEnv)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/connectionRun";
@@ -2826,87 +1470,7 @@ function MainUser() {
         localStorage.setItem("object-env-name", selectEnv)
         localStorage.setItem("object-state", stateObject)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/expert-mode-base-image";
@@ -3134,87 +1698,7 @@ function MainUser() {
         localStorage.setItem("connection-object-id", JSON.parse(data).id_inst)
         localStorage.setItem("connection-env", JSON.parse(data).viewer_url)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             window.location.href = "/dashboard/connectionRun";
