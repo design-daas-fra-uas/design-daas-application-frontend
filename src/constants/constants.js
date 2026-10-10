@@ -23,3 +23,5 @@ export const PASSWORD = "chjaKLgh75dVG$.Hh-?o";
 // Cluster live system
 export const URL_SYSTEM = 'https://cluster.daas-design.de:443';
 export const URL_SYSTEM_WITHOUT_PORT = 'https://cluster.daas-design.de';
+/* OAuth */
+export const OAUTH_CLIENT_ID = process.env.REACT_APP_OAUTH_CLIENT_ID || 'test-client';
