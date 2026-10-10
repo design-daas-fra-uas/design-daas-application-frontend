@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Col, Modal, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 // Shows the details of the selected user/admin ({ name, email }).
 // `user === null` means the modal is closed.
-function UserInfoModal({ user, onHide }) {
+function UserInfoModal({ user: currentUser, onHide }) {
   const { t } = useTranslation();
+  // Keep showing the last user while the modal fades out.
+  const lastUser = useRef(null);
+  if (currentUser) {
+    lastUser.current = currentUser;
+  }
+  const user = currentUser ?? lastUser.current;
 
   return (
-    <Modal show={Boolean(user)} onHide={onHide} size="lg" aria-labelledby="user-info-modal-title" centered>
+    <Modal show={Boolean(currentUser)} onHide={onHide} size="lg" aria-labelledby="user-info-modal-title" centered>
       <Modal.Header closeButton>
         <Modal.Title id="user-info-modal-title">
           {user?.name} - {t('information')}
