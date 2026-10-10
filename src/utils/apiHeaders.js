@@ -4,6 +4,4 @@ import { getAccessToken } from '../auth/tokenManager';
 
 export const getAuthHeaders = () => ({
     Authorization: getAccessToken(),
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': '*',
 });
