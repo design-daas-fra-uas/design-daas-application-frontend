@@ -63,6 +63,22 @@ const multipartHeaders = (authorization) => ({
     'Access-Control-Allow-Origin': URL_SYSTEM,
     'Access-Control-Allow-Headers': URL_SYSTEM,
 });
+
+const SEARCH_EXCLUDE_COLUMNS = ["id_file", "id_owner", "id_template", "installer_type", "version"];
+
+const filterBySearch = (value, fullList, currentList, setFilteredList) => {
+    const lowercasedValue = value.toLowerCase().trim();
+    if (lowercasedValue === "") setFilteredList(fullList);
+    else {
+        const filteredData = currentList.filter(item => {
+            return Object.keys(item).some(key =>
+                SEARCH_EXCLUDE_COLUMNS.includes(key) ? false : item[key].toString().toLowerCase().includes(lowercasedValue)
+            );
+        });
+        setFilteredList(filteredData);
+    }
+};
+
 const bindValue = setter => event => setter(event.target.value);
 
 function MainUser() {
@@ -1750,45 +1766,19 @@ function MainUser() {
 
     const changeVMPhasesNewIDBaseimageClone = bindValue(setVMNewIDPhasesBaseimageClone);
 
-    const excludeColumns = ["id_file", "id_owner", "id_template", "installer_type", "version"];
-
     const handleChange = value => {
         setSearchText(value);
         filterData(value);
     };
 
-    const filterData = (value) => {
-        const lowercasedValue = value.toLowerCase().trim();
-        if (lowercasedValue === "") setSearchFilterData(dataList);
-        else {
-            const filteredData = searchFilterData.filter(item => {
-                return Object.keys(item).some(key =>
-                    excludeColumns.includes(key) ? false : item[key].toString().toLowerCase().includes(lowercasedValue)
-                );
-            });
-            setSearchFilterData(filteredData);
-        }
-    }
-
-    const excludeColumnsShared = ["id_file", "id_owner", "id_template", "installer_type", "version"];
+    const filterData = (value) => filterBySearch(value, dataList, searchFilterData, setSearchFilterData);
 
     const handleChangeShared = value => {
         setSearchTextShared(value);
         filterDataShared(value);
     };
 
-    const filterDataShared = (value) => {
-        const lowercasedValue = value.toLowerCase().trim();
-        if (lowercasedValue === "") setSearchFilterDataShared(dataListShared);
-        else {
-            const filteredDataShared = searchFilterDataShared.filter(item => {
-                return Object.keys(item).some(key =>
-                    excludeColumnsShared.includes(key) ? false : item[key].toString().toLowerCase().includes(lowercasedValue)
-                );
-            });
-            setSearchFilterDataShared(filteredDataShared);
-        }
-    }
+    const filterDataShared = (value) => filterBySearch(value, dataListShared, searchFilterDataShared, setSearchFilterDataShared);
 
     const phasesBaseimageCreate = (event) => {
         event.preventDefault();
