@@ -15,14 +15,12 @@ import EntitySection from './components/EntitySection';
 import GroupModal from './components/GroupModal';
 import QuickLinks from './components/QuickLinks';
 
-import { createAdmin } from '../../../api/admins';
-import { createUser } from '../../../api/users';
-import { createUserGroup, updateUserGroup } from '../../../api/userGroups';
+const SECTION_LABEL_KEYS = { admins: 'admins', users: 'users', groups: 'group' };
 
 function MainAdmin() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { admins, users, groups, loadErrors, reload, refreshAdmins, refreshUsers, refreshGroups } = useDashboardData();
+  const { admins, users, groups, loading, loadErrors, reload, refreshAdmins, refreshUsers, refreshGroups } = useDashboardData();
   const [notice, showNotice] = useNotice();
 
   const [groupModalOpen, setGroupModalOpen] = useState(false);
@@ -95,6 +93,14 @@ function MainAdmin() {
 
   return (
     <PageLayout id="dashboardAdmin" title={t('user-management')}>
+      {loading && (
+        <Row>
+          <Col xs={12}>
+            <p role="status">{t('loading', 'Loading...')}</p>
+          </Col>
+        </Row>
+      )}
+
       <Row>
         <EntitySection
           title={t('admins')}
@@ -116,7 +122,7 @@ function MainAdmin() {
         <Row>
           <Col xs={12}>
             <Alert variant="danger" role="alert">
-              {t('load-error', 'Could not load the data. Please try again.')} ({loadErrors.map((name) => t(name, name)).join(', ')}){' '}
+              {t('load-error', 'Could not load the data. Please try again.')} ({loadErrors.map((name) => t(SECTION_LABEL_KEYS[name])).join(', ')}){' '}
               <Button variant="link" className="p-0 align-baseline" onClick={reload}>
                 {t('retry', 'Retry')}
               </Button>
