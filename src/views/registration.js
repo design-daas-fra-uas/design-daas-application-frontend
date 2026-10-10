@@ -44,11 +44,11 @@ function Registration() {
     setFeedback({ visible: false, success: false });
 
     try {
-      const response = await validateEmail({
+      await validateEmail({
         email,
         registration_code: registrationCode,
       });
-      setFeedback({ visible: true, success: response.status === 200 });
+      setFeedback({ visible: true, success: true });
     } catch (error) {
       console.error(error);
       setFeedback({ visible: true, success: false });
