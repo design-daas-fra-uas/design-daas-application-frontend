@@ -1826,9 +1826,13 @@ function MainUser() {
     };
 
     const changeVMResolutionPhasesBaseimageCreate = bindValue(setVMResolutionPhasesBaseimageCreate);
+
     const changeVMContypePhasesBaseimageCreate = bindValue(setVMContypePhasesBaseimageCreate);
+
     const changeVMResizePhasesBaseimageCreate = bindValue(setVMResizePhasesBaseimageCreate);
+
     const changeVMScalePhasesBaseimageCreate = bindValue(setVMScalePhasesBaseimageCreate);
+
     const changeVMScalePhasesBaseimageCreateChecked = () => {
         setVMScalePhasesBaseimageCreateChecked(!vmScalePhasesBaseimageCreateChecked)
 
@@ -2180,10 +2184,10 @@ function MainUser() {
             });
     }
 
-    const createApp = (event) => {
+    const submitApp = (endpoint) => (event) => {
         event.preventDefault();
 
-        axios.post(DEVELOPMENT + '/apps/create', {
+        axios.post(DEVELOPMENT + endpoint, {
             id: vmCreateUpdateAppID,
             name: vmCreateUpdateAppName,
             id_file: vmCreateUpdateAppIDFile,
@@ -2319,7 +2323,10 @@ function MainUser() {
             });
     }
 
-    const updateApp = (event) => {
+    const createApp = submitApp('/apps/create');
+
+    const updateApp = submitApp('/apps/update');
+
         event.preventDefault();
 
         axios.post(DEVELOPMENT + '/apps/update', {
