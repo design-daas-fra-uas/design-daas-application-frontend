@@ -8,58 +8,42 @@ import * as Yup from 'yup';
 import Header from '../components/header';
 
 import { loginWithPassword } from '../api/auth';
-import { clearSession, getRole, scheduleTokenRefresh, setSession } from '../auth/tokenManager';
+import { clearSession, getRole, setSession } from '../auth/tokenManager';
 
 const LOGIN_TABS = [
   { key: 'user', labelKey: 'user', role: 'user' },
   { key: 'admin', labelKey: 'admin', role: 'admin' },
 ];
 
-const redirectToDashboard = (navigate) => {
-  setTimeout(() => {
-    navigate('/dashboard');
-  }, 1000);
-};
 
 function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('user');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     if (getRole()) {
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
       return;
     }
 
     setActiveTab('user');
   }, [navigate]);
 
-  useEffect(() => {
-    const stopRefreshTimer = scheduleTokenRefresh(() => {
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
-    });
-
-    return stopRefreshTimer;
-  }, [navigate]);
 
   const getLoginSchema = () =>
     Yup.object().shape({
       username: Yup.string()
         .trim()
-        .required(`${t('username')} is required`)
-        .min(3, `${t('username')} is invalid`),
-      password: Yup.string()
-        .trim()
-        .required(`${t('password')} is required`)
-        .min(4, `${t('password')} is invalid`),
+        .required(t('error-username-required', 'Username is required.')),
+      password: Yup.string().required(t('error-password-required', 'Password is required.')),
     });
 
   const loginWithRole = async ({ username, password }, role) => {
     setIsSubmitting(true);
+    setLoginError('');
 
     try {
       const response = await loginWithPassword({ username, password });
@@ -71,14 +55,24 @@ function Login() {
           refreshToken: response.data.refresh_token,
           role,
         });
-        redirectToDashboard(navigate);
+        navigate('/dashboard', { replace: true });
+        return;
+      } else {
+        clearSession();
+        setLoginError(t('login-error-generic', 'Login failed. Please try again later.'));
       }
     } catch (error) {
       console.error(error);
       clearSession();
-    } finally {
-      setIsSubmitting(false);
+      const status = error?.response?.status;
+      setLoginError(
+        status === 400 || status === 401
+          ? t('login-error-credentials', 'Incorrect username or password.')
+          : t('login-error-generic', 'Login failed. Please try again later.')
+      );
     }
+
+    setIsSubmitting(false);
   };
 
   const renderLoginForm = ({ role }) => (
@@ -90,6 +84,11 @@ function Login() {
     >
       {({ isValid, dirty }) => (
         <Form>
+          <div role="alert" aria-live="assertive">
+            {loginError && (
+              <ReactBootstrap.Alert variant="danger">{loginError}</ReactBootstrap.Alert>
+            )}
+          </div>
           <ReactBootstrap.Row>
             <ReactBootstrap.Col xs={12}>
               <label htmlFor={`${role}-username`}>{t('username')}</label>
@@ -134,7 +133,7 @@ function Login() {
                 id="submit"
                 disabled={!isValid || !dirty || isSubmitting}
               >
-                {isSubmitting ? t('loading') || 'Loading...' : t('submit')}
+                {isSubmitting ? t('loading', 'Loading...') : t('submit')}
               </ReactBootstrap.Button>
             </ReactBootstrap.Col>
           </ReactBootstrap.Row>
@@ -153,7 +152,10 @@ function Login() {
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
 
-        <ReactBootstrap.Tabs activeKey={activeTab} onSelect={(tabKey) => setActiveTab(tabKey)}>
+        <ReactBootstrap.Tabs activeKey={activeTab} onSelect={(tabKey) => {
+            setLoginError('');
+            setActiveTab(tabKey);
+          }}>
           {LOGIN_TABS.map(({ key, labelKey, role }) => (
             <ReactBootstrap.Tab key={key} eventKey={key} title={t(labelKey)}>
               {activeTab === key && renderLoginForm({ role })}
