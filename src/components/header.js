@@ -8,6 +8,7 @@ import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, URL_SYSTEM} from "../consta
 
 import Logo from './../assets/images/png/DESIGNLogoColouredWhiteFont.png';
 import {ROUTES} from "../routes";
+import {changeLanguage} from "../i18n";
 
 function Header() {
     const [sharedData, setSharedData] = useState([]);
@@ -20,7 +21,7 @@ function Header() {
     const [searchFilterData, setSearchFilterData] = useState([]);
     const [dataList, setDataList] = useState([]);
     const [dashboardInfo, setDashboardInfo] = useState({});
-    const {t, i18n} = useTranslation();
+    const {t} = useTranslation();
 
     let userToken = localStorage.getItem("userToken");
 
@@ -112,15 +113,9 @@ function Header() {
         }
     }, []);
 
-    const changeLanguageGerman = () => {
-        i18n.changeLanguage("de")
-        localStorage.setItem('language', 'de')
-    }
+    const changeLanguageGerman = () => changeLanguage('de');
 
-    const changeLanguageEnglish = () => {
-        i18n.changeLanguage("en")
-        localStorage.setItem('language', 'en')
-    }
+    const changeLanguageEnglish = () => changeLanguage('en');
 
     const logoutValidation = () => {
         localStorage.removeItem("role");
