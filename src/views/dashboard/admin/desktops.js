@@ -7,6 +7,7 @@ import * as Yup from 'yup';
 
 import Header from '../../../components/header';
 import FormField from '../../../components/FormField';
+import { ROUTES } from '../../../routes';
 
 import { getDesktops, createDesktop } from '../../../api/desktops';
 
@@ -217,6 +218,8 @@ function Desktops() {
                 </ReactBootstrap.Modal>
             </ReactBootstrap.Container>
         </>
+                                                    <Button type="button" variant="primary" onClick={() => navigate(ROUTES.admin.desktopDetail(desktop.id))}>
+                <BackLink to={ROUTES.admin.root} />
     );
 }
 

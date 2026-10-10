@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import Header from '../../../components/header';
+import { ROUTES } from '../../../routes';
 
 import { getAdmins } from '../../../api/admins';
 
@@ -86,6 +87,7 @@ function SettingsAdminsDetails() {
         </ReactBootstrap.Row>
       </ReactBootstrap.Container>
     </>
+        <BackLink to={ROUTES.admin.admins} />
   );
 }
 

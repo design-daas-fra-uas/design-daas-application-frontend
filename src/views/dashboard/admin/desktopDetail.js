@@ -4,6 +4,7 @@ import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import Header from '../../../components/header';
+import { ROUTES } from '../../../routes';
 
 import { getDesktop } from '../../../api/desktops';
 
@@ -85,6 +86,7 @@ function DesktopDetail() {
                 </ReactBootstrap.Row>
             </ReactBootstrap.Container>
         </>
+                <BackLink to={ROUTES.admin.desktops} />
     );
 }
 

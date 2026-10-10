@@ -13,6 +13,7 @@ import { emailSchema, newPasswordSchema } from '../../../utils/validation';
 import { getAdmins, createAdmin } from '../../../api/admins';
 import { getUsers, createUser } from '../../../api/users';
 import { getUserGroups, createUserGroup, updateUserGroup } from '../../../api/userGroups';
+import { ROUTES } from '../../../routes';
 
 // Quick-link tiles rendered at the bottom of the dashboard. Centralizing them
 // here avoids ~150 lines of near-identical <Link> JSX blocks.
@@ -292,6 +293,10 @@ function MainAdmin() {
             />
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
+          allLink={ROUTES.admin.admins}
+          onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.name))}
+          allLink={ROUTES.admin.users}
+          onSettings={(user) => navigate(ROUTES.admin.userDetail(user.id))}
 
         {loadErrors.length > 0 && (
           <ReactBootstrap.Row>

@@ -162,6 +162,7 @@ function Login() {
           <ReactBootstrap.Row>
             <ReactBootstrap.Col xs={12}>
               <Link to="/registration" className="link-daas-design">
+              <Link to={ROUTES.registration} className="link-daas-design">
                 <div>{t('validate-registration')}</div>
               </Link>
             </ReactBootstrap.Col>

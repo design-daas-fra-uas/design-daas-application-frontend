@@ -10,6 +10,7 @@ import { getUsers, createUser } from '../../../api/users';
 import Header from '../../../components/header';
 import EntityPreviewList from '../../../components/EntityPreviewList';
 import FormField from '../../../components/FormField';
+import { ROUTES } from '../../../routes';
 import { emailSchema, newPasswordSchema } from '../../../utils/validation';
 
 function SettingsUsers() {
@@ -132,6 +133,7 @@ function SettingsUsers() {
                                 items={allUsers}
                                 onSettings={(user) => goToSettingsUser(user.id)}
                                 onInfo={(user) => showGetUserModal(user.name, user.email)}
+                                onSettings={(user) => navigate(ROUTES.admin.userDetail(user.id))}
                             />
                         </div>
                     </ReactBootstrap.Col>
@@ -226,6 +228,7 @@ function SettingsUsers() {
                 </ReactBootstrap.Modal>
             </ReactBootstrap.Container>
         </>
+                <BackLink to={ROUTES.admin.root} />
     );
 }
 

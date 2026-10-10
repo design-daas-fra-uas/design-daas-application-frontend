@@ -6,6 +6,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
 import Header from '../components/header';
+import { ROUTES } from '../routes';
 
 import { validateEmail } from '../api/users';
 
@@ -37,6 +38,7 @@ function Registration() {
       .required(t('error-email-required', 'Email is required.')),
     registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required')),
   });
+    const timer = setTimeout(() => navigate(ROUTES.login), REDIRECT_DELAY);
 
   const registerUser = async ({ email, registrationCode }) => {
     setIsSubmitting(true);
@@ -125,6 +127,7 @@ function Registration() {
             </Link>
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
+          <BackLink to={ROUTES.login} />
 
         <ReactBootstrap.Row>
           <ReactBootstrap.Col xs={12}>

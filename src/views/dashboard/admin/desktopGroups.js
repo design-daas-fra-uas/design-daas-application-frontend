@@ -7,6 +7,7 @@ import * as Yup from 'yup';
 
 import Header from '../../../components/header';
 import FormField from '../../../components/FormField';
+import { ROUTES } from '../../../routes';
 
 import { getDesktopGroups, createDesktopGroup, addUserGroupToDesktopGroup } from '../../../api/desktopGroups';
 import { getUserGroups } from '../../../api/userGroups';
@@ -294,6 +295,7 @@ function DesktopGroups() {
                 </ReactBootstrap.Modal>
             </ReactBootstrap.Container>
         </>
+                <BackLink to={ROUTES.admin.root} />
     );
 }
 

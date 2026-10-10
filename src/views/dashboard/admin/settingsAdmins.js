@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import Header from '../../../components/header';
 import EntityPreviewList from '../../../components/EntityPreviewList';
+import { ROUTES } from '../../../routes';
 
 import { getAdmins } from '../../../api/admins';
 
@@ -82,6 +83,7 @@ function SettingsAdmins() {
               items={allAdmins}
               onSettings={(admin) => goToSettingsUser(admin.name)}
               onInfo={(admin) => openGetUserModal(admin.name, admin.email)}
+              onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.name))}
             />
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
@@ -93,6 +95,7 @@ function SettingsAdmins() {
             </div>
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
+        <BackLink to={ROUTES.admin.root} />
 
         <ReactBootstrap.Modal show={getUserDataModal} onHide={closeGetUserModal} size="lg" centered>
           <ReactBootstrap.Modal.Header closeButton>

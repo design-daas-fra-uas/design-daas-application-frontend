@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useMediaQuery}  from 'react-responsive';
+import { ROUTES } from '../../../routes';
 
 import { getUsers, updateUser, disableUser, enableUser } from '../../../api/users';
 
@@ -234,6 +235,7 @@ function SettingsUsersDetail() {
                 </ReactBootstrap.Row>
             </ReactBootstrap.Container>
         </>);
+                <BackLink to={ROUTES.admin.users} />
 }
 
 export default SettingsUsersDetail;
