@@ -6,6 +6,8 @@ import { DEVELOPMENT, DEVELOPMENT_INTERN, PASSWORD, URL_SYSTEM, USERNAME } from 
 import { Field, Form, Formik } from "formik";
 import { useMediaQuery } from "react-responsive";
 import Logo from "../../../assets/images/png/DESIGNLogoColouredWhiteFont.png";
+import { ROUTES } from "../../../routes";
+import { changeLanguage } from "../../../i18n";
 import { requestApplicationAdminSchema, createAppSchema, updateAppSchema, createFileSchema, updateFileSchema, phasesBaseimageCreateContainerSchema, phasesBaseimageCreateVMSchema, phasesBaseimageCloneSchema, vmDataSchema, containerDataSchema } from "./mainUserSchemas";
 
 const LOGOUT_STORAGE_KEYS = [
@@ -168,7 +170,7 @@ function MainUser() {
     const [stopObjectAvailable, setStopObjectAvailable] = useState(false);
     const [requestAlert, setRequestAlert] = useState(false);
     const [requestAlertMessage, setRequestAlertMessage] = useState(false);
-    const {t, i18n} = useTranslation();
+    const {t} = useTranslation();
 
     const isSmall = useMediaQuery({
         query: '(max-width: 767px)'
@@ -274,11 +276,11 @@ function MainUser() {
     const chooseApplication = (applicationNameText) => {
         localStorage.setItem('application', applicationNameText)
 
-        window.location.href = "/dashboard/startApplication";
+        window.location.href = ROUTES.user.startApplication;
     };
 
     const goToMonitoring = () => {
-        window.location.href = "/dashboard/monitoring";
+        window.location.href = ROUTES.user.monitoring;
     }
 
     const showInfoModal = () => {
@@ -583,7 +585,7 @@ function MainUser() {
                             setRequestAlert(false);
                             setRequestAlertMessage(false);
 
-                            window.location.href = "/dashboard/connectionRun";
+                            window.location.href = ROUTES.user.connectionRun;
                         }, 2000);
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
@@ -621,7 +623,7 @@ function MainUser() {
                             setRequestAlert(false);
                             setRequestAlertMessage(false);
 
-                            window.location.href = "/dashboard/connectionRun";
+                            window.location.href = ROUTES.user.connectionRun;
                         }, 2000);
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
@@ -1040,7 +1042,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/applicationRun";
+            window.location.href = ROUTES.user.applicationRun;
         }, 2000)
     }
 
@@ -1051,7 +1053,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/instanceRun";
+            window.location.href = ROUTES.user.instanceRun;
         }, 2000)
     }
 
@@ -1064,7 +1066,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/environmentRun";
+            window.location.href = ROUTES.user.environmentRun;
         }, 2000)
     }
 
@@ -1206,7 +1208,7 @@ function MainUser() {
 
         setTimeout(() => {
             localStorage.setItem("expert-mode-baseimage", "true")
-            window.location.href = "/dashboard/expert-mode-environment-edit";
+            window.location.href = ROUTES.user.expertEnvironmentEdit;
         }, 2000)
     }
 
@@ -1297,7 +1299,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/sharedRun";
+            window.location.href = ROUTES.user.sharedRun;
         }, 2000)
     }
 
@@ -1308,7 +1310,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/connectionRun";
+            window.location.href = ROUTES.user.connectionRun;
         }, 2000)
     }
 
@@ -1320,7 +1322,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/expert-mode-base-image";
+            window.location.href = ROUTES.user.expertBaseImage;
         }, 2000)
     }
 
@@ -1449,18 +1451,12 @@ function MainUser() {
     }
 
     const adminDashboardDetail = () => {
-        window.location.href = "/dashboard/admin";
+        window.location.href = ROUTES.admin.root;
     };
 
-    const changeLanguageGerman = () => {
-        i18n.changeLanguage("de")
-        localStorage.setItem('language', 'de')
-    }
+    const changeLanguageGerman = () => changeLanguage('de');
 
-    const changeLanguageEnglish = () => {
-        i18n.changeLanguage("en")
-        localStorage.setItem('language', 'en')
-    }
+    const changeLanguageEnglish = () => changeLanguage('en');
 
     const logoutValidation = () => {
         LOGOUT_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
@@ -1489,7 +1485,7 @@ function MainUser() {
             await servicePartnerAuthLogout();
         }, 1000);
         setTimeout(() => {
-            window.location.href = "/";
+            window.location.href = ROUTES.login;
         }, 2000);
     };
 
@@ -1502,7 +1498,7 @@ function MainUser() {
         fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/connectionRun";
+            window.location.href = ROUTES.user.connectionRun;
         }, 2000)
     }
 
@@ -2487,7 +2483,7 @@ function MainUser() {
                         <ReactBootstrap.Navbar.Toggle aria-controls="basic-navbar-nav"/>
                         <ReactBootstrap.Navbar.Collapse id="basic-navbar-nav">
                             <ReactBootstrap.Nav className="justify-content-end" style={{width: "100%"}}>
-                                <ReactBootstrap.Nav.Link href="/dashboard">
+                                <ReactBootstrap.Nav.Link href={ROUTES.dashboard}>
                                     {t('home')}
                                 </ReactBootstrap.Nav.Link>
                                 <ReactBootstrap.NavDropdown title={t('available_connections')} id="basic-nav-dropdown">
