@@ -8,7 +8,7 @@ const resources = {
             "Welcome": "Soon you will find here information about DESIGN, a novel Desktop-as-a-Service solution with unique features that adapts to your needs.",
             "Funded": "DESIGN is a joint development of Nuromedia and Frankfurt University of Applied Sciences, funded by the Federal Ministry for Economic Affairs and Climate Action",
             "Error-Title": "Page not available",
-            "Error-text-one": "This page does not exist or is not more available.",
+            "Error-text-one": "This page does not exist or is no longer available.",
             "Error-text-two": "Check the URL or click on the link on the bottom.",
             "language": "Language",
             "back-link": "Back",
@@ -16,9 +16,9 @@ const resources = {
             "username": "Username",
             "password": "Password",
             "submit": "Submit",
-            "error-username": "Username are wrong",
+            "error-username": "Username is wrong",
             "error-password": "Password are wrong",
-            "error-fullname": "Fullname are wrong",
+            "error-fullname": "Full name is wrong",
             "error-username-required": "Username is required.",
             "error-fullname-required": "Full name is required.",
             "error-group-required": "Group is required.",
@@ -62,7 +62,7 @@ const resources = {
             "yes": "Yes",
             "no": "No",
             "email": "Email",
-            "fullname": "Fullname",
+            "fullname": "Full name",
             "user-management": "User management",
             "environment": "Environments",
             "linux": "Linux",
@@ -902,3 +902,8 @@ i18n
             escapeValue: false
         }
     });
+
+export const changeLanguage = (lng) => {
+    localStorage.setItem('language', lng);
+    return i18n.changeLanguage(lng);
+};
