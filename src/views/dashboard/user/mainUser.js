@@ -57,6 +57,12 @@ const LOGOUT_STORAGE_KEYS = [
     "environment-type-mode",
 ];
 
+const multipartHeaders = (authorization) => ({
+    Authorization: authorization,
+    'Content-Type': 'multipart/form-data',
+    'Access-Control-Allow-Origin': URL_SYSTEM,
+    'Access-Control-Allow-Headers': URL_SYSTEM,
+});
 const bindValue = setter => event => setter(event.target.value);
 
 function MainUser() {
@@ -154,12 +160,7 @@ function MainUser() {
 
     const fetchDashboardInfo = () => {
         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
@@ -302,12 +303,7 @@ function MainUser() {
         axios.post(DEVELOPMENT + '/files/get', {
             id: id,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
@@ -410,12 +406,7 @@ function MainUser() {
         /*axios.post(DEVELOPMENT + '/phases/environments_get', {
             id: "",
         }, {
-            headers: {
-                Authorization: token,
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(token),
             // withCredentials: true,
         })
             .then(response => {
@@ -433,12 +424,7 @@ function MainUser() {
         axios.post(DEVELOPMENT + '/phases/object_list', {
             onlyuser: "on",
         }, {
-            headers: {
-                Authorization: token,
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(token),
             // withCredentials: true,
         })
             .then(response => {
@@ -456,12 +442,7 @@ function MainUser() {
                         axios.post(DEVELOPMENT + '/phases/object_status', {
                             id: firstData.daas_id,
                         }, {
-                            headers: {
-                                Authorization: token,
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(token),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -493,12 +474,7 @@ function MainUser() {
         /*axios.post(DEVELOPMENT + '/phases/object_list', {
           onlydaas: "on",
         }, {
-          headers: {
-            Authorization: token,
-            'Content-Type': 'multipart/form-data',
-            'Access-Control-Allow-Origin': URL_SYSTEM,
-            'Access-Control-Allow-Headers': URL_SYSTEM,
-          },
+          headers: multipartHeaders(token),
           // withCredentials: true,
         })
         .then(response => {
@@ -520,12 +496,7 @@ function MainUser() {
                 axios.post(DEVELOPMENT + '/phases/object_status', {
                   id: shareID.daas_id,
                 }, {
-                  headers: {
-                    Authorization: token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                  },
+                  headers: multipartHeaders(token),
                   // withCredentials: true,
                 })
                 .then(response => {
@@ -577,12 +548,7 @@ function MainUser() {
                 name: env,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -629,12 +595,7 @@ function MainUser() {
                 id: id,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -700,12 +661,7 @@ function MainUser() {
                 name: env,
                 force: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -715,12 +671,7 @@ function MainUser() {
                         setRequestAlertMessage(true);
 
                         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(localStorage.getItem("userToken")),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -828,12 +779,7 @@ function MainUser() {
                 id_instance: localStorage.getItem("object-id-instance"),
                 force: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -843,12 +789,7 @@ function MainUser() {
                         setRequestAlertMessage(true);
 
                         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(localStorage.getItem("userToken")),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -965,12 +906,7 @@ function MainUser() {
             id: id,
             id_env: env,
         }, {
-            headers: {
-                'Authorization': token,
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(token),
             // withCredentials: true,
         })
             .then(response => {
@@ -1019,12 +955,7 @@ function MainUser() {
                 name: env,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -1036,12 +967,7 @@ function MainUser() {
                             id: id,
                             connect: "on",
                         }, {
-                            headers: {
-                                'Authorization': token,
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(token),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -1086,12 +1012,7 @@ function MainUser() {
                             id: id,
                             connect: "on",
                         }, {
-                            headers: {
-                                'Authorization': token,
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(token),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -1147,12 +1068,7 @@ function MainUser() {
                 id: id,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -1238,12 +1154,7 @@ function MainUser() {
             name: selectEnv,
             force: 'on'
         }, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
@@ -1395,12 +1306,7 @@ function MainUser() {
             id: objectID,
             name: selectEnv,
         }, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
@@ -1457,12 +1363,7 @@ function MainUser() {
             id: idSelected,
             id_env: envNameSelected,
         }, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
@@ -1932,12 +1833,7 @@ function MainUser() {
         const validData = vmPhasesObjectTypeBaseimageCreate === "vm" ? vmData : containerData;
 
         axios.post(DEVELOPMENT + '/phases/baseimage_create', validData, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
@@ -1947,12 +1843,7 @@ function MainUser() {
                     setRequestAlertMessage(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -2062,12 +1953,7 @@ function MainUser() {
             newid: vmPhasesNewIDBaseimageClone,
             name: vmPhasesNameBaseimageClone,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
@@ -2077,12 +1963,7 @@ function MainUser() {
                     setRequestAlertMessage(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -2200,12 +2081,7 @@ function MainUser() {
             target_args: vmCreateUpdateAppTargetARGS,
             version: vmCreateUpdateAppVersion,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
@@ -2215,12 +2091,7 @@ function MainUser() {
                     setRequestAlertMessage(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -2338,12 +2209,7 @@ function MainUser() {
             version: vmFileUploadAppVersion,
             file: vmFileUploadAppSelectFile,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
@@ -2353,12 +2219,7 @@ function MainUser() {
                     setRequestAlertMessage(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
