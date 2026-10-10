@@ -16,4 +16,4 @@ export const newPasswordSchema = (t) =>
     .min(8, t('error-password-length', 'Password must be at least 8 characters long.'))
     .matches(/[A-Z]/, t('error-password-upper', 'Password must contain at least one uppercase letter.'))
     .matches(/[a-z]/, t('error-password-lower', 'Password must contain at least one lowercase letter.'))
-    .matches(/[^A-Za-z0-9\s]/, t('error-password-special', 'Password must contain at least one special character.'));
+    .matches(new RegExp('[^\\p{L}\\p{N}\\s]', 'u'), t('error-password-special', 'Password must contain at least one special character.'));
