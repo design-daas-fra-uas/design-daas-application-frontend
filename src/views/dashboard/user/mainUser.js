@@ -174,6 +174,18 @@ function MainUser() {
         query: '(max-width: 767px)'
     })
 
+    const showRequestAlert = (success) => {
+        setRequestAlert(true);
+        setRequestAlertMessage(success);
+    };
+
+    const hideRequestAlertLater = () => {
+        setTimeout(() => {
+            setRequestAlert(false);
+            setRequestAlertMessage(false);
+        }, 2000);
+    };
+
     const fetchDashboardInfo = () => {
         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
             headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -325,26 +337,18 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     setDetailFileInfo(response.data.response_data)
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
                     setDetailFileInfo({})
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
@@ -353,10 +357,7 @@ function MainUser() {
 
                 setDetailFileInfo({})
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     };
 
@@ -570,8 +571,7 @@ function MainUser() {
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         fetchDashboardInfo();
 
@@ -587,24 +587,16 @@ function MainUser() {
                         }, 2000);
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else if (state === "baseimage-create" || state === "baseimage-final") {
             axios.post(DEVELOPMENT + '/phases/baseimage_start', {
@@ -617,8 +609,7 @@ function MainUser() {
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         fetchDashboardInfo();
 
@@ -634,24 +625,16 @@ function MainUser() {
                         }, 2000);
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else {
             console.log("Error")
@@ -683,8 +666,7 @@ function MainUser() {
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
                             headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -765,30 +747,19 @@ function MainUser() {
                                 console.log(e)
                             });
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else if (state === "baseimage-create" || state === "baseimage-final") {
             axios.post(DEVELOPMENT + '/phases/baseimage_stop', {
@@ -801,8 +772,7 @@ function MainUser() {
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
                             headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -883,30 +853,19 @@ function MainUser() {
                                 console.log(e)
                             });
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else {
             console.log("Error")
@@ -928,35 +887,23 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     fetchDashboardInfo();
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -989,38 +936,26 @@ function MainUser() {
                             .then(response => {
                                 console.log(response);
                                 if (response.status === 200 && response.data.response_code === 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(true);
+                                    showRequestAlert(true);
 
                                     fetchDashboardInfo();
 
 
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                                 if (response.status === 200 && response.data.response_code !== 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(false);
+                                    showRequestAlert(false);
 
                                     fetchDashboardInfo();
 
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                             })
                             .catch(e => {
                                 console.log(e)
-                                setRequestAlert(true);
-                                setRequestAlertMessage(false);
+                                showRequestAlert(false);
 
-                                setTimeout(() => {
-                                    setRequestAlert(false);
-                                    setRequestAlertMessage(false);
-                                }, 2000);
+                                hideRequestAlertLater();
                             });
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
@@ -1034,50 +969,34 @@ function MainUser() {
                             .then(response => {
                                 console.log(response);
                                 if (response.status === 200 && response.data.response_code === 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(true);
+                                    showRequestAlert(true);
 
                                     fetchDashboardInfo();
 
 
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                                 if (response.status === 200 && response.data.response_code !== 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(false);
+                                    showRequestAlert(false);
 
                                     fetchDashboardInfo();
 
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                             })
                             .catch(e => {
                                 console.log(e)
-                                setRequestAlert(true);
-                                setRequestAlertMessage(false);
+                                showRequestAlert(false);
 
-                                setTimeout(() => {
-                                    setRequestAlert(false);
-                                    setRequestAlertMessage(false);
-                                }, 2000);
+                                hideRequestAlertLater();
                             });
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else if (state === "baseimage-create" || state === "baseimage-final") {
             axios.post(DEVELOPMENT + '/phases/baseimage_delete', {
@@ -1090,36 +1009,24 @@ function MainUser() {
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         fetchDashboardInfo();
 
                         localStorage.setItem("test", "")
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else {
             console.log("Error")
@@ -1177,8 +1084,7 @@ function MainUser() {
                 console.log(response);
 
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
                     const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
@@ -1224,17 +1130,13 @@ function MainUser() {
 
                     setConnectionDataNew(newArrConnection)
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
 
                 if (response.status === 200 && response.data.response_code !== 200) {
                     console.log(response);
 
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
                     localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
                     const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
@@ -1280,20 +1182,14 @@ function MainUser() {
 
                     setConnectionDataNew(newArrConnection)
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
                 setRequestAlert(true);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -1328,35 +1224,23 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     fetchDashboardInfo();
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e);
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             })
     }
 
@@ -1385,34 +1269,22 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
 
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
 
         fetchDashboardInfo();
@@ -1829,8 +1701,7 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
                         headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -1909,29 +1780,19 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
                 setRequestAlert(true);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -1949,8 +1810,7 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
                         headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -2029,29 +1889,19 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
                 setRequestAlert(true);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -2077,8 +1927,7 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
                         headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -2157,30 +2006,19 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -2205,8 +2043,7 @@ function MainUser() {
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
                         headers: multipartHeaders(localStorage.getItem("userToken")),
@@ -2285,30 +2122,19 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
