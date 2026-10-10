@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Col } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
+import PageLink from '../../../../components/PageLink';
 import { ROUTES } from '../../../../routes';
 
 // Quick-link tiles shown at the bottom of the dashboard.
@@ -24,14 +24,13 @@ const QUICK_LINKS = [
   { to: ROUTES.dashboard, labelKeys: ['dashboard-back'] },
 ];
 
+// Returns grid columns, so it must be rendered inside a <Row>.
 function QuickLinks() {
   const { t } = useTranslation();
 
   return QUICK_LINKS.map(({ to, labelKeys }) => (
     <Col key={to} xs={12} md={6} lg={4}>
-      <Link to={to} className="link-daas-design">
-        <div>{labelKeys.map((key) => t(key)).join(' / ')}</div>
-      </Link>
+      <PageLink to={to}>{labelKeys.map((key) => t(key)).join(' / ')}</PageLink>
     </Col>
   ));
 }
