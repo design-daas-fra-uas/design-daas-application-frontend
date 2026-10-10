@@ -15,11 +15,13 @@ const toFormBody = (fields) =>
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
 
-export const loginWithPassword = ({ username, password }) => {
+export const loginWithPassword = ({ username, password, role }) => {
     const body = toFormBody({
         grant_type: 'password',
         username,
         password,
+        client_id: 'test-client',
+        scope: role,
     });
 
     return axios.post(`${DEVELOPMENT_INTERN}/oauth2/user/token`, body, {
