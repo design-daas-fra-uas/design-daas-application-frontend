@@ -1,51 +1,58 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 import { getAdmins } from '../api/admins';
 import { getUsers } from '../api/users';
 import { getUserGroups } from '../api/userGroups';
 
+import useResource from './useResource';
+
 // The API returns oldest first; the dashboard previews show the newest entries.
 const newestFirst = (items) => [...items].reverse();
 
-const fetchAdmins = async () => newestFirst(await getAdmins());
-const fetchUsers = async () => newestFirst(await getUsers());
+const fetchAdmins = async (options) => newestFirst(await getAdmins(options));
+const fetchUsers = async (options) => newestFirst(await getUsers(options));
 
-// Admin dashboard data. Each section loads independently so one failing
-// request does not blank the others; `loadErrors` lists the failed sections.
+// Admin dashboard data, built from one `useResource` per section so one failing
+// request does not blank the others. `loadErrors` lists the failed sections and
+// `loading` is true until every section has settled. `refreshX` reloads one
+// section silently and throws when that fails.
 export default function useDashboardData() {
-  const [admins, setAdmins] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [groups, setGroups] = useState([]);
-  const [loadErrors, setLoadErrors] = useState([]);
+  const admins = useResource(fetchAdmins);
+  const users = useResource(fetchUsers);
+  const groups = useResource(getUserGroups);
+  const sections = [
+    ['admins', admins],
+    ['users', users],
+    ['groups', groups],
+  ];
 
-  const reload = useCallback(async () => {
-    setLoadErrors([]);
-    const sections = [
-      ['admins', fetchAdmins, setAdmins],
-      ['users', fetchUsers, setUsers],
-      ['groups', getUserGroups, setGroups],
-    ];
-    const results = await Promise.allSettled(sections.map(([, fetcher]) => fetcher()));
-    const failed = [];
-    results.forEach((result, index) => {
-      const [name, , setter] = sections[index];
-      if (result.status === 'fulfilled') {
-        setter(result.value);
-      } else {
-        console.error(result.reason);
-        failed.push(name);
-      }
-    });
-    setLoadErrors(failed);
-  }, []);
+  const loadErrors = sections.filter(([, section]) => section.status === 'error').map(([name]) => name);
+  const loading = sections.some(([, section]) => section.status === 'loading');
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  const reloadAdmins = admins.reload;
+  const reloadUsers = users.reload;
+  const reloadGroups = groups.reload;
 
-  const refreshAdmins = useCallback(async () => setAdmins(await fetchAdmins()), []);
-  const refreshUsers = useCallback(async () => setUsers(await fetchUsers()), []);
-  const refreshGroups = useCallback(async () => setGroups(await getUserGroups()), []);
+  const reload = useCallback(
+    () => Promise.all([reloadAdmins(), reloadUsers(), reloadGroups()]),
+    [reloadAdmins, reloadUsers, reloadGroups]
+  );
 
-  return { admins, users, groups, loadErrors, reload, refreshAdmins, refreshUsers, refreshGroups };
+  const silentRefresh = (reloadSection) => async () => {
+    if (!(await reloadSection({ silent: true }))) {
+      throw new Error('Refresh failed');
+    }
+  };
+
+  return {
+    admins: admins.data ?? [],
+    users: users.data ?? [],
+    groups: groups.data ?? [],
+    loading,
+    loadErrors,
+    reload,
+    refreshAdmins: silentRefresh(reloadAdmins),
+    refreshUsers: silentRefresh(reloadUsers),
+    refreshGroups: silentRefresh(reloadGroups),
+  };
 }
