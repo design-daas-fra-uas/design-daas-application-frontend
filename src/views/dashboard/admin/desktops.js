@@ -76,9 +76,9 @@ function Desktops() {
 
     const createDesktopValidationSchema = Yup.object().shape({
         description: Yup.string()
-            .required(t('error-desktop-main-description') || 'Desktop main description invalid'),
+            .required(t('error-desktop-main-description', 'Desktop main description invalid')),
         detail_description: Yup.string()
-            .required(t('error-desktop-sub-description') || 'Desktop sub description invalid'),
+            .required(t('error-desktop-sub-description', 'Desktop sub description invalid')),
     });
 
     return (

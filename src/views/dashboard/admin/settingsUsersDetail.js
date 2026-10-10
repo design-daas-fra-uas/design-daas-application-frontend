@@ -100,10 +100,10 @@ function SettingsUsersDetail() {
     const enableUserAccount = () => toggleUserAccount(enableUser);
     const updateUserSchema = Yup.object().shape({
         name: Yup.string()
-            .required(t('error-name') || 'Username invalid'),
+            .required(t('error-name', 'Username invalid')),
         email: Yup.string()
-            .email(t('error-email') || 'Invalid email')
-            .required(t('error-email') || 'Email invalid'),
+            .email(t('error-email', 'Invalid email'))
+            .required(t('error-email', 'Email invalid')),
     });
 
     return (

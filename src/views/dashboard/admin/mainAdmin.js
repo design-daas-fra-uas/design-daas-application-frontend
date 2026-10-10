@@ -156,11 +156,11 @@ function MainAdmin() {
   };
 
   const createGroupSchema = Yup.object().shape({
-    description: Yup.string().required(t('error-create-group-new') || 'Description is required'),
+    description: Yup.string().required(t('error-create-group-new', 'Description is required')),
   });
 
   const updateGroupSchema = Yup.object().shape({
-    description: Yup.string().required(t('error-update-group-new') || 'Description is required'),
+    description: Yup.string().required(t('error-update-group-new', 'Description is required')),
   });
 
   const createUserSchema = Yup.object().shape({

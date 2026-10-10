@@ -35,7 +35,7 @@ function Registration() {
     email: Yup.string()
       .email(t('error-email-format', 'Enter a valid email address, e.g. name@example.com.'))
       .required(t('error-email-required', 'Email is required.')),
-    registrationCode: Yup.string().required(t('error-user-code') || 'Registration code is required'),
+    registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required')),
   });
 
   const registerUser = async ({ email, registrationCode }) => {

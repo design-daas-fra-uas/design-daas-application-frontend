@@ -102,12 +102,12 @@ function DesktopGroups() {
 
     const createDesktopGroupsValidationSchema = Yup.object().shape({
         description: Yup.string()
-            .required(t('error-desktop-groups-main-description') || 'Desktop main description invalid'),
+            .required(t('error-desktop-groups-main-description', 'Desktop main description invalid')),
     });
 
     const addUserGroupToDesktopGroupValidationSchema = Yup.object().shape({
         userGroupId: Yup.string()
-            .required(t('error-select-user-group') || 'Select a user group'),
+            .required(t('error-select-user-group', 'Select a user group')),
     });
 
     return (
