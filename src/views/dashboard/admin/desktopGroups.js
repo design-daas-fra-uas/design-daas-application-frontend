@@ -17,29 +17,59 @@ import { getUserGroups } from '../../../api/userGroups';
 
 const CREATE_INITIAL_VALUES = { description: '' };
 
+// Mounted only while open, so the user groups are loaded on demand.
+function AddUserGroupModal({ desktopGroupId, onHide }) {
+    const { t } = useTranslation();
+    const { data, status } = useResource(getUserGroups);
+    const userGroups = data ?? [];
+
+    const validationSchema = useMemo(() => Yup.object().shape({
+        userGroupId: Yup.string()
+            .required(t('error-select-user-group', 'Select a user group')),
+    }), [t]);
+
+    const initialValues = useMemo(
+        () => ({ userGroupId: data?.[0] ? String(data[0].id) : '' }),
+        [data]
+    );
+
+    return (
+        <FormModal
+            show
+            onHide={onHide}
+            title={t('desktop-groups-add-user-group')}
+            titleId="add-user-group-modal-title"
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            requireDirty={false}
+            onSubmit={({ userGroupId }) => addUserGroupToDesktopGroup(desktopGroupId, userGroupId)}
+        >
+            {status === 'error' && (
+                <Col xs={12}>
+                    <Alert variant="danger" role="alert">{t('load-error', 'Could not load the data. Please try again.')}</Alert>
+                </Col>
+            )}
+            <FormField name="userGroupId" label={t('select-user-group')} as="select">
+                {userGroups.map((group) => (
+                    <option key={group.id} value={group.id}>{group.description}</option>
+                ))}
+            </FormField>
+        </FormModal>
+    );
+}
+
 function DesktopGroups() {
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [selectedDesktopGroupId, setSelectedDesktopGroupId] = useState(null);
     const { t } = useTranslation();
 
     const { data: desktopGroupsData, status, reload } = useResource(getDesktopGroups);
-    const { data: userGroupsData, status: userGroupsStatus } = useResource(getUserGroups);
     const desktopGroups = desktopGroupsData ?? [];
-    const userGroups = userGroupsData ?? [];
 
     const createValidationSchema = useMemo(() => Yup.object().shape({
         description: Yup.string()
             .required(t('error-desktop-groups-main-description', 'Desktop main description invalid')),
     }), [t]);
-
-    const addUserGroupValidationSchema = useMemo(() => Yup.object().shape({
-        userGroupId: Yup.string()
-            .required(t('error-select-user-group', 'Select a user group')),
-    }), [t]);
-
-    const addUserGroupInitialValues = {
-        userGroupId: userGroups[0] ? String(userGroups[0].id) : '',
-    };
 
     return (
         <PageLayout id="desktop" title={t('desktop-groups')} wrapTitle>
@@ -93,27 +123,9 @@ function DesktopGroups() {
             >
                 <FormField name="description" label={t('desktop-groups-main-description')} />
             </FormModal>
-            <FormModal
-                show={selectedDesktopGroupId !== null}
-                onHide={() => setSelectedDesktopGroupId(null)}
-                title={t('desktop-groups-add-user-group')}
-                titleId="add-user-group-modal-title"
-                initialValues={addUserGroupInitialValues}
-                validationSchema={addUserGroupValidationSchema}
-                requireDirty={false}
-                onSubmit={({ userGroupId }) => addUserGroupToDesktopGroup(selectedDesktopGroupId, userGroupId)}
-            >
-                {userGroupsStatus === 'error' && (
-                    <Col xs={12}>
-                        <Alert variant="danger" role="alert">{t('load-error', 'Could not load the data. Please try again.')}</Alert>
-                    </Col>
-                )}
-                <FormField name="userGroupId" label={t('select-user-group')} as="select">
-                    {userGroups.map((group) => (
-                        <option key={group.id} value={group.id}>{group.description}</option>
-                    ))}
-                </FormField>
-            </FormModal>
+            {selectedDesktopGroupId !== null && (
+                <AddUserGroupModal desktopGroupId={selectedDesktopGroupId} onHide={() => setSelectedDesktopGroupId(null)} />
+            )}
         </PageLayout>
     );
 }
