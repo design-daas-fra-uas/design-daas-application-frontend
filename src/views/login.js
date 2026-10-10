@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Col, Container, Row, Tab, Tabs } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import Header from '../components/header';
 import LoginForm from '../components/LoginForm';
+import PageLink from '../components/PageLink';
 import { ROUTES } from '../routes';
 
 import { loginWithPassword } from '../api/auth';
 import { clearSession, getRole, setSession } from '../auth/tokenManager';
 
-const LOGIN_TABS = [
-  { key: 'user', labelKey: 'user', role: 'user' },
-  { key: 'admin', labelKey: 'admin', role: 'admin' },
-];
+const ROLES = ['user', 'admin'];
 
 function Login() {
   const { t } = useTranslation();
@@ -53,9 +51,9 @@ function Login() {
         </Row>
 
         <Tabs activeKey={activeTab} onSelect={setActiveTab}>
-          {LOGIN_TABS.map(({ key, labelKey, role }) => (
-            <Tab key={key} eventKey={key} title={t(labelKey)}>
-              {activeTab === key && <LoginForm key={role} role={role} onLogin={(values) => loginWithRole(values, role)} />}
+          {ROLES.map((role) => (
+            <Tab key={role} eventKey={role} title={t(role)}>
+              {activeTab === role && <LoginForm key={role} role={role} onLogin={(values) => loginWithRole(values, role)} />}
             </Tab>
           ))}
         </Tabs>
@@ -63,9 +61,7 @@ function Login() {
         {activeTab === 'user' && (
           <Row>
             <Col xs={12}>
-              <Link to={ROUTES.registration} className="link-daas-design">
-                <div>{t('validate-registration')}</div>
-              </Link>
+              <PageLink to={ROUTES.registration}>{t('validate-registration')}</PageLink>
             </Col>
           </Row>
         )}
