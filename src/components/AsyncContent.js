@@ -9,7 +9,12 @@ function AsyncContent({ status, onRetry, isEmpty = false, notFoundText, children
   const { t } = useTranslation();
 
   if (status === 'loading') {
-    return <p>{t('loading', 'Loading...')}</p>;
+    return (
+      <p role="status" aria-busy="true">
+        <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+        {t('loading', 'Loading...')}
+      </p>
+    );
   }
 
   if (status === 'not-found') {
