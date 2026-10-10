@@ -1,16 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Col } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
+import PageLink from './PageLink';
+
+// "Back" link already wrapped in its grid column (for use inside a <Row>).
 function BackLink({ to }) {
   const { t } = useTranslation();
 
   return (
     <Col xs={12} md={6} lg={4}>
-      <Link to={to} className="link-daas-design">
-        <div>{t('back-link')}</div>
-      </Link>
+      <PageLink to={to}>{t('back-link')}</PageLink>
     </Col>
   );
 }
