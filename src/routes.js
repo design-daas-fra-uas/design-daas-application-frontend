@@ -49,3 +49,22 @@ export const ROUTES = {
     files: `${ADMIN_SETTINGS}/files`,
   },
 };
+
+// Quick-link tiles of the admin dashboard (translation keys joined with ' / ').
+export const ADMIN_QUICK_LINKS = [
+  { to: ROUTES.admin.desktops, labelKeys: ['desktops'] },
+  { to: ROUTES.admin.desktopGroups, labelKeys: ['desktop-groups'] },
+  { to: ROUTES.admin.monitoring, labelKeys: ['monitoring'] },
+  { to: ROUTES.admin.limitation, labelKeys: ['limitation'] },
+  { to: ROUTES.admin.tasks, labelKeys: ['tasks'] },
+  { to: ROUTES.admin.vmEnvironment, labelKeys: ['vm-setup'] },
+  { to: ROUTES.admin.nodeConfiguration, labelKeys: ['vm-node-dhcp', 'vm-node-iptables'] },
+  { to: ROUTES.admin.connections, labelKeys: ['viewer-check'] },
+  { to: ROUTES.admin.instances, labelKeys: ['vm-instance'] },
+  { to: ROUTES.admin.docker, labelKeys: ['vm-docker'] },
+  { to: ROUTES.admin.phases, labelKeys: ['vm-phases'] },
+  { to: ROUTES.admin.adminAssign, labelKeys: ['admin-assign-object-app'] },
+  { to: ROUTES.admin.apps, labelKeys: ['app-configuration'] },
+  { to: ROUTES.admin.files, labelKeys: ['file-configuration'] },
+  { to: ROUTES.dashboard, labelKeys: ['dashboard-back'] },
+];
