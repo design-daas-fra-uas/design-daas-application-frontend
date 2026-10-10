@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 import { DEVELOPMENT_INTERN } from '../constants/constants';
-import { clearSession, refreshSession } from '../auth/tokenManager';
-import { getAuthHeaders } from '../utils/apiHeaders';
+import { clearSession, getAccessToken, refreshSession } from '../auth/tokenManager';
 
 const unwrapData = (response) => response.data;
 
@@ -19,11 +18,9 @@ export const publicClient = axios.create({
 publicClient.interceptors.response.use(unwrapData);
 
 apiClient.interceptors.request.use((config) => {
-    Object.entries(getAuthHeaders()).forEach(([key, value]) => {
-        if (!config.headers.has(key)) {
-            config.headers.set(key, value);
-        }
-    });
+    if (!config.headers.has('Authorization')) {
+        config.headers.set('Authorization', getAccessToken());
+    }
 
     return config;
 });
