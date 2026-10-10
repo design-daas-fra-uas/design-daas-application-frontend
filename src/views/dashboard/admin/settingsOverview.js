@@ -1,17 +1,17 @@
-import React, {useEffect, useState} from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
-import * as Yup from 'yup';
 
 import Header from "../../../components/header";
 
 function SettingsOverview() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+
+  const navigate = useNavigate();
 
   const goToSettingsChoice = (id) => {
-    window.location.href = "/dashboard/settings/" + id;
+    navigate("/dashboard/admin/settings/" + id);
   };
 
   return (
