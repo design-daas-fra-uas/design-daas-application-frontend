@@ -4,4 +4,6 @@ export const getDesktops = ({ signal } = {}) => apiClient.get('/desktops', { sig
 
 export const getDesktop = (id, { signal } = {}) => apiClient.get(`/desktop/${id}`, { signal });
 
-export const createDesktop = (payload) => apiClient.post('/desktop', payload);
+// The API models the sub description as a single-entry groups list.
+export const createDesktop = ({ description, subDescription }) =>
+    apiClient.post('/desktop', { description, groups: [{ description: subDescription }] });
