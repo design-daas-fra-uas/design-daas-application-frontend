@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import AsyncContent from '../../../components/AsyncContent';
 import BackLink from '../../../components/BackLink';
-import EntityPreviewList from '../../../components/EntityPreviewList';
+import EntityList from '../../../components/EntityList';
 import PageLayout from '../../../components/PageLayout';
 import UserInfoModal from '../../../components/UserInfoModal';
 import useResource from '../../../hooks/useResource';
@@ -27,7 +27,7 @@ function SettingsAdmins() {
         </Col>
         <Col xs={12}>
           <AsyncContent status={status} onRetry={reload}>
-            <EntityPreviewList
+            <EntityList
               items={data ?? []}
               onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.name))}
               onInfo={setSelectedAdmin}
