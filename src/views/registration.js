@@ -1,144 +1,107 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import * as ReactBootstrap from 'react-bootstrap';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Col, Container, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
+import BackLink from '../components/BackLink';
+import FormField from '../components/FormField';
 import Header from '../components/header';
 import { ROUTES } from '../routes';
 
 import { validateEmail } from '../api/users';
 
 const REDIRECT_DELAY = 4000;
+const INITIAL_VALUES = { email: '', registrationCode: '' };
 
 function Registration() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [alert, setAlert] = useState({ visible: false, success: false });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState({ visible: false, success: false });
 
-  const redirectTimer = useRef(null);
-
-  useEffect(() => () => clearTimeout(redirectTimer.current), []);
-
-  const showAlert = (success) => {
-    setAlert({ visible: true, success });
-
-    if (success) {
-      clearTimeout(redirectTimer.current);
-      redirectTimer.current = setTimeout(() => {
-        navigate('/');
-      }, REDIRECT_DELAY);
+  // Send the user back to the login page shortly after a successful validation.
+  useEffect(() => {
+    if (!feedback.success) {
+      return undefined;
     }
-  };
-  const registrationSchema = Yup.object().shape({
-    email: Yup.string()
-      .email(t('error-email-format', 'Enter a valid email address, e.g. name@example.com.'))
-      .required(t('error-email-required', 'Email is required.')),
-    registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required')),
-  });
     const timer = setTimeout(() => navigate(ROUTES.login), REDIRECT_DELAY);
+    return () => clearTimeout(timer);
+  }, [feedback.success, navigate]);
+
+  const registrationSchema = useMemo(
+    () =>
+      Yup.object().shape({
+        email: Yup.string()
+          .email(t('error-email-format', 'Enter a valid email address, e.g. name@example.com.'))
+          .required(t('error-email-required', 'Email is required.')),
+        registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required')),
+      }),
+    [t]
+  );
 
   const registerUser = async ({ email, registrationCode }) => {
-    setIsSubmitting(true);
-    setAlert({ visible: false, success: false });
+    setFeedback({ visible: false, success: false });
 
     try {
       const response = await validateEmail({
         email,
         registration_code: registrationCode,
       });
-
-      showAlert(response.status === 200);
+      setFeedback({ visible: true, success: response.status === 200 });
     } catch (error) {
       console.error(error);
-      showAlert(false);
-    } finally {
-      setIsSubmitting(false);
+      setFeedback({ visible: true, success: false });
     }
   };
 
   return (
     <>
       <Header />
-      <ReactBootstrap.Container id="registration">
-        <ReactBootstrap.Row>
-          <ReactBootstrap.Col xs={12}>
+      <Container id="registration">
+        <Row>
+          <Col xs={12}>
             <h2>{t('validate-registration')}</h2>
-          </ReactBootstrap.Col>
-        </ReactBootstrap.Row>
+          </Col>
+        </Row>
 
-        <ReactBootstrap.Col xs={12}>
-          <Formik
-            initialValues={{ email: '', registrationCode: '' }}
-            validationSchema={registrationSchema}
-            onSubmit={registerUser}
-          >
-            {({ isValid, dirty }) => (
-              <Form>
-                <ReactBootstrap.Row>
-                  <ReactBootstrap.Col xs={12}>
-                    <label htmlFor="email">{t('email')}</label>
-                  </ReactBootstrap.Col>
-                  <ReactBootstrap.Col xs={12}>
-                    <Field type="text" id="email" name="email" className="form-control" />
-                  </ReactBootstrap.Col>
-                  <ReactBootstrap.Col xs={12}>
-                    <div className="error-text">
-                      <ErrorMessage name="email" />
-                    </div>
-                  </ReactBootstrap.Col>
+        <Row>
+          <Col xs={12}>
+            <Formik initialValues={INITIAL_VALUES} validationSchema={registrationSchema} onSubmit={registerUser}>
+              {({ isValid, dirty, isSubmitting }) => (
+                <Form noValidate>
+                  <Row>
+                    <FormField name="email" label={t('email')} type="email" />
+                    <FormField name="registrationCode" label={t('user-code')} />
+                  </Row>
 
-                  <ReactBootstrap.Col xs={12}>
-                    <label htmlFor="registrationCode">{t('user-code')}</label>
-                  </ReactBootstrap.Col>
-                  <ReactBootstrap.Col xs={12}>
-                    <Field type="text" id="registrationCode" name="registrationCode" className="form-control" />
-                  </ReactBootstrap.Col>
-                  <ReactBootstrap.Col xs={12}>
-                    <div className="error-text">
-                      <ErrorMessage name="registrationCode" />
-                    </div>
-                  </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
+                  <Row>
+                    <Col xs={12}>
+                      <Button type="submit" variant="primary" className="submit-full-width" disabled={!isValid || !dirty || isSubmitting}>
+                        {isSubmitting ? t('loading', 'Loading...') : t('submit')}
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form>
+              )}
+            </Formik>
+          </Col>
+        </Row>
 
-                <ReactBootstrap.Row>
-                  <ReactBootstrap.Col xs={12}>
-                    <ReactBootstrap.Button
-                      type="submit"
-                      variant="primary"
-                      id="submit"
-                      disabled={!isValid || !dirty || isSubmitting}
-                    >
-                      {isSubmitting ? t('loading') || 'Loading...' : t('submit')}
-                    </ReactBootstrap.Button>
-                  </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-              </Form>
-            )}
-          </Formik>
-        </ReactBootstrap.Col>
-
-        <ReactBootstrap.Row>
-          <ReactBootstrap.Col xs={12} sm={12} md={12} lg={4} xl={4}>
-            <Link to="/" className="link-daas-design">
-              <div>{t('back-link')}</div>
-            </Link>
-          </ReactBootstrap.Col>
-        </ReactBootstrap.Row>
+        <Row>
           <BackLink to={ROUTES.login} />
+        </Row>
 
-        <ReactBootstrap.Row>
-          <ReactBootstrap.Col xs={12}>
-            <div className={alert.visible ? 'show-alert' : 'hide-alert'} role="alert" aria-live="polite">
-              <div className={alert.success ? 'request-success-alert' : 'request-fail-alert'}>
-                {alert.success ? t('request-successful') : t('request-failed')}
+        <Row>
+          <Col xs={12}>
+            <div className={feedback.visible ? 'show-alert' : 'hide-alert'} role="alert" aria-live="polite">
+              <div className={feedback.success ? 'request-success-alert' : 'request-fail-alert'}>
+                {feedback.success ? t('request-successful') : t('request-failed')}
               </div>
             </div>
-          </ReactBootstrap.Col>
-        </ReactBootstrap.Row>
-      </ReactBootstrap.Container>
+          </Col>
+        </Row>
+      </Container>
     </>
   );
 }
