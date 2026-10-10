@@ -1,5 +1,4 @@
-// Shared helper for building the headers used by the admin settings views
-// when talking to the backend API.
+// Builds the auth headers injected by the shared API client (api/client.js).
 import { getAccessToken } from '../auth/tokenManager';
 
 export const getAuthHeaders = () => ({
