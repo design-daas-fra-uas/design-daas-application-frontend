@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,6 @@ import Header from '../components/header';
 
 import { validateEmail } from '../api/users';
 
-const ALERT_VISIBLE_DURATION = 2000;
 const REDIRECT_DELAY = 4000;
 
 function Registration() {
@@ -18,29 +17,30 @@ function Registration() {
   const [alert, setAlert] = useState({ visible: false, success: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const redirectTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
+
   const showAlert = (success) => {
     setAlert({ visible: true, success });
 
-    setTimeout(() => {
-      setAlert({ visible: false, success: false });
-    }, ALERT_VISIBLE_DURATION);
-
     if (success) {
-      setTimeout(() => {
+      clearTimeout(redirectTimer.current);
+      redirectTimer.current = setTimeout(() => {
         navigate('/');
       }, REDIRECT_DELAY);
     }
   };
-
   const registrationSchema = Yup.object().shape({
     email: Yup.string()
-      .email(t('error-username') || 'Invalid email')
-      .required(t('error-username') || 'Email is required'),
+      .email(t('error-email-format', 'Enter a valid email address, e.g. name@example.com.'))
+      .required(t('error-email-required', 'Email is required.')),
     registrationCode: Yup.string().required(t('error-user-code') || 'Registration code is required'),
   });
 
   const registerUser = async ({ email, registrationCode }) => {
     setIsSubmitting(true);
+    setAlert({ visible: false, success: false });
 
     try {
       const response = await validateEmail({
@@ -128,7 +128,7 @@ function Registration() {
 
         <ReactBootstrap.Row>
           <ReactBootstrap.Col xs={12}>
-            <div className={alert.visible ? 'show-alert' : 'hide-alert'}>
+            <div className={alert.visible ? 'show-alert' : 'hide-alert'} role="alert" aria-live="polite">
               <div className={alert.success ? 'request-success-alert' : 'request-fail-alert'}>
                 {alert.success ? t('request-successful') : t('request-failed')}
               </div>
