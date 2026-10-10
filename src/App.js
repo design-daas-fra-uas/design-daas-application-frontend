@@ -10,6 +10,7 @@ import './App.css';
 import './i18n';
 import { clearSession, getRole, scheduleTokenRefresh, subscribeToSession } from './auth/tokenManager';
 import { ROUTES } from './routes';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import Login from './views/login';
 import NotFound from './views/error';
@@ -44,6 +45,8 @@ const Limitation = lazy(() => import('./views/dashboard/admin/limitation'));
 const ApplicationRunning = lazy(() => import('./views/dashboard/user/applicationRunning'));
 const EnvironmentRunning = lazy(() => import('./views/dashboard/user/environmentRunning'));
 const ConnectionRunning = lazy(() => import('./views/dashboard/user/connectionRunning'));
+const StartApplication = lazy(() => import('./views/dashboard/user/startApplication'));
+const InstanceRunning = lazy(() => import('./views/dashboard/user/instanceRunning'));
 const SharedRunning = lazy(() => import('./views/dashboard/user/sharedRunning'));
 const ObjectBaseImageSetup = lazy(() => import('./views/dashboard/user/objectBaseImageSetup'));
 const ObjectEnvironmentSetup = lazy(() => import('./views/dashboard/user/objectEnvironmentSetup'));
@@ -60,6 +63,8 @@ const RUN_ROUTES = [
   [ROUTES.user.environmentRun, EnvironmentRunning],
   [ROUTES.user.connectionRun, ConnectionRunning],
   [ROUTES.user.sharedRun, SharedRunning],
+  [ROUTES.user.startApplication, StartApplication],
+  [ROUTES.user.instanceRun, InstanceRunning],
   [ROUTES.user.expertBaseImage, ObjectBaseImageSetup],
   [ROUTES.user.expertEnvironment, ObjectEnvironmentSetup],
   [ROUTES.user.expertEnvironmentEdit, ObjectEnvironmentSetupEdit],
@@ -124,6 +129,7 @@ function App() {
 
   return (
     <Router>
+      <ErrorBoundary>
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path={ROUTES.login} element={<Login />} />
@@ -140,6 +146,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </Router>
   );
 }
