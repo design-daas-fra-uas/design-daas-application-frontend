@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 import Header from '../../../components/header';
 import EntityPreviewList from '../../../components/EntityPreviewList';
 import FormField from '../../../components/FormField';
+import { emailSchema, newPasswordSchema } from '../../../utils/validation';
 
 import { getAdmins, createAdmin } from '../../../api/admins';
 import { getUsers, createUser } from '../../../api/users';
@@ -46,11 +47,11 @@ function MainAdmin() {
   const [allAdmins, setAllAdmins] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [allGroups, setAllGroups] = useState([]);
+  const [loadErrors, setLoadErrors] = useState([]);
 
   const [createUserModal, setCreateUserModal] = useState(false);
   const [createUpdateModal, setCreateUpdateModal] = useState(false);
   const [getUserDataModal, setGetUserDataModal] = useState(false);
-  const [deleteUserModal, setDeleteUserModal] = useState(false);
 
   const [userDataID, setUserDataID] = useState('');
   const [userDataEmail, setUserDataEmail] = useState('');
@@ -62,28 +63,55 @@ function MainAdmin() {
   // Brief inline feedback shown after a create/update action, e.g. { text: 'group-created', success: true }.
   const [actionNotice, setActionNotice] = useState(null);
 
+  const noticeTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(noticeTimer.current), []);
+
+  const showNotice = (notice, autoHide) => {
+    clearTimeout(noticeTimer.current);
+    setActionNotice(notice);
+    if (autoHide) {
+      noticeTimer.current = setTimeout(() => setActionNotice(null), 4000);
+    }
+  };
+
   const notifyAndCloseModal = (closeModal) => {
-    setActionNotice({ text: 'request-successful', success: true });
-    setTimeout(() => setActionNotice(null), 2000);
+    showNotice({ text: 'request-successful', success: true }, true);
     closeModal();
   };
 
   const notifyError = () => {
-    setActionNotice({ text: 'request-failed', success: false });
-    setTimeout(() => setActionNotice(null), 2000);
+    showNotice({ text: 'request-failed', success: false }, false);
   };
 
-  const loadDashboardData = useCallback(async () => {
-    try {
-      const [admins, users, groups] = await Promise.all([fetchAdmins(), fetchUsers(), fetchGroups()]);
-      setAllAdmins(admins);
-      setAllUsers(users);
-      setAllGroups(groups);
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
+  const notifyRefreshError = () => {
+    showNotice(
+      { text: 'refresh-failed', fallback: 'Saved, but the list could not be refreshed. Please reload the data.', success: false },
+      false
+    );
+  };
 
+  // Each section loads independently so one failing request does not blank the others.
+  const loadDashboardData = useCallback(async () => {
+    setLoadErrors([]);
+    const sections = [
+      ['admins', fetchAdmins, setAllAdmins],
+      ['users', fetchUsers, setAllUsers],
+      ['groups', fetchGroups, setAllGroups],
+    ];
+    const results = await Promise.allSettled(sections.map(([, fetcher]) => fetcher()));
+    const failed = [];
+    results.forEach((result, index) => {
+      const [name, , setter] = sections[index];
+      if (result.status === 'fulfilled') {
+        setter(result.value);
+      } else {
+        console.error(result.reason);
+        failed.push(name);
+      }
+    });
+    setLoadErrors(failed);
+  }, []);
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
@@ -108,22 +136,11 @@ function MainAdmin() {
     setUserDataEmail('');
   };
 
-  // Reserved for a future delete-trash icon (disabled in the original UI pending a delete API).
-  // eslint-disable-next-line no-unused-vars
-  const openDeleteUserModal = ({ id }) => {
-    setUserDataID(id);
-    setDeleteUserModal(true);
-  };
-  const closeDeleteUserModal = () => {
-    setDeleteUserModal(false);
-    setUserDataID('');
-  };
-
   const goToSettingsUser = (id) => {
     navigate(`/dashboard/admin/settings/users/${id}`);
   };
   const goToSettingsAdmin = (id) => {
-    navigate(`/dashboard/admin/settings/admins/${id}`);
+    navigate(`/dashboard/admin/settings/admins/${encodeURIComponent(id)}`);
   };
 
   const onSelectGroupToUpdate = (event) => {
@@ -147,68 +164,81 @@ function MainAdmin() {
   });
 
   const createUserSchema = Yup.object().shape({
-    name: Yup.string().required(t('error-username') || 'Username is required'),
-    email: Yup.string().email(t('error-email') || 'Invalid email').required(t('error-email') || 'Email is required'),
-    password: Yup.string().required(t('error-password') || 'Password is required'),
-    group: Yup.string().notOneOf(['0'], t('error-group') || 'Group is required').required(t('error-group') || 'Group is required'),
+    name: Yup.string().required(t('error-username-required', 'Username is required.')),
+    email: emailSchema(t),
+    password: newPasswordSchema(t),
+    group: Yup.string().notOneOf(['0'], t('error-group-required', 'Group is required.')).required(t('error-group-required', 'Group is required.')),
   });
 
   const createAdminSchema = Yup.object().shape({
-    name: Yup.string().required(t('error-username-admin') || 'Username is required'),
-    email: Yup.string().email(t('error-email-admin') || 'Invalid email').required(t('error-email-admin') || 'Email is required'),
-    password: Yup.string().required(t('error-password-admin') || 'Password is required'),
+    name: Yup.string().required(t('error-username-required', 'Username is required.')),
+    email: emailSchema(t),
+    password: newPasswordSchema(t),
   });
 
-  const submitCreateGroup = async ({ description }, { resetForm }) => {
+  // Saving and refreshing are reported separately so a refresh failure is not shown as a failed save.
+  const saveThenRefresh = async ({ save, refresh, onSaved, closeModal }) => {
     try {
-      await createUserGroup({ description });
-      setAllGroups(await fetchGroups());
-      resetForm();
-      notifyAndCloseModal(closeCreateUpdateModal);
+      await save();
     } catch (error) {
       console.error(error);
       notifyError();
-    }
-  };
-
-  const submitUpdateGroup = async ({ description }) => {
-    if (!groupToUpdate) {
       return;
     }
 
+    onSaved?.();
     try {
-      await updateUserGroup(groupToUpdate.id, { description });
-      setAllGroups(await fetchGroups());
-      notifyAndCloseModal(closeCreateUpdateModal);
+      await refresh();
+      notifyAndCloseModal(closeModal);
     } catch (error) {
       console.error(error);
-      notifyError();
+      closeModal();
+      notifyRefreshError();
     }
   };
 
-  const submitCreateUser = async ({ name, email, password, group }, { resetForm }) => {
-    try {
-      await createUser({ name, email, password, groups: [Number(group)] });
-      setAllUsers(await fetchUsers());
-      resetForm();
-      notifyAndCloseModal(closeCreateUserModal);
-    } catch (error) {
-      console.error(error);
-      notifyError();
+  const submitCreateGroup = ({ description }, { resetForm }) =>
+    saveThenRefresh({
+      save: () => createUserGroup({ description }),
+      refresh: async () => setAllGroups(await fetchGroups()),
+      onSaved: resetForm,
+      closeModal: closeCreateUpdateModal,
+    });
+
+  const submitUpdateGroup = ({ description }) => {
+    if (!groupToUpdate) {
+      return undefined;
     }
+
+    return saveThenRefresh({
+      save: () => updateUserGroup(groupToUpdate.id, { description }),
+      refresh: async () => setAllGroups(await fetchGroups()),
+      closeModal: closeCreateUpdateModal,
+    });
   };
 
-  const submitCreateAdmin = async ({ name, email, password }, { resetForm }) => {
-    try {
-      await createAdmin({ name, email, password });
-      setAllAdmins(await fetchAdmins());
-      resetForm();
-      notifyAndCloseModal(closeCreateUserModal);
-    } catch (error) {
-      console.error(error);
+  const submitCreateUser = ({ name, email, password, group }, { resetForm }) =>
+    saveThenRefresh({
+      save: () => createUser({ name, email, password, groups: [Number(group)] }),
+      refresh: async () => setAllUsers(await fetchUsers()),
+      onSaved: resetForm,
+      closeModal: closeCreateUserModal,
+    });
+
+  const submitCreateAdmin = ({ name, email, password }, { resetForm }) =>
+    saveThenRefresh({
+      save: () => createAdmin({ name, email, password }),
+      refresh: async () => setAllAdmins(await fetchAdmins()),
+      onSaved: resetForm,
+      closeModal: closeCreateUserModal,
+    });
+
+  const activateOnKey = (action) => (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
     }
   };
-
   return (
     <>
       <Header />
@@ -263,11 +293,24 @@ function MainAdmin() {
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
 
+        {loadErrors.length > 0 && (
+          <ReactBootstrap.Row>
+            <ReactBootstrap.Col xs={12}>
+              <ReactBootstrap.Alert variant="danger" role="alert">
+                {t('load-error', 'Could not load the data. Please try again.')} ({loadErrors.map((name) => t(name, name)).join(', ')}){' '}
+                <ReactBootstrap.Button variant="link" className="p-0 align-baseline" onClick={loadDashboardData}>
+                  {t('retry', 'Retry')}
+                </ReactBootstrap.Button>
+              </ReactBootstrap.Alert>
+            </ReactBootstrap.Col>
+          </ReactBootstrap.Row>
+        )}
+
         {actionNotice && (
           <ReactBootstrap.Row>
             <ReactBootstrap.Col xs={12}>
-              <div className={actionNotice.success ? 'request-success-alert' : 'request-fail-alert'}>
-                {t(actionNotice.text)}
+              <div role="alert" className={actionNotice.success ? 'request-success-alert' : 'request-fail-alert'}>
+                {t(actionNotice.text, actionNotice.fallback)}
               </div>
             </ReactBootstrap.Col>
           </ReactBootstrap.Row>
@@ -275,12 +318,12 @@ function MainAdmin() {
 
         <ReactBootstrap.Row>
           <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-            <div className="link-daas-design" onClick={openCreateUpdateModal}>
+            <div className="link-daas-design" role="button" tabIndex={0} onClick={openCreateUpdateModal} onKeyDown={activateOnKey(openCreateUpdateModal)}>
               <div>{t('create-update-group')}</div>
             </div>
           </ReactBootstrap.Col>
           <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-            <div className="link-daas-design" onClick={openCreateUserModal}>
+            <div className="link-daas-design" role="button" tabIndex={0} onClick={openCreateUserModal} onKeyDown={activateOnKey(openCreateUserModal)}>
               <div>{t('create-user')}</div>
             </div>
           </ReactBootstrap.Col>
@@ -305,14 +348,14 @@ function MainAdmin() {
                   validationSchema={createGroupSchema}
                   onSubmit={submitCreateGroup}
                 >
-                  {({ isValid, dirty }) => (
+                  {({ isValid, dirty, isSubmitting }) => (
                     <Form>
                       <ReactBootstrap.Row>
                         <FormField name="description" label={t('description-group')} htmlFor="create-group-description" />
                       </ReactBootstrap.Row>
                       <ReactBootstrap.Row>
                         <ReactBootstrap.Col xs={12}>
-                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={!isValid || !dirty}>
+                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={isSubmitting}>
                             {t('submit')}
                           </ReactBootstrap.Button>
                         </ReactBootstrap.Col>
@@ -328,7 +371,7 @@ function MainAdmin() {
                   validationSchema={updateGroupSchema}
                   onSubmit={submitUpdateGroup}
                 >
-                  {({ isValid, dirty }) => (
+                  {({ isValid, dirty, isSubmitting }) => (
                     <Form>
                       <ReactBootstrap.Row>
                         <ReactBootstrap.Col xs={12}>
@@ -355,7 +398,7 @@ function MainAdmin() {
                             type="submit"
                             variant="primary"
                             id="submit"
-                            disabled={!groupToUpdate || !isValid || !dirty}
+                            disabled={!groupToUpdate || !isValid || !dirty || isSubmitting}
                           >
                             {t('submit')}
                           </ReactBootstrap.Button>
@@ -381,7 +424,7 @@ function MainAdmin() {
                   validationSchema={createUserSchema}
                   onSubmit={submitCreateUser}
                 >
-                  {({ isValid, dirty }) => (
+                  {({ isValid, dirty, isSubmitting }) => (
                     <Form>
                       <ReactBootstrap.Row>
                         <FormField name="name" label={t('username')} htmlFor="username" />
@@ -402,7 +445,7 @@ function MainAdmin() {
                       </ReactBootstrap.Row>
                       <ReactBootstrap.Row>
                         <ReactBootstrap.Col xs={12}>
-                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={!isValid || !dirty}>
+                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={isSubmitting}>
                             {t('submit')}
                           </ReactBootstrap.Button>
                         </ReactBootstrap.Col>
@@ -417,7 +460,7 @@ function MainAdmin() {
                   validationSchema={createAdminSchema}
                   onSubmit={submitCreateAdmin}
                 >
-                  {({ isValid, dirty }) => (
+                  {({ isValid, dirty, isSubmitting }) => (
                     <Form>
                       <ReactBootstrap.Row>
                         <FormField name="name" label={t('username')} htmlFor="username-admin" />
@@ -429,7 +472,7 @@ function MainAdmin() {
                       </ReactBootstrap.Row>
                       <ReactBootstrap.Row>
                         <ReactBootstrap.Col xs={12}>
-                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={!isValid || !dirty}>
+                          <ReactBootstrap.Button type="submit" variant="primary" id="submit" disabled={isSubmitting}>
                             {t('submit')}
                           </ReactBootstrap.Button>
                         </ReactBootstrap.Col>
@@ -460,28 +503,6 @@ function MainAdmin() {
           </ReactBootstrap.Modal.Body>
         </ReactBootstrap.Modal>
 
-        {/* TODO: wire up a real delete-user API call once the endpoint is available. */}
-        <ReactBootstrap.Modal show={deleteUserModal} onHide={closeDeleteUserModal} size="md" centered>
-          <ReactBootstrap.Modal.Header closeButton>
-            <ReactBootstrap.Modal.Title>
-              {userDataID} - {t('delete')}
-            </ReactBootstrap.Modal.Title>
-          </ReactBootstrap.Modal.Header>
-          <ReactBootstrap.Modal.Body>
-            <ReactBootstrap.Row>
-              <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                <ReactBootstrap.Button variant="primary" onClick={closeDeleteUserModal}>
-                  {t('no')}
-                </ReactBootstrap.Button>
-              </ReactBootstrap.Col>
-              <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                <ReactBootstrap.Button variant="danger" onClick={closeDeleteUserModal}>
-                  {t('yes')}
-                </ReactBootstrap.Button>
-              </ReactBootstrap.Col>
-            </ReactBootstrap.Row>
-          </ReactBootstrap.Modal.Body>
-        </ReactBootstrap.Modal>
       </ReactBootstrap.Container>
     </>
   );
