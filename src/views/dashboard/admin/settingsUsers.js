@@ -7,7 +7,7 @@ import * as Yup from 'yup';
 import ActionLink from '../../../components/ActionLink';
 import AsyncContent from '../../../components/AsyncContent';
 import BackLink from '../../../components/BackLink';
-import EntityPreviewList from '../../../components/EntityPreviewList';
+import EntityList from '../../../components/EntityList';
 import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
 import PageLayout from '../../../components/PageLayout';
@@ -41,7 +41,7 @@ function SettingsUsers() {
     }), [t]);
 
     const submitCreateUser = ({ username, email, password, group }) =>
-        createUser({ name: username, email, password, groups: [Number(group)] });
+        createUser({ name: username.trim(), email: email.trim(), password, groups: [Number(group)] });
 
     return (
         <PageLayout id="dashboardAdminSettingsUser" title={t('user-management')} wrapTitle>
@@ -52,7 +52,7 @@ function SettingsUsers() {
                 <Col xs={12}>
                     <AsyncContent status={status} onRetry={reload}>
                         <div>
-                            <EntityPreviewList
+                            <EntityList
                                 items={users ?? []}
                                 onSettings={(user) => navigate(ROUTES.admin.userDetail(user.id))}
                                 onInfo={setSelectedUser}
