@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Col, Row } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
 
@@ -20,7 +20,6 @@ const INITIAL_VALUES = { description: '', subDescription: '' };
 function Desktops() {
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const { data, status, reload } = useResource(getDesktops);
     const desktops = data ?? [];
 
@@ -30,13 +29,6 @@ function Desktops() {
         subDescription: Yup.string()
             .required(t('error-desktop-sub-description', 'Desktop sub description invalid')),
     }), [t]);
-
-    const submitCreateDesktop = ({ description, subDescription }) =>
-        createDesktop({
-            description,
-            // The API models the sub description as a single-entry `groups` list.
-            groups: [{ description: subDescription }],
-        });
 
     return (
         <PageLayout id="desktop" title={t('desktops')} wrapTitle>
@@ -59,9 +51,9 @@ function Desktops() {
                                         <ul>
                                             <li>
                                                 <span>
-                                                    <Button type="button" variant="primary" onClick={() => navigate(ROUTES.admin.desktopDetail(desktop.id))}>
+                                                    <Link className="btn btn-primary" to={ROUTES.admin.desktopDetail(desktop.id)}>
                                                         {t('choose')}
-                                                    </Button>
+                                                    </Link>
                                                 </span>
                                             </li>
                                         </ul>
@@ -85,7 +77,7 @@ function Desktops() {
                 titleId="create-desktop-modal-title"
                 initialValues={INITIAL_VALUES}
                 validationSchema={validationSchema}
-                onSubmit={submitCreateDesktop}
+                onSubmit={({ description, subDescription }) => createDesktop({ description, subDescription })}
                 onSaved={reload}
             >
                 <FormField name="description" label={t('desktop-main-description')} />
