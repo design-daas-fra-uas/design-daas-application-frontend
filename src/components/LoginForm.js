@@ -26,7 +26,7 @@ function LoginForm({ role, onLogin }) {
   const handleSubmit = async (values) => {
     setLoginError('');
     try {
-      await onLogin(values);
+      await onLogin({ ...values, username: values.username.trim() });
     } catch (error) {
       console.error(error);
       const status = error?.response?.status;
@@ -42,9 +42,7 @@ function LoginForm({ role, onLogin }) {
     <Formik initialValues={{ username: '', password: '' }} validationSchema={schema} onSubmit={handleSubmit}>
       {({ isValid, dirty, isSubmitting }) => (
         <Form>
-          <div role="alert" aria-live="assertive">
-            {loginError && <Alert variant="danger">{loginError}</Alert>}
-          </div>
+          {loginError && <Alert variant="danger">{loginError}</Alert>}
           <Row>
             <FormField name="username" label={t('username')} htmlFor={`${role}-username`} />
             <FormField name="password" label={t('password')} htmlFor={`${role}-password`} type="password" />
