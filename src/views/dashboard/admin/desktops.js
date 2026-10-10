@@ -13,52 +13,65 @@ import { getDesktops, createDesktop } from '../../../api/desktops';
 function Desktops() {
     const [allDesktops, setAllDesktops] = useState([]);
     const [createDesktopModal, setCreateDesktopModal] = useState(false);
+    const [loadStatus, setLoadStatus] = useState('loading');
+    const [submitError, setSubmitError] = useState('');
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const fetchDesktops = useCallback(() => {
-        getDesktops()
-            .then(setAllDesktops)
-            .catch((e) => {
-                console.log(e);
-            });
+    const fetchDesktops = useCallback(async () => {
+        setLoadStatus('loading');
+        try {
+            setAllDesktops(await getDesktops());
+            setLoadStatus('loaded');
+        } catch (e) {
+            console.log(e);
+            setLoadStatus('error');
+            throw e;
+        }
     }, []);
 
     useEffect(() => {
-        fetchDesktops();
+        fetchDesktops().catch(() => {});
     }, [fetchDesktops]);
 
     const showModalCreateDesktop = () => {
         setCreateDesktopModal(true);
     };
     const closeModalCreateDesktop = () => {
+        setSubmitError('');
         setCreateDesktopModal(false);
     };
 
     const goToDetailView = (id) => {
-        navigate("/dashboard/settings/desktops/" + id);
+        navigate("/dashboard/admin/settings/desktops/" + encodeURIComponent(id));
     };
 
-    const submitCreateDesktop = (values, { setSubmitting, resetForm }) => {
-        createDesktop({
-            description: values.description,
-            groups: [
-                {
-                    description: values.detail_description,
-                }
-            ]
-        })
-        .then(() => {
-            fetchDesktops();
-            resetForm();
-            closeModalCreateDesktop();
-        })
-        .catch(e => {
-            console.log(e)
-        })
-        .finally(() => {
+    const submitCreateDesktop = async (values, { setSubmitting, resetForm }) => {
+        setSubmitError('');
+        try {
+            await createDesktop({
+                description: values.description,
+                groups: [
+                    {
+                        description: values.detail_description,
+                    }
+                ]
+            });
+        } catch (e) {
+            console.log(e);
+            setSubmitError(t('request-failed', 'The request failed. Please try again.'));
             setSubmitting(false);
-        });
+            return;
+        }
+
+        resetForm();
+        closeModalCreateDesktop();
+        try {
+            await fetchDesktops();
+        } catch (e) {
+            // The list shows its own refresh error state.
+        }
+        setSubmitting(false);
     };
 
     const createDesktopValidationSchema = Yup.object().shape({
@@ -83,10 +96,20 @@ function Desktops() {
                 </ReactBootstrap.Row>
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                        {loadStatus === 'loading' && <p>{t('loading', 'Loading...')}</p>}
+                        {loadStatus === 'error' && (
+                            <ReactBootstrap.Alert variant="danger" role="alert">
+                                {t('load-error', 'Could not load the data. Please try again.')}{' '}
+                                <ReactBootstrap.Button variant="link" className="p-0 align-baseline" onClick={() => fetchDesktops().catch(() => {})}>
+                                    {t('retry', 'Retry')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Alert>
+                        )}
+                        {loadStatus === 'loaded' && allDesktops.length === 0 && <p>{t('no-entries', 'No entries found.')}</p>}
                         {
                             allDesktops.map(desktopData => {
                                 return (
-                                    <ReactBootstrap.Row>
+                                    <ReactBootstrap.Row key={desktopData.id}>
                                         <ReactBootstrap.Col xs={12} sm={12} md={10} lg={10} xl={10}>
                                             <div>
                                                 <ul>
@@ -103,7 +126,7 @@ function Desktops() {
                                                 <ul>
                                                     <li>
                                                         <span>
-                                                            <ReactBootstrap.Button type="submit" variant="primary" onClick={() => goToDetailView(desktopData.id)}>
+                                                            <ReactBootstrap.Button type="button" variant="primary" onClick={() => goToDetailView(desktopData.id)}>
                                                               {t('choose')}
                                                             </ReactBootstrap.Button>
                                                         </span>
@@ -130,7 +153,7 @@ function Desktops() {
                     </ReactBootstrap.Col>
                     <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
                         <div>
-                            <div className="link-daas-design" onClick={showModalCreateDesktop}>
+                            <div className="link-daas-design" role="button" tabIndex={0} onClick={showModalCreateDesktop} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && showModalCreateDesktop()}>
                                 {/*<i className="fa-solid fa-arrow-left"></i>*/}
                                 <div>
                                     {t('desktop-create')}
@@ -152,6 +175,7 @@ function Desktops() {
                         </ReactBootstrap.Modal.Title>
                     </ReactBootstrap.Modal.Header>
                     <ReactBootstrap.Modal.Body>
+                        {submitError && <ReactBootstrap.Alert variant="danger" role="alert">{submitError}</ReactBootstrap.Alert>}
                         <Formik
                             key={createDesktopModal}
                             initialValues={{

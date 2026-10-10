@@ -11,7 +11,10 @@ import { getUsers, updateUser, disableUser, enableUser } from '../../../api/user
 import Header from '../../../components/header';
 
 function SettingsUsersDetail() {
-    const [userDataInformation, setUserDataInformation] = useState({});
+    const [userDataInformation, setUserDataInformation] = useState(null);
+    const [loadStatus, setLoadStatus] = useState('loading');
+    const [isToggling, setIsToggling] = useState(false);
+    const [actionError, setActionError] = useState('');
     const params = useParams(); // Example: {params.id}
     const navigate = useNavigate();
     const {t} = useTranslation();
@@ -21,62 +24,80 @@ function SettingsUsersDetail() {
     })
 
     const backToDashboard = () => {
-        navigate("/dashboard/settings/users");
+        navigate("/dashboard/admin/settings/users");
     };
 
     const fetchUserData = useCallback(() => {
-        getUsers()
+        let isCurrent = true;
+
+        const request = getUsers()
             .then(users => {
-                const userData = users.find(user => String(user.id) === String(params.id));
-                if (userData) {
-                    setUserDataInformation(userData);
+                if (!isCurrent) {
+                    return;
                 }
+                const userData = users.find(user => String(user.id) === String(params.id));
+                setUserDataInformation(userData || null);
+                setLoadStatus(userData ? 'found' : 'not-found');
             })
             .catch(e => {
-                console.log(e)
+                console.log(e);
+                if (isCurrent) {
+                    setUserDataInformation(null);
+                    setLoadStatus('error');
+                }
             });
+
+        return { request, cancel: () => { isCurrent = false; } };
     }, [params.id]);
 
     useEffect(() => {
-        fetchUserData();
+        setUserDataInformation(null);
+        setLoadStatus('loading');
+        setActionError('');
+        const { cancel } = fetchUserData();
+        return cancel;
     }, [fetchUserData]);
 
-    const updateUserAccount = (values, { setSubmitting }) => {
-        updateUser(userDataInformation.id, {
-            name: values.name,
-            email: values.email,
-        })
-            .then(() => {
-                fetchUserData();
-            })
-            .catch(e => {
-                console.log(e)
-            })
-            .finally(() => {
-                setSubmitting(false);
+    const updateUserAccount = async (values, { setSubmitting }) => {
+        if (!userDataInformation.id) {
+            setSubmitting(false);
+            return;
+        }
+        setActionError('');
+        try {
+            await updateUser(userDataInformation?.id, {
+                name: values.name,
+                email: values.email,
             });
+            await fetchUserData().request;
+        } catch (e) {
+            console.log(e);
+            setActionError(t('update-error', 'The request failed. Please try again.'));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
-    const disableUserAccount = (id) => {
-        disableUser(id)
-        .then(() => {
-            fetchUserData();
-        })
-        .catch(e => {
-            console.log(e)
-        });
+    const toggleUserAccount = async (action) => {
+        const id = userDataInformation?.id;
+        if (id === undefined || id === null || isToggling) {
+            return;
+        }
+        setIsToggling(true);
+        setActionError('');
+        try {
+            await action(id);
+            await fetchUserData().request;
+        } catch (e) {
+            console.log(e);
+            setActionError(t('update-error', 'The request failed. Please try again.'));
+        } finally {
+            setIsToggling(false);
+        }
     };
 
-    const enableUserAccount = (id) => {
-        enableUser(id)
-            .then(() => {
-                fetchUserData();
-            })
-            .catch(e => {
-                console.log(e)
-            });
-    };
-
+    const disableUserAccount = () => toggleUserAccount(disableUser);
+    const enableUserAccount = () => toggleUserAccount(enableUser);
     const updateUserSchema = Yup.object().shape({
         name: Yup.string()
             .required(t('error-name') || 'Username invalid'),
@@ -98,23 +119,28 @@ function SettingsUsersDetail() {
                         </div>
                     </ReactBootstrap.Col>
                 </ReactBootstrap.Row>
+                {loadStatus === 'loading' && <p>{t('loading', 'Loading...')}</p>}
+                {loadStatus === 'not-found' && <p role="alert">{t('user-not-found', 'User not found.')}</p>}
+                {loadStatus === 'error' && <p role="alert">{t('load-error', 'Could not load the data. Please try again.')}</p>}
+                {actionError && <ReactBootstrap.Alert variant="danger">{actionError}</ReactBootstrap.Alert>}
+                {loadStatus === 'found' && userDataInformation && (<>
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={6} md={6} lg={6} xl={6}>
                         <div>
                             <ul>
                                 <li>
                                     <span>
-                                        {t('username')}: {userDataInformation.name}
+                                        {t('username')}: {userDataInformation?.name}
                                     </span>
                                 </li>
                                 <li>
                                     <span>
-                                        {t('email')}: {userDataInformation.email}
+                                        {t('email')}: {userDataInformation?.email}
                                     </span>
                                 </li>
                                 <li>
                                     <span>
-                                        Status: {userDataInformation.enabled ? t('active') : t('inactive')}
+                                        {t('status', 'Status')}: {userDataInformation?.enabled ? t('active') : t('inactive')}
                                     </span>
                                 </li>
                             </ul>
@@ -126,12 +152,12 @@ function SettingsUsersDetail() {
                                 <li>
                                     <span>
                                         {
-                                            userDataInformation.enabled ? (
-                                                <ReactBootstrap.Button type="submit" variant="primary" onClick={() => disableUserAccount(userDataInformation.id)}>
+                                            userDataInformation?.enabled ? (
+                                                <ReactBootstrap.Button type="button" variant="primary" disabled={isToggling} onClick={disableUserAccount}>
                                                     {t('disable')}
                                                 </ReactBootstrap.Button>
                                             ) : (
-                                                <ReactBootstrap.Button type="submit" variant="primary" onClick={() => enableUserAccount(userDataInformation.id)}>
+                                                <ReactBootstrap.Button type="button" variant="primary" disabled={isToggling} onClick={enableUserAccount}>
                                                     {t('enable')}
                                                 </ReactBootstrap.Button>
                                             )
@@ -145,11 +171,11 @@ function SettingsUsersDetail() {
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
                         <Formik
-                            key={userDataInformation.id}
+                            key={userDataInformation?.id}
                             enableReinitialize
                             initialValues={{
-                                name: userDataInformation.name || '',
-                                email: userDataInformation.email || '',
+                                name: userDataInformation?.name || '',
+                                email: userDataInformation?.email || '',
                             }}
                             validationSchema={updateUserSchema}
                             onSubmit={updateUserAccount}
@@ -196,9 +222,10 @@ function SettingsUsersDetail() {
                         </Formik>
                     </ReactBootstrap.Col>
                 </ReactBootstrap.Row>
+                </>)}
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div className="link-daas-design" onClick={backToDashboard}>
+                        <div className="link-daas-design" role="button" tabIndex={0} onClick={backToDashboard} onKeyDown={(e) => e.key === 'Enter' && backToDashboard()}>
                             <div>
                                 {t('back-link')}
                             </div>

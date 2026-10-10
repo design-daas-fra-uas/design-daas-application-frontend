@@ -17,23 +17,31 @@ function DesktopGroups() {
     const [createDesktopGroupsModal, setCreateDesktopGroupsModal] = useState(false);
     const [addUserGroupDesktopGroupModal, setAddUserGroupDesktopGroupModal] = useState(false);
     const [selectedDesktopGroupId, setSelectedDesktopGroupId] = useState(null);
+    const [loadStatus, setLoadStatus] = useState('loading');
+    const [userGroupsFailed, setUserGroupsFailed] = useState(false);
+    const [submitError, setSubmitError] = useState('');
     const { t } = useTranslation();
 
-    const fetchDesktopGroups = useCallback(() => {
-        getDesktopGroups()
-            .then(setAllDesktopGroups)
-            .catch((e) => {
-                console.log(e);
-            });
+    const fetchDesktopGroups = useCallback(async () => {
+        setLoadStatus('loading');
+        try {
+            setAllDesktopGroups(await getDesktopGroups());
+            setLoadStatus('loaded');
+        } catch (e) {
+            console.log(e);
+            setLoadStatus('error');
+            throw e;
+        }
     }, []);
 
     useEffect(() => {
-        fetchDesktopGroups();
+        fetchDesktopGroups().catch(() => {});
 
         getUserGroups()
             .then(setAllUserGroups)
             .catch((e) => {
                 console.log(e);
+                setUserGroupsFailed(true);
             });
     }, [fetchDesktopGroups]);
 
@@ -41,46 +49,55 @@ function DesktopGroups() {
         setCreateDesktopGroupsModal(true);
     };
     const closeModalCreateDesktopGroups = () => {
+        setSubmitError('');
         setCreateDesktopGroupsModal(false);
     };
 
     const showModalAddUserGroups = (id) => {
+        setSubmitError('');
         setSelectedDesktopGroupId(id);
         setAddUserGroupDesktopGroupModal(true);
     };
     const closeModalAddUserGroups = () => {
+        setSubmitError('');
         setAddUserGroupDesktopGroupModal(false);
         setSelectedDesktopGroupId(null);
     };
 
-    const submitCreateDesktopGroups = (values, { setSubmitting, resetForm }) => {
-        createDesktopGroup({
-            description: values.description,
-        })
-        .then(() => {
-            fetchDesktopGroups();
-            resetForm();
-            closeModalCreateDesktopGroups();
-        })
-        .catch(e => {
-            console.log(e)
-        })
-        .finally(() => {
+    const submitCreateDesktopGroups = async (values, { setSubmitting, resetForm }) => {
+        setSubmitError('');
+        try {
+            await createDesktopGroup({
+                description: values.description,
+            });
+        } catch (e) {
+            console.log(e);
+            setSubmitError(t('request-failed', 'The request failed. Please try again.'));
             setSubmitting(false);
-        });
+            return;
+        }
+
+        resetForm();
+        closeModalCreateDesktopGroups();
+        try {
+            await fetchDesktopGroups();
+        } catch (e) {
+            // The list shows its own refresh error state.
+        }
+        setSubmitting(false);
     };
 
-    const submitAddUserGroupToDesktopGroup = (values, { setSubmitting }) => {
-        addUserGroupToDesktopGroup(selectedDesktopGroupId, values.userGroupId)
-        .then(() => {
+    const submitAddUserGroupToDesktopGroup = async (values, { setSubmitting }) => {
+        setSubmitError('');
+        try {
+            await addUserGroupToDesktopGroup(selectedDesktopGroupId, values.userGroupId);
             closeModalAddUserGroups();
-        })
-        .catch(e => {
-            console.log(e)
-        })
-        .finally(() => {
+        } catch (e) {
+            console.log(e);
+            setSubmitError(t('request-failed', 'The request failed. Please try again.'));
+        } finally {
             setSubmitting(false);
-        });
+        }
     };
 
     const createDesktopGroupsValidationSchema = Yup.object().shape({
@@ -108,10 +125,20 @@ function DesktopGroups() {
                 </ReactBootstrap.Row>
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                        {loadStatus === 'loading' && <p>{t('loading', 'Loading...')}</p>}
+                        {loadStatus === 'error' && (
+                            <ReactBootstrap.Alert variant="danger" role="alert">
+                                {t('load-error', 'Could not load the data. Please try again.')}{' '}
+                                <ReactBootstrap.Button variant="link" className="p-0 align-baseline" onClick={() => fetchDesktopGroups().catch(() => {})}>
+                                    {t('retry', 'Retry')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Alert>
+                        )}
+                        {loadStatus === 'loaded' && allDesktopGroups.length === 0 && <p>{t('no-entries', 'No entries found.')}</p>}
                         {
                             allDesktopGroups.map(desktopGroupsData => {
                                 return (
-                                    <ReactBootstrap.Row>
+                                    <ReactBootstrap.Row key={desktopGroupsData.id}>
                                         <ReactBootstrap.Col xs={12} sm={12} md={8} lg={8} xl={8}>
                                             <div>
                                                 <ul>
@@ -128,7 +155,7 @@ function DesktopGroups() {
                                                 <ul>
                                                     <li>
                                                         <span>
-                                                            <ReactBootstrap.Button type="submit" variant="primary" onClick={() => showModalAddUserGroups(desktopGroupsData.id)}>
+                                                            <ReactBootstrap.Button type="button" variant="primary" onClick={() => showModalAddUserGroups(desktopGroupsData.id)}>
                                                               {t('add-user-group')}
                                                             </ReactBootstrap.Button>
                                                         </span>
@@ -155,7 +182,7 @@ function DesktopGroups() {
                     </ReactBootstrap.Col>
                     <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
                         <div>
-                            <div className="link-daas-design" onClick={showModalCreateDesktopGroups}>
+                            <div className="link-daas-design" role="button" tabIndex={0} onClick={showModalCreateDesktopGroups} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && showModalCreateDesktopGroups()}>
                                 {/*<i className="fa-solid fa-arrow-left"></i>*/}
                                 <div>
                                     {t('desktop-groups-create')}
@@ -177,6 +204,7 @@ function DesktopGroups() {
                         </ReactBootstrap.Modal.Title>
                     </ReactBootstrap.Modal.Header>
                     <ReactBootstrap.Modal.Body>
+                        {submitError && <ReactBootstrap.Alert variant="danger" role="alert">{submitError}</ReactBootstrap.Alert>}
                         <Formik
                             key={createDesktopGroupsModal}
                             initialValues={{
@@ -222,6 +250,8 @@ function DesktopGroups() {
                         </ReactBootstrap.Modal.Title>
                     </ReactBootstrap.Modal.Header>
                     <ReactBootstrap.Modal.Body>
+                        {submitError && <ReactBootstrap.Alert variant="danger" role="alert">{submitError}</ReactBootstrap.Alert>}
+                        {userGroupsFailed && <ReactBootstrap.Alert variant="danger" role="alert">{t('load-error', 'Could not load the data. Please try again.')}</ReactBootstrap.Alert>}
                         <Formik
                             key={`${addUserGroupDesktopGroupModal}-${selectedDesktopGroupId}`}
                             initialValues={{

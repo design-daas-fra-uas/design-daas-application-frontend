@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -10,32 +10,39 @@ import { getUsers, createUser } from '../../../api/users';
 import Header from '../../../components/header';
 import EntityPreviewList from '../../../components/EntityPreviewList';
 import FormField from '../../../components/FormField';
+import { emailSchema, newPasswordSchema } from '../../../utils/validation';
 
 function SettingsUsers() {
     const [createUserModal, setCreateUserModal] = useState(false);
     const [getUserDataModal, setGetUserDataModal] = useState(false);
-    const [deleteUserModal, setDeleteUserModal] = useState(false);
     const [userDataID, setUserDataID] = useState("");
     const [userDataEmail, setUserDataEmail] = useState("");
     const [allUsers, setAllUsers] = useState([]);
+    const [loadStatus, setLoadStatus] = useState('loading');
+    const [submitError, setSubmitError] = useState('');
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const fetchUsers = () => {
-        getUsers()
-            .then(setAllUsers)
-            .catch((e) => {
-                console.log(e);
-            });
-    };
+    const fetchUsers = useCallback(async () => {
+        setLoadStatus('loading');
+        try {
+            setAllUsers(await getUsers());
+            setLoadStatus('loaded');
+        } catch (e) {
+            console.log(e);
+            setLoadStatus('error');
+            throw e;
+        }
+    }, []);
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        fetchUsers().catch(() => {});
+    }, [fetchUsers]);
     const showCreateUserModal = () => {
         setCreateUserModal(true);
     };
     const closeCreateUserModal = () => {
+        setSubmitError('');
         setCreateUserModal(false);
     };
     const showGetUserModal = (id, mail) => {
@@ -48,55 +55,47 @@ function SettingsUsers() {
         setUserDataID("");
         setUserDataEmail("");
     };
-    const showDeleteUserModal = (id) => {
-        setDeleteUserModal(true);
-        setUserDataID(id);
-        setUserDataEmail("");
-    };
-    const closeDeleteUserModal = () => {
-        setDeleteUserModal(false);
-        setUserDataID("");
-        setUserDataEmail("");
-    };
-
     const goToSettingsUser = (id) => {
-        navigate("/dashboard/settings/users/" + id);
+        navigate("/dashboard/admin/settings/users/" + encodeURIComponent(id));
     };
 
     const backToDashboard = () => {
         navigate("/dashboard/admin");
     };
 
-    const submitCreateUser = (values, { setSubmitting, resetForm }) => {
-        createUser({
-            name: values.username,
-            password: values.password,
-            fullname: values.fullname,
-            email: values.email,
-        })
-            .then(() => {
-                fetchUsers();
-                resetForm();
-                closeCreateUserModal();
-            })
-            .catch((e) => {
-                console.log(e);
-            })
-            .finally(() => {
-                setSubmitting(false);
+    const submitCreateUser = async (values, { setSubmitting, resetForm }) => {
+        setSubmitError('');
+        try {
+            await createUser({
+                name: values.username,
+                password: values.password,
+                fullname: values.fullname,
+                email: values.email,
             });
+        } catch (e) {
+            console.log(e);
+            setSubmitError(t('request-failed', 'The request failed. Please try again.'));
+            setSubmitting(false);
+            return;
+        }
+
+        resetForm();
+        closeCreateUserModal();
+        try {
+            await fetchUsers();
+        } catch (e) {
+            // The list shows its own refresh error state.
+        }
+        setSubmitting(false);
     };
 
     const createUserSchema = Yup.object().shape({
         username: Yup.string()
-            .required(t('error-username') || 'Username invalid'),
-        password: Yup.string()
-            .required(t('error-password') || 'Password invalid'),
+            .required(t('error-username-required', 'Username is required.')),
+        password: newPasswordSchema(t),
         fullname: Yup.string()
-            .required(t('error-fullname') || 'Fullname invalid'),
-        email: Yup.string()
-            .email(t('error-email') || 'Invalid email')
-            .required(t('error-email') || 'Email invalid'),
+            .required(t('error-fullname-required', 'Full name is required.')),
+        email: emailSchema(t),
     });
 
     return (
@@ -119,6 +118,15 @@ function SettingsUsers() {
                         </h4>
                     </ReactBootstrap.Col>
                     <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                        {loadStatus === 'loading' && <p>{t('loading', 'Loading...')}</p>}
+                        {loadStatus === 'error' && (
+                            <ReactBootstrap.Alert variant="danger" role="alert">
+                                {t('load-error', 'Could not load the data. Please try again.')}{' '}
+                                <ReactBootstrap.Button variant="link" className="p-0 align-baseline" onClick={() => fetchUsers().catch(() => {})}>
+                                    {t('retry', 'Retry')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Alert>
+                        )}
                         <div>
                             <EntityPreviewList
                                 items={allUsers}
@@ -130,14 +138,14 @@ function SettingsUsers() {
                 </ReactBootstrap.Row>
                 <ReactBootstrap.Row>
                     <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div className="link-daas-design" onClick={backToDashboard}>
+                        <div className="link-daas-design" role="button" tabIndex={0} onClick={backToDashboard} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && backToDashboard()}>
                             <div>
                                 {t('back-link')}
                             </div>
                         </div>
                     </ReactBootstrap.Col>
                     <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div className="link-daas-design" onClick={showCreateUserModal}>
+                        <div className="link-daas-design" role="button" tabIndex={0} onClick={showCreateUserModal} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && showCreateUserModal()}>
                             <div>
                                 {t('create-user')}
                             </div>
@@ -157,6 +165,7 @@ function SettingsUsers() {
                         </ReactBootstrap.Modal.Title>
                     </ReactBootstrap.Modal.Header>
                     <ReactBootstrap.Modal.Body>
+                        {submitError && <ReactBootstrap.Alert variant="danger" role="alert">{submitError}</ReactBootstrap.Alert>}
                         <Formik
                             key={createUserModal}
                             initialValues={{
@@ -182,7 +191,7 @@ function SettingsUsers() {
                                                 type="submit"
                                                 variant="primary"
                                                 id="submit"
-                                                disabled={!isValid || !dirty || isSubmitting}>
+                                                disabled={isSubmitting}>
                                                 {t('submit')}
                                             </ReactBootstrap.Button>
                                         </ReactBootstrap.Col>
@@ -212,46 +221,7 @@ function SettingsUsers() {
                             <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
                                 {userDataEmail}
                             </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                {t('fullname')}
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                {userDataID}
-                            </ReactBootstrap.Col>
-                        </ReactBootstrap.Row>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-                <ReactBootstrap.Modal
-                    show={deleteUserModal}
-                    onHide={closeDeleteUserModal}
-                    size="md"
-                    aria-labelledby="contained-modal-title-vcenter"
-                    centered
-                >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {userDataID} - {t('delete')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <ReactBootstrap.Row>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                <ReactBootstrap.Button
-                                    type="submit"
-                                    variant="primary"
-                                    onClick={closeDeleteUserModal}>
-                                    {t('no')}
-                                </ReactBootstrap.Button>
-                            </ReactBootstrap.Col>
-                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                <ReactBootstrap.Button
-                                    type="submit"
-                                    variant="danger"
-                                    onClick={closeDeleteUserModal}>
-                                    {t('yes')}
-                                </ReactBootstrap.Button>
-                            </ReactBootstrap.Col>
-                        </ReactBootstrap.Row>
+                       </ReactBootstrap.Row>
                     </ReactBootstrap.Modal.Body>
                 </ReactBootstrap.Modal>
             </ReactBootstrap.Container>
