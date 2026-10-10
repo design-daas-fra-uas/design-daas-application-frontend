@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import ActionLink from '../../../components/ActionLink';
 import PageLayout from '../../../components/PageLayout';
 import UserInfoModal from '../../../components/UserInfoModal';
+import useAdminActions from '../../../hooks/useAdminActions';
 import useDashboardData from '../../../hooks/useDashboardData';
 import useNotice from '../../../hooks/useNotice';
 import { ROUTES } from '../../../routes';
@@ -27,69 +28,26 @@ function MainAdmin() {
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Saving and refreshing are reported separately so a refresh failure is not shown as a failed save.
-  const saveThenRefresh = async ({ save, refresh, onSaved, closeModal }) => {
-    try {
-      await save();
-    } catch (error) {
-      console.error(error);
-      showNotice({ text: 'request-failed', success: false }, false);
-      return;
-    }
-
-    onSaved?.();
-    try {
-      await refresh();
-      showNotice({ text: 'request-successful', success: true }, true);
-      closeModal();
-    } catch (error) {
-      console.error(error);
-      closeModal();
-      showNotice(
-        { text: 'refresh-failed', fallback: 'Saved, but the list could not be refreshed. Please reload the data.', success: false },
-        false
-      );
-    }
-  };
-
   const closeGroupModal = () => setGroupModalOpen(false);
   const closeAccountModal = () => setAccountModalOpen(false);
 
-  const createGroup = ({ description }, { resetForm }) =>
-    saveThenRefresh({
-      save: () => createUserGroup({ description }),
-      refresh: refreshGroups,
-      onSaved: resetForm,
-      closeModal: closeGroupModal,
-    });
+  const { saveError, clearSaveError, createGroup, updateGroup, createUserAccount, createAdminAccount } = useAdminActions({
+    showNotice,
+    refreshGroups,
+    refreshUsers,
+    refreshAdmins,
+    closeGroupModal,
+    closeAccountModal,
+  });
 
-  const updateGroup = (group, { description }) => {
-    if (!group) {
-      return undefined;
-    }
-
-    return saveThenRefresh({
-      save: () => updateUserGroup(group.id, { description }),
-      refresh: refreshGroups,
-      closeModal: closeGroupModal,
-    });
+  const openModal = (open) => () => {
+    clearSaveError();
+    open(true);
   };
-
-  const createUserAccount = ({ name, email, password, group }, { resetForm }) =>
-    saveThenRefresh({
-      save: () => createUser({ name, email, password, groups: [Number(group)] }),
-      refresh: refreshUsers,
-      onSaved: resetForm,
-      closeModal: closeAccountModal,
-    });
-
-  const createAdminAccount = ({ name, email, password }, { resetForm }) =>
-    saveThenRefresh({
-      save: () => createAdmin({ name, email, password }),
-      refresh: refreshAdmins,
-      onSaved: resetForm,
-      closeModal: closeAccountModal,
-    });
+  const hideModal = (close) => () => {
+    clearSaveError();
+    close();
+  };
 
   return (
     <PageLayout id="dashboardAdmin" title={t('user-management')}>
@@ -143,18 +101,19 @@ function MainAdmin() {
 
       <Row>
         <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={() => setGroupModalOpen(true)}>{t('create-update-group')}</ActionLink>
+          <ActionLink onClick={openModal(setGroupModalOpen)}>{t('create-update-group')}</ActionLink>
         </Col>
         <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={() => setAccountModalOpen(true)}>{t('create-user')}</ActionLink>
+          <ActionLink onClick={openModal(setAccountModalOpen)}>{t('create-user')}</ActionLink>
         </Col>
         <QuickLinks />
       </Row>
 
-      <GroupModal show={groupModalOpen} onHide={closeGroupModal} groups={groups} onCreate={createGroup} onUpdate={updateGroup} />
+      <GroupModal show={groupModalOpen} onHide={hideModal(closeGroupModal)} error={saveError} groups={groups} onCreate={createGroup} onUpdate={updateGroup} />
       <CreateAccountModal
         show={accountModalOpen}
-        onHide={closeAccountModal}
+        onHide={hideModal(closeAccountModal)}
+        error={saveError}
         groups={groups}
         onCreateUser={createUserAccount}
         onCreateAdmin={createAdminAccount}
