@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Button, Col, Modal, Row, Tab, Tabs } from 'react-bootstrap';
+import React, { useMemo } from 'react';
+import { Alert, Button, Col, Modal, Row, Tab, Tabs } from 'react-bootstrap';
 import { Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
@@ -41,53 +41,55 @@ function CreateGroupForm({ onSubmit }) {
   );
 }
 
+const NO_GROUP = '0';
+
 function UpdateGroupForm({ groups, onSubmit }) {
   const { t } = useTranslation();
-  // Group picked in the select; prefills the form with its description.
-  const [groupToUpdate, setGroupToUpdate] = useState(null);
   const schema = useMemo(
     () => Yup.object().shape({ description: Yup.string().required(t('error-update-group-new', 'Description is required')) }),
     [t]
   );
 
-  const selectGroup = (event) => {
-    setGroupToUpdate(groups.find((group) => String(group.id) === event.target.value) ?? null);
-  };
+  const findGroup = (groupId) => groups.find((group) => String(group.id) === groupId) ?? null;
 
   return (
     <Formik
-      enableReinitialize
-      initialValues={{ description: groupToUpdate?.description ?? '' }}
+      initialValues={{ groupId: NO_GROUP, description: '' }}
       validationSchema={schema}
-      onSubmit={(values) => onSubmit(groupToUpdate, values)}
+      onSubmit={({ groupId, description }) => onSubmit(findGroup(groupId), { description })}
     >
-      {({ isValid, dirty, isSubmitting }) => (
-        <Form>
-          <Row>
-            <Col xs={12}>
-              <label htmlFor="update-group-select">{t('group-choice')}</label>
-            </Col>
-            <Col xs={12}>
-              <select id="update-group-select" className="select-field" onChange={selectGroup} defaultValue="0">
-                <option value="0">{t('select-group')}</option>
+      {({ values, isValid, isSubmitting, handleChange, setFieldValue }) => {
+        // Selecting a group prefills the form with its description.
+        const selectGroup = (event) => {
+          handleChange(event);
+          setFieldValue('description', findGroup(event.target.value)?.description ?? '');
+        };
+
+        return (
+          <Form>
+            <Row>
+              <FormField name="groupId" label={t('group-choice')} htmlFor="update-group-select" as="select" onChange={selectGroup}>
+                <option value={NO_GROUP}>{t('select-group')}</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
                     {group.description}
                   </option>
                 ))}
-              </select>
-            </Col>
-            {groupToUpdate && <FormField name="description" label={t('description-group')} htmlFor="update-group-description" />}
-          </Row>
-          <SubmitRow disabled={!groupToUpdate || !isValid || !dirty || isSubmitting} />
-        </Form>
-      )}
+              </FormField>
+              {values.groupId !== NO_GROUP && (
+                <FormField name="description" label={t('description-group')} htmlFor="update-group-description" />
+              )}
+            </Row>
+            <SubmitRow disabled={values.groupId === NO_GROUP || !isValid || isSubmitting} />
+          </Form>
+        );
+      }}
     </Formik>
   );
 }
 
 // Modal with a "create group" and an "update group" tab.
-function GroupModal({ show, onHide, groups, onCreate, onUpdate }) {
+function GroupModal({ show, onHide, error, groups, onCreate, onUpdate }) {
   const { t } = useTranslation();
 
   return (
@@ -96,6 +98,7 @@ function GroupModal({ show, onHide, groups, onCreate, onUpdate }) {
         <Modal.Title>{t('create-update-group')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        {error && <Alert variant="danger" role="alert">{t('request-failed', 'The request failed. Please try again.')}</Alert>}
         <Tabs defaultActiveKey="create-group" id="create-update-group">
           <Tab eventKey="create-group" title={t('create-group')}>
             <CreateGroupForm onSubmit={onCreate} />
