@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import * as Yup from 'yup';
 
+import AccountFields from '../../../components/AccountFields';
 import ActionLink from '../../../components/ActionLink';
 import AsyncContent from '../../../components/AsyncContent';
 import BackLink from '../../../components/BackLink';
@@ -12,14 +12,14 @@ import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
 import PageLayout from '../../../components/PageLayout';
 import UserInfoModal from '../../../components/UserInfoModal';
+import useAccountSchemas, { NO_GROUP } from '../../../hooks/useAccountSchemas';
 import useResource from '../../../hooks/useResource';
 import { ROUTES } from '../../../routes';
-import { emailSchema, newPasswordSchema } from '../../../utils/validation';
 
 import { getUsers, createUser } from '../../../api/users';
 import { getUserGroups } from '../../../api/userGroups';
 
-const INITIAL_VALUES = { username: '', password: '', email: '', group: '0' };
+const INITIAL_VALUES = { name: '', password: '', email: '', group: NO_GROUP };
 
 function SettingsUsers() {
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -30,15 +30,7 @@ function SettingsUsers() {
     const { data: users, status, reload } = useResource(getUsers);
     const { data: groups } = useResource(getUserGroups);
 
-    const validationSchema = useMemo(() => Yup.object().shape({
-        username: Yup.string()
-            .required(t('error-username-required', 'Username is required.')),
-        password: newPasswordSchema(t),
-        email: emailSchema(t),
-        group: Yup.string()
-            .notOneOf(['0'], t('error-group-required', 'Group is required.'))
-            .required(t('error-group-required', 'Group is required.')),
-    }), [t]);
+    const { userSchema } = useAccountSchemas(t);
 
     const submitCreateUser = ({ username, email, password, group }) =>
         createUser({ name: username.trim(), email: email.trim(), password, groups: [Number(group)] });
@@ -73,17 +65,15 @@ function SettingsUsers() {
                 title={t('create-user')}
                 titleId="create-user-modal-title"
                 initialValues={INITIAL_VALUES}
-                validationSchema={validationSchema}
+                validationSchema={userSchema}
                 requireDirty={false}
                 fullWidthSubmit
                 onSubmit={submitCreateUser}
                 onSaved={reload}
             >
-                <FormField name="username" label={t('username')} />
-                <FormField name="password" label={t('password')} type="password" />
-                <FormField name="email" label={t('email')} />
+                <AccountFields />
                 <FormField name="group" label={t('group')} as="select">
-                    <option value="0">{t('select-group')}</option>
+                    <option value={NO_GROUP}>{t('select-group')}</option>
                     {(groups ?? []).map((group) => (
                         <option key={group.id} value={group.id}>{group.description}</option>
                     ))}

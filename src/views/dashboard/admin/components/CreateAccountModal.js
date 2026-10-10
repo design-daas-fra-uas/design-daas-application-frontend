@@ -1,14 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Alert, Button, Col, Modal, Row, Tab, Tabs } from 'react-bootstrap';
 import { Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
-import * as Yup from 'yup';
 
 import FormField from '../../../../components/FormField';
-import { emailSchema, newPasswordSchema } from '../../../../utils/validation';
-
-// Value of the group select while no group is chosen.
-const NO_GROUP = '0';
+import AccountFields from '../../../../components/AccountFields';
+import useAccountSchemas, { NO_GROUP } from '../../../../hooks/useAccountSchemas';
 
 function AccountForm({ idSuffix, initialValues, validationSchema, onSubmit, children }) {
   const { t } = useTranslation();
@@ -18,12 +15,7 @@ function AccountForm({ idSuffix, initialValues, validationSchema, onSubmit, chil
       {({ isValid, dirty, isSubmitting }) => (
         <Form>
           <Row>
-            <FormField name="name" label={t('username')} htmlFor={`username${idSuffix}`} />
-            <FormField name="email" label={t('email')} htmlFor={`email${idSuffix}`} />
-            <FormField name="password" label={t('password')} htmlFor={`password${idSuffix}`} type="password" />
-            <Col xs={12}>
-              <div>{t('password-detail-info')}</div>
-            </Col>
+            <AccountFields idSuffix={idSuffix} />
             {children}
           </Row>
           <Row>
@@ -43,25 +35,7 @@ function AccountForm({ idSuffix, initialValues, validationSchema, onSubmit, chil
 function CreateAccountModal({ show, onHide, error, groups, onCreateUser, onCreateAdmin }) {
   const { t } = useTranslation();
 
-  const adminSchema = useMemo(
-    () =>
-      Yup.object().shape({
-        name: Yup.string().required(t('error-username-required', 'Username is required.')),
-        email: emailSchema(t),
-        password: newPasswordSchema(t),
-      }),
-    [t]
-  );
-
-  const userSchema = useMemo(
-    () =>
-      adminSchema.shape({
-        group: Yup.string()
-          .notOneOf([NO_GROUP], t('error-group-required', 'Group is required.'))
-          .required(t('error-group-required', 'Group is required.')),
-      }),
-    [adminSchema, t]
-  );
+  const { adminSchema, userSchema } = useAccountSchemas(t);
 
   return (
     <Modal show={show} onHide={onHide} size="md" centered>

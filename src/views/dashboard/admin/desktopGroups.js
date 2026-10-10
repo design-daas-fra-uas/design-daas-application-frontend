@@ -9,6 +9,7 @@ import BackLink from '../../../components/BackLink';
 import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
 import PageLayout from '../../../components/PageLayout';
+import useNotice from '../../../hooks/useNotice';
 import useResource from '../../../hooks/useResource';
 import { ROUTES } from '../../../routes';
 
@@ -18,7 +19,7 @@ import { getUserGroups } from '../../../api/userGroups';
 const CREATE_INITIAL_VALUES = { description: '' };
 
 // Mounted only while open, so the user groups are loaded on demand.
-function AddUserGroupModal({ desktopGroupId, onHide }) {
+function AddUserGroupModal({ desktopGroupId, onHide, onSaved }) {
     const { t } = useTranslation();
     const { data, status } = useResource(getUserGroups);
     const userGroups = data ?? [];
@@ -43,6 +44,7 @@ function AddUserGroupModal({ desktopGroupId, onHide }) {
             validationSchema={validationSchema}
             requireDirty={false}
             onSubmit={({ userGroupId }) => addUserGroupToDesktopGroup(desktopGroupId, userGroupId)}
+            onSaved={onSaved}
         >
             {status === 'error' && (
                 <Col xs={12}>
@@ -62,6 +64,7 @@ function DesktopGroups() {
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [selectedDesktopGroupId, setSelectedDesktopGroupId] = useState(null);
     const { t } = useTranslation();
+    const [notice, showNotice] = useNotice();
 
     const { data: desktopGroupsData, status, reload } = useResource(getDesktopGroups);
     const desktopGroups = desktopGroupsData ?? [];
@@ -73,6 +76,13 @@ function DesktopGroups() {
 
     return (
         <PageLayout id="desktop" title={t('desktop-groups')} wrapTitle>
+            {notice && (
+                <Row>
+                    <Col xs={12}>
+                        <div role="alert" className="request-success-alert">{t(notice.text)}</div>
+                    </Col>
+                </Row>
+            )}
             <Row>
                 <Col xs={12}>
                     <AsyncContent status={status} onRetry={reload} isEmpty={desktopGroups.length === 0}>
@@ -124,7 +134,11 @@ function DesktopGroups() {
                 <FormField name="description" label={t('desktop-groups-main-description')} />
             </FormModal>
             {selectedDesktopGroupId !== null && (
-                <AddUserGroupModal desktopGroupId={selectedDesktopGroupId} onHide={() => setSelectedDesktopGroupId(null)} />
+                <AddUserGroupModal
+                    desktopGroupId={selectedDesktopGroupId}
+                    onHide={() => setSelectedDesktopGroupId(null)}
+                    onSaved={() => showNotice({ text: 'request-successful', success: true }, { autoHide: true })}
+                />
             )}
         </PageLayout>
     );
