@@ -14,23 +14,17 @@ import { getDesktop } from '../../../api/desktops';
 function DesktopDetail() {
     const { id } = useParams();
     const { t } = useTranslation();
-    const { data: desktop, status } = useResource(() => getDesktop(id), [id]);
+    const { data: desktop, status, reload } = useResource(() => getDesktop(id), [id]);
 
     return (
         <PageLayout id="desktop-details" title={t('desktop-details')} wrapTitle>
             <Row>
                 <Col xs={12}>
-                    <AsyncContent status={status} notFoundText={t('desktop-not-found', 'Desktop not found.')}>
+                    <AsyncContent status={status} onRetry={reload} notFoundText={t('desktop-not-found', 'Desktop not found.')}>
                         {() => (
-                            <div>
-                                <ul>
-                                    <li>
-                                        <span>
-                                            {desktop.id}.) {desktop.description}
-                                        </span>
-                                    </li>
-                                </ul>
-                            </div>
+                            <p>
+                                {desktop.id}.) {desktop.description}
+                            </p>
                         )}
                     </AsyncContent>
                 </Col>
