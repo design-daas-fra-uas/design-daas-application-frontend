@@ -2465,120 +2465,339 @@ function MainUser() {
 
     const updateFile = submitFile('/files/update');
 
-    const updateFileSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        filename: Yup.string()
-            .required('Name invalid'),
-        filepath: Yup.string()
-            .required('Path invalid'),
-        os_type: Yup.string()
-            .required('OS Type invalid'),
-        version: Yup.string()
-            .required('Version invalid'),
-        file: Yup.string()
-            .required('File invalid'),
-    });
+    const renderAppForm = (mode, validationSchema, onSubmit) => (
+            <Formik
+                initialValues={{
+                    id: '',
+                    name: '',
+                    id_file: '',
+                    id_template: '',
+                    os_type: '',
+                    installer: '',
+                    installer_args: '',
+                    installer_type: '',
+                    target: '',
+                    target_args: '',
+                    version: '',
+                }}
+                validationSchema={validationSchema}
+                onSubmit={values => {
+                    console.log(values.text);
+                }}
+            >
+                {({errors, touched}) => (
+                    <Form onSubmit={onSubmit} id="form-apps-tools">
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label htmlFor={`${mode}-app-id`}>{t('vm-id')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-id`} name={`${mode}-app-id`}
+                                       value={vmCreateUpdateAppID}
+                                       onChange={changeVMCreateUpdateAppID}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-id`)}
+                                {/*<ErrorMessage name={`${mode}-app-id`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-name`}>{t('app-create-update-name')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-name`} name={`${mode}-app-name`}
+                                       value={vmCreateUpdateAppName}
+                                       onChange={changeVMCreateUpdateAppName}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-name`)}
+                                {/*<ErrorMessage name={`${mode}-app-name`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-id-file`}>{t('app-create-update-file')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-id-file`} name={`${mode}-app-id-file`}
+                                       value={vmCreateUpdateAppIDFile}
+                                       onChange={changeVMCreateUpdateAppIDFile}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-id-file`)}
+                                {/*<ErrorMessage name={`${mode}-app-id-file`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-id-template`}>{t('app-create-update-template')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-id-template`}
+                                       name={`${mode}-app-id-template`}
+                                       value={vmCreateUpdateAppIDTemplate}
+                                       onChange={changeVMCreateUpdateAppIDTemplate}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-id-template`)}
+                                {/*<ErrorMessage name={`${mode}-app-id-template`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-os-type`}>{t('app-create-update-os-type')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <select id={`${mode}-app-os-type`} name={`${mode}-app-os-type`}
+                                        value={vmCreateUpdateAppOSType}
+                                        onChange={changeVMCreateUpdateAppOSType}>
+                                    <option value="win10">Windows 10</option>
+                                    <option value="win11">Windows 11</option>
+                                    <option value="l26">Debian 12</option>
+                                </select>
+                                {/*<Field type="text" id={`${mode}-app-os-type`} name={`${mode}-app-os-type`} value={vmCreateUpdateAppOSType} onChange={changeVMCreateUpdateAppOSType}/>*/}
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-os-type`)}
+                                {/*<ErrorMessage name={`${mode}-app-os-type`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-installer`}>{t('app-create-update-installer')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-installer`}
+                                       name={`${mode}-app-installer`}
+                                       value={vmCreateUpdateAppInstaller}
+                                       onChange={changeVMCreateUpdateAppInstaller}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-installer`)}
+                                {/*<ErrorMessage name={`${mode}-app-installer`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-installer-args`}>{t('app-create-update-installer-args')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-installer-args`}
+                                       name={`${mode}-app-installer-args`}
+                                       value={vmCreateUpdateAppInstallerARGS}
+                                       onChange={changeVMCreateUpdateAppInstallerARGS}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-installer-args`)}
+                                {/*<ErrorMessage name={`${mode}-app-installer-args`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-installer-type`}>{t('app-create-update-installer-type')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <select id={`${mode}-app-installer-type`}
+                                        name={`${mode}-app-installer-type`}
+                                        value={vmCreateUpdateAppInstallerType}
+                                        onChange={changeVMCreateUpdateAppInstallerType}>
+                                    <option value="None">{t('app-installer-none')}</option>
+                                    <option
+                                        value="exec_cmd">{t('app-installer-execute-command')}</option>
+                                    <option
+                                        value="os_install">{t('app-installer-os-install')}</option>
+                                    <option
+                                        value="os_uninstall">{t('app-installer-os-uninstall')}</option>
+                                </select>
+                                {/*<Field type="text" id={`${mode}-app-installer-type`} name={`${mode}-app-installer-type`} value={vmCreateUpdateAppInstallerType} onChange={changeVMCreateUpdateAppInstallerType}/>*/}
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-installer-type`)}
+                                {/*<ErrorMessage name={`${mode}-app-installer-type`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-target`}>{t('app-create-update-target')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-target`} name={`${mode}-app-target`}
+                                       value={vmCreateUpdateAppTarget}
+                                       onChange={changeVMCreateUpdateAppTarget}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-target`)}
+                                {/*<ErrorMessage name={`${mode}-app-target`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-target-args`}>{t('app-create-update-target-args')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-target-args`}
+                                       name={`${mode}-app-target-args`}
+                                       value={vmCreateUpdateAppTargetARGS}
+                                       onChange={changeVMCreateUpdateAppTargetARGS}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-target-args`)}
+                                {/*<ErrorMessage name={`${mode}-app-target-args`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-version`}>{t('app-create-update-version')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-version`} name={`${mode}-app-version`}
+                                       value={vmCreateUpdateAppVersion}
+                                       onChange={changeVMCreateUpdateAppVersion}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-version`)}
+                                {/*<ErrorMessage name={`${mode}-app-version`}>
+                        </ErrorMessage>*/}
+                            </div>
+                        </ReactBootstrap.Row>
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                                <ReactBootstrap.Button
+                                    type="submit"
+                                    variant="primary"
+                                    id="submit"
+                                    disabled={vmCreateUpdateAppID.length > 0 && vmCreateUpdateAppName.length > 0 && vmCreateUpdateAppOSType.length > 0 && vmCreateUpdateAppInstallerType.length > 0 && vmCreateUpdateAppTarget.length > 0 && vmCreateUpdateAppVersion.length > 0 ? false : true}>
+                                    {t('submit')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Col>
+                        </ReactBootstrap.Row>
+                    </Form>
+                )}
+            </Formik>
+    );
 
-    const phasesBaseimageCreateContainerSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        obj_type: Yup.string()
-            .required('Object type invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-        rootimage: Yup.string()
-            .required('Root image invalid'),
-        cores: Yup.string()
-            .required('Cores invalid'),
-        memsize: Yup.string()
-            .required('Memory size invalid'),
-        disksize: Yup.string()
-            .required('Disk size invalid'),
-        dockerfile: Yup.mixed()
-            .required('Dockerfile invalid'),
-        ceph_public: Yup.string()
-            .required('CEPH public invalid'),
-        ceph_shared: Yup.string()
-            .required('CEPH shared invalid'),
-        ceph_user: Yup.string()
-            .required('CEPH user invalid'),
-        viewer_resolution: Yup.string()
-            .required('Resolution invalid'),
-        viewer_contype: Yup.string()
-            .required('Contype invalid'),
-        viewer_resize: Yup.string()
-            .required('Resize invalid'),
-        viewer_scale: Yup.string()
-            .required('Scale invalid'),
-    });
-
-    const phasesBaseimageCreateVMSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        obj_type: Yup.string()
-            .required('Object type invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-        os_type: Yup.string()
-            .required('OS type invalid'),
-        cores: Yup.string()
-            .required('Cores invalid'),
-        memsize: Yup.string()
-            .required('Memory size invalid'),
-        disksize: Yup.string()
-            .required('Disk size invalid'),
-        kb: Yup.string()
-            .required('Keyboard language invalid'),
-        ceph_pool: Yup.string()
-            .required('CEPH pool invalid'),
-    });
-
-    const phasesBaseimageCloneSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        newid: Yup.string()
-            .required('New ID invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-    });
-
-    const vmDataSchema = {
-        id: "",
-        obj_type: "",
-        name: "",
-        os_type: "",
-        cores: "",
-        memsize: "",
-        disksize: "",
-        kb: "",
-        ceph_pool: "",
-        ceph_public: "",
-        ceph_shared: "",
-        ceph_user: "",
-        viewer_contype: "",
-        viewer_resolution: "",
-        viewer_resize: "",
-        viewer_scale: "",
-    }
-
-    const containerDataSchema = {
-        id: "",
-        obj_type: "",
-        name: "",
-        rootimage: "",
-        cores: "",
-        memsize: "",
-        disksize: "",
-        dockerfile: "",
-        ceph_public: "",
-        ceph_shared: "",
-        ceph_user: "",
-        viewer_contype: "",
-        viewer_resolution: "",
-        viewer_resize: "",
-        viewer_scale: "",
-    }
+    const renderFileForm = (mode, validationSchema, onSubmit) => (
+            <Formik
+                initialValues={{
+                    id: '',
+                    filename: '',
+                    filepath: '',
+                    os_type: '',
+                    version: '',
+                    file: '',
+                }}
+                validationSchema={validationSchema}
+                onSubmit={values => {
+                    console.log(values.text);
+                }}
+            >
+                {({errors, touched}) => (
+                    <Form onSubmit={onSubmit} id="form-apps-tools">
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label htmlFor={`${mode}-file-id`}>{t('vm-id')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-id`} name={`${mode}-file-id`}
+                                       value={vmFileUploadAppID}
+                                       onChange={changeVMFileUploadAppID}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-id`)}
+                                {/*<ErrorMessage name={`${mode}-file-id`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-name`}>{t('file-create-update-name')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-name`} name={`${mode}-file-name`}
+                                       value={vmFileUploadAppName}
+                                       onChange={changeVMFileUploadAppName}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-name`)}
+                                {/*<ErrorMessage name={`${mode}-file-name`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-path`}>{t('file-create-update-path')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-path`} name={`${mode}-file-path`}
+                                       value={vmFileUploadAppPath}
+                                       onChange={changeVMFileUploadAppPath}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-path`)}
+                                {/*<ErrorMessage name={`${mode}-file-path`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-os-type`}>{t('file-create-update-os-type')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <select id={`${mode}-file-os-type`} name={`${mode}-file-os-type`}
+                                        value={vmFileUploadAppOSType}
+                                        onChange={changeVMFileUploadAppOSType}>
+                                    <option value="win10">Windows 10</option>
+                                    <option value="win11">Windows 11</option>
+                                    <option value="l26">Debian 12</option>
+                                </select>
+                                {/*<Field type="text" id={`${mode}-file-os-type`} name={`${mode}-file-os-type`} value={vmFileUploadAppOSType} onChange={changeVMFileUploadAppOSType}/>*/}
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-os-type`)}
+                                {/*<ErrorMessage name={`${mode}-file-os-type`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-version`}>{t('file-create-update-version')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-version`}
+                                       name={`${mode}-file-version`} value={vmFileUploadAppVersion}
+                                       onChange={changeVMFileUploadAppVersion}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-version`)}
+                                {/*<ErrorMessage name={`${mode}-file-version`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-file`}>{t('file-create-update-file')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <input type="file" id={`${mode}-file-file`} name={`${mode}-file-file`}
+                                       onChange={changeVMFileUploadAppSelectFile}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-file`)}
+                                {/*<ErrorMessage name={`${mode}-file-file`}>
+                        </ErrorMessage>*/}
+                            </div>
+                        </ReactBootstrap.Row>
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                                <ReactBootstrap.Button
+                                    type="submit"
+                                    variant="primary"
+                                    id="submit"
+                                    disabled={vmFileUploadAppID.length > 0 && vmFileUploadAppName.length > 0 && vmFileUploadAppOSType.length > 0 && vmFileUploadAppVersion.length > 0 && vmFileUploadAppPath.length > 0 && vmFileUploadAppSelectFile !== "" ? false : true}>
+                                    {t('submit')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Col>
+                        </ReactBootstrap.Row>
+                    </Form>
+                )}
+            </Formik>
+    );
 
     return (
         <>
@@ -4073,668 +4292,16 @@ function MainUser() {
                                 </Formik>
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="app-create" title={t('app-create')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        name: '',
-                                        id_file: '',
-                                        id_template: '',
-                                        os_type: '',
-                                        installer: '',
-                                        installer_args: '',
-                                        installer_type: '',
-                                        target: '',
-                                        target_args: '',
-                                        version: '',
-                                    }}
-                                    validationSchema={createAppSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createApp} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="create-app-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-id" name="create-app-id"
-                                                           value={vmCreateUpdateAppID}
-                                                           onChange={changeVMCreateUpdateAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-id')}
-                                                    {/*<ErrorMessage name="create-app-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-name">{t('app-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-name" name="create-app-name"
-                                                           value={vmCreateUpdateAppName}
-                                                           onChange={changeVMCreateUpdateAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-name')}
-                                                    {/*<ErrorMessage name="create-app-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-id-file">{t('app-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-id-file" name="create-app-id-file"
-                                                           value={vmCreateUpdateAppIDFile}
-                                                           onChange={changeVMCreateUpdateAppIDFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-id-file')}
-                                                    {/*<ErrorMessage name="create-app-id-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-id-template">{t('app-create-update-template')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-id-template"
-                                                           name="create-app-id-template"
-                                                           value={vmCreateUpdateAppIDTemplate}
-                                                           onChange={changeVMCreateUpdateAppIDTemplate}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-id-template')}
-                                                    {/*<ErrorMessage name="create-app-id-template">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-os-type">{t('app-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="create-app-os-type" name="create-app-os-type"
-                                                            value={vmCreateUpdateAppOSType}
-                                                            onChange={changeVMCreateUpdateAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="create-app-os-type" name="create-app-os-type" value={vmCreateUpdateAppOSType} onChange={changeVMCreateUpdateAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-os-type')}
-                                                    {/*<ErrorMessage name="create-app-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-installer">{t('app-create-update-installer')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-installer"
-                                                           name="create-app-installer"
-                                                           value={vmCreateUpdateAppInstaller}
-                                                           onChange={changeVMCreateUpdateAppInstaller}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-installer')}
-                                                    {/*<ErrorMessage name="create-app-installer">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-installer-args">{t('app-create-update-installer-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-installer-args"
-                                                           name="create-app-installer-args"
-                                                           value={vmCreateUpdateAppInstallerARGS}
-                                                           onChange={changeVMCreateUpdateAppInstallerARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-installer-args')}
-                                                    {/*<ErrorMessage name="create-app-installer-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-installer-type">{t('app-create-update-installer-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="create-app-installer-type"
-                                                            name="create-app-installer-type"
-                                                            value={vmCreateUpdateAppInstallerType}
-                                                            onChange={changeVMCreateUpdateAppInstallerType}>
-                                                        <option value="None">{t('app-installer-none')}</option>
-                                                        <option
-                                                            value="exec_cmd">{t('app-installer-execute-command')}</option>
-                                                        <option
-                                                            value="os_install">{t('app-installer-os-install')}</option>
-                                                        <option
-                                                            value="os_uninstall">{t('app-installer-os-uninstall')}</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="create-app-installer-type" name="create-app-installer-type" value={vmCreateUpdateAppInstallerType} onChange={changeVMCreateUpdateAppInstallerType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-installer-type')}
-                                                    {/*<ErrorMessage name="create-app-installer-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-target">{t('app-create-update-target')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-target" name="create-app-target"
-                                                           value={vmCreateUpdateAppTarget}
-                                                           onChange={changeVMCreateUpdateAppTarget}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-target')}
-                                                    {/*<ErrorMessage name="create-app-target">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-target-args">{t('app-create-update-target-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-target-args"
-                                                           name="create-app-target-args"
-                                                           value={vmCreateUpdateAppTargetARGS}
-                                                           onChange={changeVMCreateUpdateAppTargetARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-target-args')}
-                                                    {/*<ErrorMessage name="create-app-target-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-version">{t('app-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-version" name="create-app-version"
-                                                           value={vmCreateUpdateAppVersion}
-                                                           onChange={changeVMCreateUpdateAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-version')}
-                                                    {/*<ErrorMessage name="create-app-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmCreateUpdateAppID.length > 0 && vmCreateUpdateAppName.length > 0 && vmCreateUpdateAppOSType.length > 0 && vmCreateUpdateAppInstallerType.length > 0 && vmCreateUpdateAppTarget.length > 0 && vmCreateUpdateAppVersion.length > 0 ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderAppForm('create', createAppSchema, createApp)}
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="app-update" title={t('app-update')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        name: '',
-                                        id_file: '',
-                                        id_template: '',
-                                        os_type: '',
-                                        installer: '',
-                                        installer_args: '',
-                                        installer_type: '',
-                                        target: '',
-                                        target_args: '',
-                                        version: '',
-                                    }}
-                                    validationSchema={updateAppSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={updateApp} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="update-app-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-id" name="update-app-id"
-                                                           value={vmCreateUpdateAppID}
-                                                           onChange={changeVMCreateUpdateAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-id')}
-                                                    {/*<ErrorMessage name="update-app-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-name">{t('app-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-name" name="update-app-name"
-                                                           value={vmCreateUpdateAppName}
-                                                           onChange={changeVMCreateUpdateAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-name')}
-                                                    {/*<ErrorMessage name="update-app-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-id-file">{t('app-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-id-file" name="update-app-id-file"
-                                                           value={vmCreateUpdateAppIDFile}
-                                                           onChange={changeVMCreateUpdateAppIDFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-id-file')}
-                                                    {/*<ErrorMessage name="update-app-id-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-id-template">{t('app-create-update-template')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-id-template"
-                                                           name="update-app-id-template"
-                                                           value={vmCreateUpdateAppIDTemplate}
-                                                           onChange={changeVMCreateUpdateAppIDTemplate}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-id-template')}
-                                                    {/*<ErrorMessage name="update-app-id-template">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-os-type">{t('app-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="update-app-os-type" name="update-app-os-type"
-                                                            value={vmCreateUpdateAppOSType}
-                                                            onChange={changeVMCreateUpdateAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="update-app-os-type" name="update-app-os-type" value={vmCreateUpdateAppOSType} onChange={changeVMCreateUpdateAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-os-type')}
-                                                    {/*<ErrorMessage name="update-app-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-installer">{t('app-create-update-installer')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-installer"
-                                                           name="update-app-installer"
-                                                           value={vmCreateUpdateAppInstaller}
-                                                           onChange={changeVMCreateUpdateAppInstaller}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-installer')}
-                                                    {/*<ErrorMessage name="update-app-installer">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-installer-args">{t('app-create-update-installer-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-installer-args"
-                                                           name="update-app-installer-args"
-                                                           value={vmCreateUpdateAppInstallerARGS}
-                                                           onChange={changeVMCreateUpdateAppInstallerARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-installer-args')}
-                                                    {/*<ErrorMessage name="update-app-installer-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-installer-type">{t('app-create-update-installer-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="update-app-installer-type"
-                                                            name="update-app-installer-type"
-                                                            value={vmCreateUpdateAppInstallerType}
-                                                            onChange={changeVMCreateUpdateAppInstallerType}>
-                                                        <option value="None">{t('app-installer-none')}</option>
-                                                        <option
-                                                            value="exec_cmd">{t('app-installer-execute-command')}</option>
-                                                        <option
-                                                            value="os_install">{t('app-installer-os-install')}</option>
-                                                        <option
-                                                            value="os_uninstall">{t('app-installer-os-uninstall')}</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="update-app-installer-type" name="update-app-installer-type" value={vmCreateUpdateAppInstallerType} onChange={changeVMCreateUpdateAppInstallerType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-installer-type')}
-                                                    {/*<ErrorMessage name="update-app-installer-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-target">{t('app-create-update-target')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-target" name="update-app-target"
-                                                           value={vmCreateUpdateAppTarget}
-                                                           onChange={changeVMCreateUpdateAppTarget}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-target')}
-                                                    {/*<ErrorMessage name="update-app-target">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-target-args">{t('app-create-update-target-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-target-args"
-                                                           name="update-app-target-args"
-                                                           value={vmCreateUpdateAppTargetARGS}
-                                                           onChange={changeVMCreateUpdateAppTargetARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-target-args')}
-                                                    {/*<ErrorMessage name="update-app-target-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-version">{t('app-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-version" name="update-app-version"
-                                                           value={vmCreateUpdateAppVersion}
-                                                           onChange={changeVMCreateUpdateAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-version')}
-                                                    {/*<ErrorMessage name="update-app-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmCreateUpdateAppID.length > 0 && vmCreateUpdateAppName.length > 0 && vmCreateUpdateAppOSType.length > 0 && vmCreateUpdateAppInstallerType.length > 0 && vmCreateUpdateAppTarget.length > 0 && vmCreateUpdateAppVersion.length > 0 ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderAppForm('update', updateAppSchema, updateApp)}
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="file-create" title={t('file-create')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        filename: '',
-                                        filepath: '',
-                                        os_type: '',
-                                        version: '',
-                                        file: '',
-                                    }}
-                                    validationSchema={createFileSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createFile} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="create-file-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-id" name="create-file-id"
-                                                           value={vmFileUploadAppID}
-                                                           onChange={changeVMFileUploadAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-id')}
-                                                    {/*<ErrorMessage name="create-file-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-name">{t('file-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-name" name="create-file-name"
-                                                           value={vmFileUploadAppName}
-                                                           onChange={changeVMFileUploadAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-name')}
-                                                    {/*<ErrorMessage name="create-file-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-path">{t('file-create-update-path')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-path" name="create-file-path"
-                                                           value={vmFileUploadAppPath}
-                                                           onChange={changeVMFileUploadAppPath}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-path')}
-                                                    {/*<ErrorMessage name="create-file-path">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-os-type">{t('file-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="create-file-os-type" name="create-file-os-type"
-                                                            value={vmFileUploadAppOSType}
-                                                            onChange={changeVMFileUploadAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="create-file-os-type" name="create-file-os-type" value={vmFileUploadAppOSType} onChange={changeVMFileUploadAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-os-type')}
-                                                    {/*<ErrorMessage name="create-file-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-version">{t('file-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-version"
-                                                           name="create-file-version" value={vmFileUploadAppVersion}
-                                                           onChange={changeVMFileUploadAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-version')}
-                                                    {/*<ErrorMessage name="create-file-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-file">{t('file-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <input type="file" id="create-file-file" name="create-file-file"
-                                                           onChange={changeVMFileUploadAppSelectFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-file')}
-                                                    {/*<ErrorMessage name="create-file-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmFileUploadAppID.length > 0 && vmFileUploadAppName.length > 0 && vmFileUploadAppOSType.length > 0 && vmFileUploadAppVersion.length > 0 && vmFileUploadAppPath.length > 0 && vmFileUploadAppSelectFile !== "" ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderFileForm('create', createFileSchema, createFile)}
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="file-update" title={t('file-update')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        filename: '',
-                                        filepath: '',
-                                        os_type: '',
-                                        version: '',
-                                        file: '',
-                                    }}
-                                    validationSchema={updateFileSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={updateFile} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="update-file-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-id" name="update-file-id"
-                                                           value={vmFileUploadAppID}
-                                                           onChange={changeVMFileUploadAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-id')}
-                                                    {/*<ErrorMessage name="update-file-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-name">{t('file-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-name" name="update-file-name"
-                                                           value={vmFileUploadAppName}
-                                                           onChange={changeVMFileUploadAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-name')}
-                                                    {/*<ErrorMessage name="update-file-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-path">{t('file-create-update-path')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-path" name="update-file-path"
-                                                           value={vmFileUploadAppPath}
-                                                           onChange={changeVMFileUploadAppPath}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-path')}
-                                                    {/*<ErrorMessage name="update-file-path">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-os-type">{t('file-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="update-file-os-type" name="update-file-os-type"
-                                                            value={vmFileUploadAppOSType}
-                                                            onChange={changeVMFileUploadAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="update-file-os-type" name="update-file-os-type" value={vmFileUploadAppOSType} onChange={changeVMFileUploadAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-os-type')}
-                                                    {/*<ErrorMessage name="update-file-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-version">{t('file-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-version"
-                                                           name="update-file-version" value={vmFileUploadAppVersion}
-                                                           onChange={changeVMFileUploadAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-version')}
-                                                    {/*<ErrorMessage name="update-file-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-file">{t('file-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <input type="file" id="update-file-file" name="update-file-file"
-                                                           onChange={changeVMFileUploadAppSelectFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-file')}
-                                                    {/*<ErrorMessage name="update-file-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmFileUploadAppID.length > 0 && vmFileUploadAppName.length > 0 && vmFileUploadAppOSType.length > 0 && vmFileUploadAppVersion.length > 0 && vmFileUploadAppPath.length > 0 && vmFileUploadAppSelectFile !== "" ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderFileForm('update', updateFileSchema, updateFile)}
                             </ReactBootstrap.Tab>
                         </ReactBootstrap.Tabs>
                     </ReactBootstrap.Modal.Body>
