@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Col, Container, Row } from 'react-bootstrap';
+import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -9,6 +9,7 @@ import BackLink from '../components/BackLink';
 import FormField from '../components/FormField';
 import Header from '../components/header';
 import { ROUTES } from '../routes';
+import { emailSchema } from '../utils/validation';
 
 import { validateEmail } from '../api/users';
 
@@ -32,23 +33,22 @@ function Registration() {
   const registrationSchema = useMemo(
     () =>
       Yup.object().shape({
-        email: Yup.string()
-          .email(t('error-email-format', 'Enter a valid email address, e.g. name@example.com.'))
-          .required(t('error-email-required', 'Email is required.')),
-        registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required')),
+        email: emailSchema(t),
+        registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required.')),
       }),
     [t]
   );
 
-  const registerUser = async ({ email, registrationCode }) => {
+  const registerUser = async ({ email, registrationCode }, { resetForm }) => {
     setFeedback({ visible: false, success: false });
 
     try {
       await validateEmail({
-        email,
-        registration_code: registrationCode,
+        email: email.trim(),
+        registration_code: registrationCode.trim(),
       });
       setFeedback({ visible: true, success: true });
+      resetForm();
     } catch (error) {
       console.error(error);
       setFeedback({ visible: true, success: false });
@@ -94,11 +94,11 @@ function Registration() {
 
         <Row>
           <Col xs={12}>
-            <div className={feedback.visible ? 'show-alert' : 'hide-alert'} role="alert" aria-live="polite">
-              <div className={feedback.success ? 'request-success-alert' : 'request-fail-alert'}>
+            {feedback.visible && (
+              <Alert variant={feedback.success ? 'success' : 'danger'} role="alert">
                 {feedback.success ? t('request-successful') : t('request-failed')}
-              </div>
-            </div>
+              </Alert>
+            )}
           </Col>
         </Row>
       </Container>
