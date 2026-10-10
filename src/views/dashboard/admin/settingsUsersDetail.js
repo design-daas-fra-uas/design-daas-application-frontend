@@ -11,6 +11,7 @@ import FormField from '../../../components/FormField';
 import PageLayout from '../../../components/PageLayout';
 import useResource from '../../../hooks/useResource';
 import { ROUTES } from '../../../routes';
+import { emailSchema } from '../../../utils/validation';
 
 import { getUsers, updateUser, disableUser, enableUser } from '../../../api/users';
 
@@ -26,9 +27,7 @@ function SettingsUsersDetail() {
     const updateUserSchema = useMemo(() => Yup.object().shape({
         name: Yup.string()
             .required(t('error-name', 'Username invalid')),
-        email: Yup.string()
-            .email(t('error-email', 'Invalid email'))
-            .required(t('error-email', 'Email invalid')),
+        email: emailSchema(t),
     }), [t]);
 
     // Saving and refreshing share one error message; the refresh is silent so the form stays mounted.
