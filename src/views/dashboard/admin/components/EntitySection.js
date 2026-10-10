@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-import EntityPreviewList from '../../../../components/EntityPreviewList';
+import EntityList from '../../../../components/EntityList';
 
 // Dashboard widget: section title, "all" link and a short preview list.
 function EntitySection({ title, allLink, items, onSettings, onInfo, limit = 3 }) {
@@ -24,7 +24,7 @@ function EntitySection({ title, allLink, items, onSettings, onInfo, limit = 3 })
         </Row>
       </Col>
       <Col xs={12}>
-        <EntityPreviewList items={items} limit={limit} onSettings={onSettings} onInfo={onInfo} />
+        <EntityList items={items} limit={limit} onSettings={onSettings} onInfo={onInfo} />
       </Col>
     </>
   );
