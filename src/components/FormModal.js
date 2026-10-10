@@ -28,7 +28,7 @@ function FormModal({
     onHide();
   };
 
-  const handleSubmit = async (values, { resetForm }) => {
+  const handleSubmit = async (values) => {
     setSubmitError('');
     try {
       await onSubmit(values);
@@ -38,9 +38,12 @@ function FormModal({
       return;
     }
 
-    resetForm();
     handleHide();
-    await onSaved?.();
+    try {
+      await onSaved?.();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
