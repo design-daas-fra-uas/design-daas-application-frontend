@@ -1674,53 +1674,7 @@ function MainUser() {
     }
 
     const logoutValidation = () => {
-        localStorage.removeItem("role");
-        localStorage.removeItem("language");
-        localStorage.removeItem("userData");
-        localStorage.removeItem("userDataID");
-        localStorage.removeItem("objectSharedApp");
-        localStorage.removeItem("objectUserID");
-        localStorage.removeItem("application");
-        localStorage.removeItem("app-data");
-        localStorage.removeItem("app-data-option");
-        localStorage.removeItem("instance-object-id");
-        localStorage.removeItem("instance-env");
-        localStorage.removeItem("env-object-id")
-        localStorage.removeItem("env-name")
-        localStorage.removeItem("connection-object-id")
-        localStorage.removeItem("connection-env")
-        localStorage.removeItem("connection-shared-object-id")
-        localStorage.removeItem("connection-shared-env")
-        localStorage.removeItem("object-id")
-        localStorage.removeItem("object-env-name")
-        localStorage.removeItem("object-state")
-        localStorage.removeItem("messageError");
-        localStorage.removeItem("userDataName");
-        localStorage.removeItem("userToken");
-        localStorage.removeItem("userTimeToken");
-        localStorage.removeItem("userRefreshToken");
-        localStorage.removeItem("user-group-id");
-        localStorage.removeItem("desktop-group-id");
-        localStorage.removeItem("selected-environment-id")
-        localStorage.removeItem("selected-environment-name")
-        localStorage.removeItem("selected-instance-id")
-        localStorage.removeItem("selected-instance-env-name")
-        localStorage.removeItem("selected-environment-envname")
-        localStorage.removeItem("selected-connection-index")
-        localStorage.removeItem("selected-object-id")
-        localStorage.removeItem("selected-object-env-name")
-        localStorage.removeItem("selected-object-state")
-        localStorage.removeItem("expert-mode-baseimage")
-        localStorage.removeItem("expert-mode-environment")
-        localStorage.removeItem("expert-mode-environment-id")
-        localStorage.removeItem("expert-mode-environment-env")
-        localStorage.removeItem("timeUser")
-
-        localStorage.removeItem("application-viewer-id")
-        localStorage.removeItem("environment-viewer-id")
-        localStorage.removeItem("object-viewer-id")
-        localStorage.removeItem("dashboard-info")
-        localStorage.removeItem("environment-type-mode")
+        LOGOUT_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
 
         setTimeout(async () => {
             const servicePartnerAuthLogout = async () => {
