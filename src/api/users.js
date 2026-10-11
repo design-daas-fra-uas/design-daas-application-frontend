@@ -7,8 +7,8 @@ export const createUser = (payload) => apiClient.post('/user', payload);
 export const updateUser = (id, payload) =>
     apiClient.patch(`/user/${id}`, payload);
 
-export const enableUser = (id) => apiClient.post(`/user/${id}/enable`, {});
+export const enableUser = (id) => apiClient.patch(`/user/${id}/enable`);
 
-export const disableUser = (id) => apiClient.post(`/user/${id}/disable`, {});
+export const disableUser = (id) => apiClient.patch(`/user/${id}/disable`);
 
 export const validateEmail = (payload) => publicClient.post('/user/validate_email', payload);
