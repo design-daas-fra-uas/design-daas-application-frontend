@@ -6,6 +6,8 @@ import { DEVELOPMENT_INTERN, OAUTH_CLIENT_ID } from '../constants/constants';
 // These intentionally bypass the shared `client.js` instance.
 const TOKEN_URL = `${DEVELOPMENT_INTERN}/oauth2/user/token`;
 
+const LOGOUT_URL = `${DEVELOPMENT_INTERN}/oauth2/user/logout`;
+
 const toFormBody = (fields) =>
     Object.entries(fields)
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
@@ -19,5 +21,17 @@ const postToken = (fields) =>
 export const loginWithPassword = ({ username, password, role }) =>
     postToken({ grant_type: 'password', username, password, scope: role });
 
-export const refreshAccessToken = ({ refreshToken, role }) =>
-    postToken({ grant_type: 'refresh_token', scope: role, refresh_token: refreshToken });
+export const refreshAccessToken = ({ refreshToken }) =>
+    postToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
+
+export const logoutRequest = ({ accessToken, refreshToken }) =>
+    axios.post(
+        LOGOUT_URL,
+        toFormBody(refreshToken ? { refresh_token: refreshToken } : {}),
+        {
+            headers: {
+                Authorization: accessToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        },
+    );
