@@ -31,7 +31,7 @@ function Login() {
         tokenType: response.data.token_type,
         accessToken: response.data.access_token,
         refreshToken: response.data.refresh_token,
-        role,
+        role: response.data.scope || role,
       });
     } catch (error) {
       clearSession();

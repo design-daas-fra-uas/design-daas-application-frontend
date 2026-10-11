@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import axios from "axios";
-import { DEVELOPMENT, DEVELOPMENT_INTERN, PASSWORD, URL_SYSTEM, USERNAME } from "../../../constants/constants";
+import { logoutRequest } from "../../../api/auth";
+import { DEVELOPMENT, DEVELOPMENT_INTERN, URL_SYSTEM } from "../../../constants/constants";
 import { Field, Form, Formik } from "formik";
 import { useMediaQuery } from "react-responsive";
 import Logo from "../../../assets/images/png/DESIGNLogoColouredWhiteFont.png";
@@ -1459,34 +1460,14 @@ function MainUser() {
     const changeLanguageEnglish = () => changeLanguage('en');
 
     const logoutValidation = () => {
+        const accessToken = localStorage.getItem("userToken");
+        const refreshToken = (localStorage.getItem("userRefreshToken") || '').replace(/^\S+\s+(?=\S)/, '');
         LOGOUT_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-
-        setTimeout(async () => {
-            const servicePartnerAuthLogout = async () => {
-                await axios.post(DEVELOPMENT + '/logout', {
-                    username: USERNAME,
-                    password: PASSWORD,
-                }, {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                        'Access-Control-Allow-Credentials': true,
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        console.log(response);
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-            };
-            await servicePartnerAuthLogout();
-        }, 1000);
-        setTimeout(() => {
-            window.location.href = ROUTES.login;
-        }, 2000);
+        logoutRequest({accessToken, refreshToken})
+            .catch(e => console.log(e))
+            .finally(() => {
+                window.location.href = ROUTES.login;
+            });
     };
 
     const connectStart = (data) => {

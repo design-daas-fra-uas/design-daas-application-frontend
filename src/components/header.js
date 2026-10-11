@@ -1,14 +1,15 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import axios from "axios";
-import {useMediaQuery} from "react-responsive";
+import { useMediaQuery } from "react-responsive";
 
-import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, URL_SYSTEM} from "../constants/constants";
+import { DEVELOPMENT, TEST, LIVE, URL_SYSTEM } from "../constants/constants";
 
 import Logo from './../assets/images/png/DESIGNLogoColouredWhiteFont.png';
-import {ROUTES} from "../routes";
-import {changeLanguage} from "../i18n";
+import { ROUTES } from "../routes";
+import { changeLanguage } from "../i18n";
+import { logoutRequest } from "../api/auth";
 
 function Header() {
     const [sharedData, setSharedData] = useState([]);
@@ -118,6 +119,8 @@ function Header() {
     const changeLanguageEnglish = () => changeLanguage('en');
 
     const logoutValidation = () => {
+        const accessToken = localStorage.getItem("userToken");
+        const refreshToken = (localStorage.getItem("userRefreshToken") || '').replace(/^\S+\s+(?=\S)/, '');
         localStorage.removeItem("role");
         localStorage.removeItem("language");
         localStorage.removeItem("userData");
@@ -166,33 +169,11 @@ function Header() {
         localStorage.removeItem("dashboard-info")
         localStorage.removeItem("environment-type-mode")
         localStorage.removeItem("object-id-instance");
-
-        setTimeout(async () => {
-            const servicePartnerAuthLogout = async () => {
-                await axios.post(DEVELOPMENT + '/logout', {
-                    username: USERNAME,
-                    password: PASSWORD,
-                }, {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                        'Access-Control-Allow-Credentials': true,
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        console.log(response);
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-            };
-            await servicePartnerAuthLogout();
-        }, 1000);
-        setTimeout(() => {
-            window.location.href = ROUTES.login;
-        }, 2000);
+        logoutRequest({accessToken, refreshToken})
+            .catch(e => console.log(e))
+            .finally(() => {
+                window.location.href = ROUTES.login;
+            });
     };
 
     const connectStart = (data) => {
