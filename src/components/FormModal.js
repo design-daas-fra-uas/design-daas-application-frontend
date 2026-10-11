@@ -34,7 +34,8 @@ function FormModal({
       await onSubmit(values);
     } catch (error) {
       console.error(error);
-      setSubmitError(t('request-failed', 'The request failed. Please try again.'));
+      const conflictMessage = error?.response?.status === 409 ? error.response.data?.message : '';
+      setSubmitError(conflictMessage || t('request-failed', 'The request failed. Please try again.'));
       return;
     }
 
