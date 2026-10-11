@@ -1,269 +1,146 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import * as ReactBootstrap from 'react-bootstrap';
+import React, { useMemo, useState } from 'react';
+import { Alert, Button, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
-import Header from '../../../components/header';
+import ActionLink from '../../../components/ActionLink';
+import AsyncContent from '../../../components/AsyncContent';
+import BackLink from '../../../components/BackLink';
 import FormField from '../../../components/FormField';
+import FormModal from '../../../components/FormModal';
+import PageLayout from '../../../components/PageLayout';
+import useNotice from '../../../hooks/useNotice';
+import useResource from '../../../hooks/useResource';
+import { ROUTES } from '../../../routes';
 
 import { getDesktopGroups, createDesktopGroup, addUserGroupToDesktopGroup } from '../../../api/desktopGroups';
 import { getUserGroups } from '../../../api/userGroups';
 
-function DesktopGroups() {
-    const [allDesktopGroups, setAllDesktopGroups] = useState([]);
-    const [allUserGroups, setAllUserGroups] = useState([]);
-    const [createDesktopGroupsModal, setCreateDesktopGroupsModal] = useState(false);
-    const [addUserGroupDesktopGroupModal, setAddUserGroupDesktopGroupModal] = useState(false);
-    const [selectedDesktopGroupId, setSelectedDesktopGroupId] = useState(null);
+const CREATE_INITIAL_VALUES = { description: '' };
+
+// Mounted only while open, so the user groups are loaded on demand.
+function AddUserGroupModal({ desktopGroupId, onHide, onSaved }) {
     const { t } = useTranslation();
+    const { data, status } = useResource(getUserGroups);
+    const userGroups = data ?? [];
 
-    const fetchDesktopGroups = useCallback(() => {
-        getDesktopGroups()
-            .then(setAllDesktopGroups)
-            .catch((e) => {
-                console.log(e);
-            });
-    }, []);
-
-    useEffect(() => {
-        fetchDesktopGroups();
-
-        getUserGroups()
-            .then(setAllUserGroups)
-            .catch((e) => {
-                console.log(e);
-            });
-    }, [fetchDesktopGroups]);
-
-    const showModalCreateDesktopGroups = () => {
-        setCreateDesktopGroupsModal(true);
-    };
-    const closeModalCreateDesktopGroups = () => {
-        setCreateDesktopGroupsModal(false);
-    };
-
-    const showModalAddUserGroups = (id) => {
-        setSelectedDesktopGroupId(id);
-        setAddUserGroupDesktopGroupModal(true);
-    };
-    const closeModalAddUserGroups = () => {
-        setAddUserGroupDesktopGroupModal(false);
-        setSelectedDesktopGroupId(null);
-    };
-
-    const submitCreateDesktopGroups = (values, { setSubmitting, resetForm }) => {
-        createDesktopGroup({
-            description: values.description,
-        })
-        .then(() => {
-            fetchDesktopGroups();
-            resetForm();
-            closeModalCreateDesktopGroups();
-        })
-        .catch(e => {
-            console.log(e)
-        })
-        .finally(() => {
-            setSubmitting(false);
-        });
-    };
-
-    const submitAddUserGroupToDesktopGroup = (values, { setSubmitting }) => {
-        addUserGroupToDesktopGroup(selectedDesktopGroupId, values.userGroupId)
-        .then(() => {
-            closeModalAddUserGroups();
-        })
-        .catch(e => {
-            console.log(e)
-        })
-        .finally(() => {
-            setSubmitting(false);
-        });
-    };
-
-    const createDesktopGroupsValidationSchema = Yup.object().shape({
-        description: Yup.string()
-            .required(t('error-desktop-groups-main-description') || 'Desktop main description invalid'),
-    });
-
-    const addUserGroupToDesktopGroupValidationSchema = Yup.object().shape({
+    const validationSchema = useMemo(() => Yup.object().shape({
         userGroupId: Yup.string()
-            .required(t('error-select-user-group') || 'Select a user group'),
-    });
+            .required(t('error-select-user-group', 'Select a user group')),
+    }), [t]);
+
+    const initialValues = useMemo(
+        () => ({ userGroupId: data?.[0] ? String(data[0].id) : '' }),
+        [data]
+    );
 
     return (
-        <>
-            <Header />
-            <ReactBootstrap.Container id="desktop">
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12} className="text-center">
-                        <div>
-                            <h2>
-                                {t('desktop-groups')}
-                            </h2>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                        {
-                            allDesktopGroups.map(desktopGroupsData => {
-                                return (
-                                    <ReactBootstrap.Row>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={8} lg={8} xl={8}>
-                                            <div>
-                                                <ul>
-                                                    <li>
-                                                        <span>
-                                                            {desktopGroupsData.description}
-                                                        </span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </ReactBootstrap.Col>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={4} lg={4} xl={4} className="text-end">
-                                            <div>
-                                                <ul>
-                                                    <li>
-                                                        <span>
-                                                            <ReactBootstrap.Button type="submit" variant="primary" onClick={() => showModalAddUserGroups(desktopGroupsData.id)}>
-                                                              {t('add-user-group')}
-                                                            </ReactBootstrap.Button>
-                                                        </span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </ReactBootstrap.Col>
-                                    </ReactBootstrap.Row>
-                                )
-                            })
-                        }
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Row>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div>
-                            <Link to="/dashboard/admin" className="link-daas-design">
-                                {/*<i className="fa-solid fa-arrow-left"></i>*/}
-                                <div>
-                                    {t('back-link')}
-                                </div>
-                            </Link>
-                        </div>
-                    </ReactBootstrap.Col>
-                    <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}>
-                        <div>
-                            <div className="link-daas-design" onClick={showModalCreateDesktopGroups}>
-                                {/*<i className="fa-solid fa-arrow-left"></i>*/}
-                                <div>
-                                    {t('desktop-groups-create')}
-                                </div>
-                            </div>
-                        </div>
-                    </ReactBootstrap.Col>
-                </ReactBootstrap.Row>
-                <ReactBootstrap.Modal
-                    show={createDesktopGroupsModal}
-                    onHide={closeModalCreateDesktopGroups}
-                    size="md"
-                    aria-labelledby="contained-modal-title-vcenter"
-                    centered
-                >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {t('desktop-groups-create')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <Formik
-                            key={createDesktopGroupsModal}
-                            initialValues={{
-                                description: '',
-                            }}
-                            validationSchema={createDesktopGroupsValidationSchema}
-                            onSubmit={submitCreateDesktopGroups}
-                        >
-                            {({ isValid, dirty, isSubmitting }) => (
-                                <Form>
-                                    <ReactBootstrap.Row>
-                                        <FormField
-                                            name="description"
-                                            label={t('desktop-groups-main-description')}
-                                        />
-                                    </ReactBootstrap.Row>
-                                    <ReactBootstrap.Row>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <ReactBootstrap.Button
-                                                type="submit"
-                                                variant="primary"
-                                                disabled={!isValid || !dirty || isSubmitting}
-                                            >
-                                                {t('submit')}
-                                            </ReactBootstrap.Button>
-                                        </ReactBootstrap.Col>
-                                    </ReactBootstrap.Row>
-                                </Form>
-                            )}
-                        </Formik>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-                <ReactBootstrap.Modal
-                    show={addUserGroupDesktopGroupModal}
-                    onHide={closeModalAddUserGroups}
-                    size="md"
-                    aria-labelledby="contained-modal-title-vcenter-two"
-                    centered
-                >
-                    <ReactBootstrap.Modal.Header closeButton>
-                        <ReactBootstrap.Modal.Title>
-                            {t('desktop-groups-add-user-group')}
-                        </ReactBootstrap.Modal.Title>
-                    </ReactBootstrap.Modal.Header>
-                    <ReactBootstrap.Modal.Body>
-                        <Formik
-                            key={`${addUserGroupDesktopGroupModal}-${selectedDesktopGroupId}`}
-                            initialValues={{
-                                userGroupId: allUserGroups[0] ? String(allUserGroups[0].id) : '',
-                            }}
-                            enableReinitialize
-                            validationSchema={addUserGroupToDesktopGroupValidationSchema}
-                            onSubmit={submitAddUserGroupToDesktopGroup}
-                        >
-                            {({ isValid, isSubmitting }) => (
-                                <Form>
-                                    <ReactBootstrap.Row>
-                                        <FormField
-                                            name="userGroupId"
-                                            label={t('select-user-group')}
-                                            as="select"
-                                        >
-                                            {
-                                                allUserGroups.map(data => (
-                                                    <option key={data.id} value={data.id}>{data.description}</option>
-                                                ))
-                                            }
-                                        </FormField>
-                                    </ReactBootstrap.Row>
-                                    <ReactBootstrap.Row>
-                                        <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                            <ReactBootstrap.Button
-                                                type="submit"
-                                                variant="primary"
-                                                disabled={!isValid || isSubmitting}
-                                            >
-                                                {t('submit')}
-                                            </ReactBootstrap.Button>
-                                        </ReactBootstrap.Col>
-                                    </ReactBootstrap.Row>
-                                </Form>
-                            )}
-                        </Formik>
-                    </ReactBootstrap.Modal.Body>
-                </ReactBootstrap.Modal>
-            </ReactBootstrap.Container>
-        </>
+        <FormModal
+            show
+            onHide={onHide}
+            title={t('desktop-groups-add-user-group')}
+            titleId="add-user-group-modal-title"
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            requireDirty={false}
+            onSubmit={({ userGroupId }) => addUserGroupToDesktopGroup(desktopGroupId, userGroupId)}
+            onSaved={onSaved}
+        >
+            {status === 'error' && (
+                <Col xs={12}>
+                    <Alert variant="danger" role="alert">{t('load-error', 'Could not load the data. Please try again.')}</Alert>
+                </Col>
+            )}
+            <FormField name="userGroupId" label={t('select-user-group')} as="select">
+                {userGroups.map((group) => (
+                    <option key={group.id} value={group.id}>{group.description}</option>
+                ))}
+            </FormField>
+        </FormModal>
+    );
+}
+
+function DesktopGroups() {
+    const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [selectedDesktopGroupId, setSelectedDesktopGroupId] = useState(null);
+    const { t } = useTranslation();
+    const [notice, showNotice] = useNotice();
+
+    const { data: desktopGroupsData, status, reload } = useResource(getDesktopGroups);
+    const desktopGroups = desktopGroupsData ?? [];
+
+    const createValidationSchema = useMemo(() => Yup.object().shape({
+        description: Yup.string()
+            .required(t('error-desktop-groups-main-description', 'Desktop main description invalid')),
+    }), [t]);
+
+    return (
+        <PageLayout id="desktop" title={t('desktop-groups')} wrapTitle>
+            {notice && (
+                <Row>
+                    <Col xs={12}>
+                        <div role="alert" className="request-success-alert">{t(notice.text)}</div>
+                    </Col>
+                </Row>
+            )}
+            <Row>
+                <Col xs={12}>
+                    <AsyncContent status={status} onRetry={reload} isEmpty={desktopGroups.length === 0}>
+                        {desktopGroups.map((desktopGroup) => (
+                            <Row key={desktopGroup.id}>
+                                <Col xs={12} md={8}>
+                                    <div>
+                                        <ul>
+                                            <li>
+                                                <span>{desktopGroup.description}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </Col>
+                                <Col xs={12} md={4} className="text-end">
+                                    <div>
+                                        <ul>
+                                            <li>
+                                                <span>
+                                                    <Button type="button" variant="primary" onClick={() => setSelectedDesktopGroupId(desktopGroup.id)}>
+                                                        {t('add-user-group')}
+                                                    </Button>
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </Col>
+                            </Row>
+                        ))}
+                    </AsyncContent>
+                </Col>
+            </Row>
+            <Row>
+                <BackLink to={ROUTES.admin.root} />
+                <Col xs={12} md={6} lg={4}>
+                    <ActionLink onClick={() => setCreateModalOpen(true)}>{t('desktop-groups-create')}</ActionLink>
+                </Col>
+            </Row>
+            <FormModal
+                show={createModalOpen}
+                onHide={() => setCreateModalOpen(false)}
+                title={t('desktop-groups-create')}
+                titleId="create-desktop-group-modal-title"
+                initialValues={CREATE_INITIAL_VALUES}
+                validationSchema={createValidationSchema}
+                onSubmit={({ description }) => createDesktopGroup({ description })}
+                onSaved={reload}
+            >
+                <FormField name="description" label={t('desktop-groups-main-description')} />
+            </FormModal>
+            {selectedDesktopGroupId !== null && (
+                <AddUserGroupModal
+                    desktopGroupId={selectedDesktopGroupId}
+                    onHide={() => setSelectedDesktopGroupId(null)}
+                    onSaved={() => showNotice({ text: 'request-successful', success: true }, { autoHide: true })}
+                />
+            )}
+        </PageLayout>
     );
 }
 

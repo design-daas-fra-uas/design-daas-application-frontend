@@ -1,12 +1,15 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import axios from "axios";
-import {useMediaQuery} from "react-responsive";
+import { useMediaQuery } from "react-responsive";
 
-import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, URL_SYSTEM} from "../constants/constants";
+import { DEVELOPMENT, TEST, LIVE, URL_SYSTEM } from "../constants/constants";
 
 import Logo from './../assets/images/png/DESIGNLogoColouredWhiteFont.png';
+import { ROUTES } from "../routes";
+import { changeLanguage } from "../i18n";
+import { logoutRequest } from "../api/auth";
 
 function Header() {
     const [sharedData, setSharedData] = useState([]);
@@ -19,7 +22,7 @@ function Header() {
     const [searchFilterData, setSearchFilterData] = useState([]);
     const [dataList, setDataList] = useState([]);
     const [dashboardInfo, setDashboardInfo] = useState({});
-    const {t, i18n} = useTranslation();
+    const {t} = useTranslation();
 
     let userToken = localStorage.getItem("userToken");
 
@@ -111,17 +114,13 @@ function Header() {
         }
     }, []);
 
-    const changeLanguageGerman = () => {
-        i18n.changeLanguage("de")
-        localStorage.setItem('language', 'de')
-    }
+    const changeLanguageGerman = () => changeLanguage('de');
 
-    const changeLanguageEnglish = () => {
-        i18n.changeLanguage("en")
-        localStorage.setItem('language', 'en')
-    }
+    const changeLanguageEnglish = () => changeLanguage('en');
 
     const logoutValidation = () => {
+        const accessToken = localStorage.getItem("userToken");
+        const refreshToken = (localStorage.getItem("userRefreshToken") || '').replace(/^\S+\s+(?=\S)/, '');
         localStorage.removeItem("role");
         localStorage.removeItem("language");
         localStorage.removeItem("userData");
@@ -170,33 +169,11 @@ function Header() {
         localStorage.removeItem("dashboard-info")
         localStorage.removeItem("environment-type-mode")
         localStorage.removeItem("object-id-instance");
-
-        setTimeout(async () => {
-            const servicePartnerAuthLogout = async () => {
-                await axios.post(DEVELOPMENT + '/logout', {
-                    username: USERNAME,
-                    password: PASSWORD,
-                }, {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                        'Access-Control-Allow-Credentials': true,
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        console.log(response);
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-            };
-            await servicePartnerAuthLogout();
-        }, 1000);
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 2000);
+        logoutRequest({accessToken, refreshToken})
+            .catch(e => console.log(e))
+            .finally(() => {
+                window.location.href = ROUTES.login;
+            });
     };
 
     const connectStart = (data) => {
@@ -284,7 +261,7 @@ function Header() {
             });
 
         setTimeout(() => {
-            window.location.href = "/dashboard/connectionRun";
+            window.location.href = ROUTES.user.connectionRun;
         }, 2000)
     }
 
@@ -301,7 +278,7 @@ function Header() {
                             {
                                 userToken ? (
                                     <>
-                                        <ReactBootstrap.Nav.Link href="/dashboard">
+                                        <ReactBootstrap.Nav.Link href={ROUTES.dashboard}>
                                             {t('home')}
                                         </ReactBootstrap.Nav.Link>
                                         <ReactBootstrap.NavDropdown title={t('available_connections')}

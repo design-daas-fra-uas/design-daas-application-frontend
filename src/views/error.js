@@ -4,9 +4,8 @@ import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import Header from '../components/header';
-import Footer from '../components/footer';
 
-function Error() {
+function NotFound() {
   const { t, i18n } = useTranslation();
   return (
     <>
@@ -44,9 +43,8 @@ function Error() {
           </ReactBootstrap.Col>
         </ReactBootstrap.Row>
       </ReactBootstrap.Container>
-      {/*<Footer />*/}
-    </>
+        </>
   );
 }
 
-export default Error;
+export default NotFound;

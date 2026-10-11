@@ -1,42 +1,10 @@
-import React, {useEffect} from 'react';
-import { Link } from 'react-router-dom';
-import * as ReactBootstrap from 'react-bootstrap';
-import { useTranslation } from 'react-i18next';
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import React from 'react';
 
-import Header from '../../components/header';
-//import Footer from '../../components/footer';
+import MainUser from './user/mainUser';
 
-/* Dashboard */
-import MainUser from "./user/mainUser";
-import MainAdmin from "./admin/mainAdmin";
-import MainExpert from "./expert/mainExpert";
-
+// The route is already guarded in App.js, so this only renders the user dashboard.
 function Dashboard() {
-  const { t, i18n } = useTranslation();
-
-  let userToken = localStorage.getItem("role");
-
-  useEffect(() => {
-    if (!userToken) {
-      window.location.href = "/";
-    }
-  }, [userToken]);
-
-  return (
-    <>
-      {/*<Header />*/}
-      {/*
-        userToken == "user"
-          ? <MainUser />
-          : userToken == "expert"
-            ? <MainExpert />
-            : <MainAdmin />
-      */}
-      <MainUser />
-      {/*<Footer />*/}
-    </>
-  );
+  return <MainUser />;
 }
 
 export default Dashboard;

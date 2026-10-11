@@ -1,14 +1,88 @@
-import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import axios from "axios";
-import {DEVELOPMENT, DEVELOPMENT_INTERN, PASSWORD, URL_SYSTEM, USERNAME} from "../../../constants/constants";
-import {Field, Form, Formik} from "formik";
-import app from "../../../App";
-import * as Yup from "yup";
-import {useMediaQuery} from "react-responsive";
+import { logoutRequest } from "../../../api/auth";
+import { DEVELOPMENT, DEVELOPMENT_INTERN, URL_SYSTEM } from "../../../constants/constants";
+import { Field, Form, Formik } from "formik";
+import { useMediaQuery } from "react-responsive";
 import Logo from "../../../assets/images/png/DESIGNLogoColouredWhiteFont.png";
+import { ROUTES } from "../../../routes";
+import { changeLanguage } from "../../../i18n";
+import { requestApplicationAdminSchema, createAppSchema, updateAppSchema, createFileSchema, updateFileSchema, phasesBaseimageCreateContainerSchema, phasesBaseimageCreateVMSchema, phasesBaseimageCloneSchema, vmDataSchema, containerDataSchema } from "./mainUserSchemas";
+
+const LOGOUT_STORAGE_KEYS = [
+    "role",
+    "language",
+    "userData",
+    "userDataID",
+    "objectSharedApp",
+    "objectUserID",
+    "application",
+    "app-data",
+    "app-data-option",
+    "instance-object-id",
+    "instance-env",
+    "env-object-id",
+    "env-name",
+    "connection-object-id",
+    "connection-env",
+    "connection-shared-object-id",
+    "connection-shared-env",
+    "object-id",
+    "object-env-name",
+    "object-state",
+    "messageError",
+    "userDataName",
+    "userToken",
+    "userTimeToken",
+    "userRefreshToken",
+    "user-group-id",
+    "desktop-group-id",
+    "selected-environment-id",
+    "selected-environment-name",
+    "selected-instance-id",
+    "selected-instance-env-name",
+    "selected-environment-envname",
+    "selected-connection-index",
+    "selected-object-id",
+    "selected-object-env-name",
+    "selected-object-state",
+    "expert-mode-baseimage",
+    "expert-mode-environment",
+    "expert-mode-environment-id",
+    "expert-mode-environment-env",
+    "timeUser",
+    "application-viewer-id",
+    "environment-viewer-id",
+    "object-viewer-id",
+    "dashboard-info",
+    "environment-type-mode",
+];
+
+const multipartHeaders = (authorization) => ({
+    Authorization: authorization,
+    'Content-Type': 'multipart/form-data',
+    'Access-Control-Allow-Origin': URL_SYSTEM,
+    'Access-Control-Allow-Headers': URL_SYSTEM,
+});
+
+const SEARCH_EXCLUDE_COLUMNS = ["id_file", "id_owner", "id_template", "installer_type", "version"];
+
+const filterBySearch = (value, fullList, currentList, setFilteredList) => {
+    const lowercasedValue = value.toLowerCase().trim();
+    if (lowercasedValue === "") setFilteredList(fullList);
+    else {
+        const filteredData = currentList.filter(item => {
+            return Object.keys(item).some(key =>
+                SEARCH_EXCLUDE_COLUMNS.includes(key) ? false : item[key].toString().toLowerCase().includes(lowercasedValue)
+            );
+        });
+        setFilteredList(filteredData);
+    }
+};
+
+const bindValue = setter => event => setter(event.target.value);
 
 function MainUser() {
     const [baseimageCreate, setBaseimageCreate] = useState(false);
@@ -97,22 +171,27 @@ function MainUser() {
     const [stopObjectAvailable, setStopObjectAvailable] = useState(false);
     const [requestAlert, setRequestAlert] = useState(false);
     const [requestAlertMessage, setRequestAlertMessage] = useState(false);
-    const {t, i18n} = useTranslation();
+    const {t} = useTranslation();
 
     const isSmall = useMediaQuery({
         query: '(max-width: 767px)'
     })
 
-    const refreshDashboard = event => {
-        event.preventDefault();
+    const showRequestAlert = (success) => {
+        setRequestAlert(true);
+        setRequestAlertMessage(success);
+    };
 
+    const hideRequestAlertLater = () => {
+        setTimeout(() => {
+            setRequestAlert(false);
+            setRequestAlertMessage(false);
+        }, 2000);
+    };
+
+    const fetchDashboardInfo = () => {
         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
@@ -187,89 +266,92 @@ function MainUser() {
             .catch(e => {
                 console.log(e)
             });
+    };
+
+    const refreshDashboard = event => {
+        event.preventDefault();
+
+        fetchDashboardInfo();
     }
 
     const chooseApplication = (applicationNameText) => {
         localStorage.setItem('application', applicationNameText)
 
-        window.location.href = "/dashboard/startApplication";
+        window.location.href = ROUTES.user.startApplication;
     };
 
     const goToMonitoring = () => {
-        window.location.href = "/dashboard/monitoring";
+        window.location.href = ROUTES.user.monitoring;
     }
 
     const showInfoModal = () => {
         setInfoModal(true);
     };
+
     const closeInfoModal = () => {
         setInfoModal(false);
     };
+
     const showApplicationModal = () => {
         setApplicationModal(true);
     };
+
     const closeApplicationModal = () => {
         setApplicationModal(false);
         setRequestMessage("");
     };
+
     const showRequestModal = () => {
         setRequestModal(true);
     };
+
     const closeRequestModal = () => {
         setRequestModal(false);
         setRequestMessage("");
     };
+
     const showFileModal = () => {
         setFileModal(true);
     };
+
     const closeFileModal = () => {
         setFileModal(false);
         setRequestMessage("");
     };
+
     const showFileDetailsModal = () => {
         setFileDetailsModal(true);
     };
+
     const closeFileDetailsModal = () => {
         setFileDetailsModal(false);
         setRequestMessage("");
     };
+
     const getFileDetailsModal = (id) => {
         setFileDetailsModal(true);
 
         axios.post(DEVELOPMENT + '/files/get', {
             id: id,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     setDetailFileInfo(response.data.response_data)
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
                     setDetailFileInfo({})
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
@@ -278,15 +360,11 @@ function MainUser() {
 
                 setDetailFileInfo({})
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     };
-    const changeRequestMessage = event => {
-        setRequestMessage(event.target.value);
-    };
+
+    const changeRequestMessage = bindValue(setRequestMessage);
 
     useEffect(() => {
         const token = localStorage.getItem("userToken");
@@ -343,97 +421,12 @@ function MainUser() {
                 console.log(e)
             });
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         /*axios.post(DEVELOPMENT + '/phases/environments_get', {
             id: "",
         }, {
-            headers: {
-                Authorization: token,
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(token),
             // withCredentials: true,
         })
             .then(response => {
@@ -451,12 +444,7 @@ function MainUser() {
         axios.post(DEVELOPMENT + '/phases/object_list', {
             onlyuser: "on",
         }, {
-            headers: {
-                Authorization: token,
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(token),
             // withCredentials: true,
         })
             .then(response => {
@@ -474,12 +462,7 @@ function MainUser() {
                         axios.post(DEVELOPMENT + '/phases/object_status', {
                             id: firstData.daas_id,
                         }, {
-                            headers: {
-                                Authorization: token,
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(token),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -511,12 +494,7 @@ function MainUser() {
         /*axios.post(DEVELOPMENT + '/phases/object_list', {
           onlydaas: "on",
         }, {
-          headers: {
-            Authorization: token,
-            'Content-Type': 'multipart/form-data',
-            'Access-Control-Allow-Origin': URL_SYSTEM,
-            'Access-Control-Allow-Headers': URL_SYSTEM,
-          },
+          headers: multipartHeaders(token),
           // withCredentials: true,
         })
         .then(response => {
@@ -538,12 +516,7 @@ function MainUser() {
                 axios.post(DEVELOPMENT + '/phases/object_status', {
                   id: shareID.daas_id,
                 }, {
-                  headers: {
-                    Authorization: token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                  },
+                  headers: multipartHeaders(token),
                   // withCredentials: true,
                 })
                 .then(response => {
@@ -595,101 +568,15 @@ function MainUser() {
                 name: env,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
-                        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
-                            // withCredentials: true,
-                        })
-                            .then(response => {
-                                console.log(response);
-                                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                let newArrayApps = [];
-
-                                arrayApplications.map(data => {
-                                    newArrayApps.push(data)
-                                })
-
-                                setSearchFilterData(newArrayApps)
-                                setSearchFilterDataShared(newArrayApps)
-                                setDataListShared(newArrayApps)
-                                setDataList(newArrayApps)
-
-                                setConnectionDataNewer(arrayConnection)
-
-                                let newArrConnection = [];
-                                let newInstanceFilterData = [];
-
-                                for (let i = 0; i < arrayConnection.length; i++) {
-                                    for (let j = 0; j < arrayInstances.length; j++) {
-                                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                            newArrConnection.push(arrayInstances[j]);
-                                        }
-                                    }
-                                }
-
-                                arrayInstances.map(instanceObjectData => {
-                                    newInstanceFilterData.push({
-                                        "ID_Instance": instanceObjectData.id_instance,
-                                        "ID_Object": instanceObjectData.id_object,
-                                        "Env_Name": instanceObjectData.name_env
-                                    })
-                                })
-
-                                setInstanceStopData(newInstanceFilterData)
-                                console.log(newInstanceFilterData)
-
-                                setConnectionDataNew(newArrConnection)
-
-                                if (response.status === 200 && response.data.response_code === 200) {
-                                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnApplication(filterOwnData)
-
-                                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnFiles(filterOwnFile)
-
-                                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == 0
-                                    });
-
-                                    setSharedFiles(filterSharedFile)
-                                }
-                            })
-                            .catch(e => {
-                                console.log(e)
-                            });
+                        fetchDashboardInfo();
 
                         localStorage.setItem("object-id-instance", response.data.id_instance)
 
@@ -699,129 +586,35 @@ function MainUser() {
                             setRequestAlert(false);
                             setRequestAlertMessage(false);
 
-                            window.location.href = "/dashboard/connectionRun";
+                            window.location.href = ROUTES.user.connectionRun;
                         }, 2000);
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else if (state === "baseimage-create" || state === "baseimage-final") {
             axios.post(DEVELOPMENT + '/phases/baseimage_start', {
                 id: id,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
-                        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
-                            // withCredentials: true,
-                        })
-                            .then(response => {
-                                console.log(response);
-                                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                let newArrayApps = [];
-
-                                arrayApplications.map(data => {
-                                    newArrayApps.push(data)
-                                })
-
-                                setSearchFilterData(newArrayApps)
-                                setSearchFilterDataShared(newArrayApps)
-                                setDataListShared(newArrayApps)
-                                setDataList(newArrayApps)
-
-                                setConnectionDataNewer(arrayConnection)
-
-                                let newArrConnection = [];
-                                let newInstanceFilterData = [];
-
-                                for (let i = 0; i < arrayConnection.length; i++) {
-                                    for (let j = 0; j < arrayInstances.length; j++) {
-                                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                            newArrConnection.push(arrayInstances[j]);
-                                        }
-                                    }
-                                }
-
-                                arrayInstances.map(instanceObjectData => {
-                                    newInstanceFilterData.push({
-                                        "ID_Instance": instanceObjectData.id_instance,
-                                        "ID_Object": instanceObjectData.id_object,
-                                        "Env_Name": instanceObjectData.name_env
-                                    })
-                                })
-
-                                setInstanceStopData(newInstanceFilterData)
-                                console.log(newInstanceFilterData)
-
-                                setConnectionDataNew(newArrConnection)
-
-                                if (response.status === 200 && response.data.response_code === 200) {
-                                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnApplication(filterOwnData)
-
-                                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnFiles(filterOwnFile)
-
-                                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == 0
-                                    });
-
-                                    setSharedFiles(filterSharedFile)
-                                }
-                            })
-                            .catch(e => {
-                                console.log(e)
-                            });
+                        fetchDashboardInfo();
 
                         localStorage.setItem("object-id-instance", response.data.id_instance)
 
@@ -831,28 +624,20 @@ function MainUser() {
                             setRequestAlert(false);
                             setRequestAlertMessage(false);
 
-                            window.location.href = "/dashboard/connectionRun";
+                            window.location.href = ROUTES.user.connectionRun;
                         }, 2000);
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else {
             console.log("Error")
@@ -878,27 +663,16 @@ function MainUser() {
                 name: env,
                 force: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(localStorage.getItem("userToken")),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -976,57 +750,35 @@ function MainUser() {
                                 console.log(e)
                             });
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else if (state === "baseimage-create" || state === "baseimage-final") {
             axios.post(DEVELOPMENT + '/phases/baseimage_stop', {
                 id_instance: localStorage.getItem("object-id-instance"),
                 force: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
                         axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(localStorage.getItem("userToken")),
                             // withCredentials: true,
                         })
                             .then(response => {
@@ -1104,30 +856,19 @@ function MainUser() {
                                 console.log(e)
                             });
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else {
             console.log("Error")
@@ -1143,126 +884,29 @@ function MainUser() {
             id: id,
             id_env: env,
         }, {
-            headers: {
-                'Authorization': token,
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(token),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
-                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
-                        // withCredentials: true,
-                    })
-                        .then(response => {
-                            console.log(response);
-                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
+                    fetchDashboardInfo();
 
-                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                            let newArrayApps = [];
-
-                            arrayApplications.map(data => {
-                                newArrayApps.push(data)
-                            })
-
-                            setSearchFilterData(newArrayApps)
-                            setSearchFilterDataShared(newArrayApps)
-                            setDataListShared(newArrayApps)
-                            setDataList(newArrayApps)
-
-                            setConnectionDataNewer(arrayConnection)
-
-                            let newArrConnection = [];
-                            let newInstanceFilterData = [];
-
-                            for (let i = 0; i < arrayConnection.length; i++) {
-                                for (let j = 0; j < arrayInstances.length; j++) {
-                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                        newArrConnection.push(arrayInstances[j]);
-                                    }
-                                }
-                            }
-
-                            arrayInstances.map(instanceObjectData => {
-                                newInstanceFilterData.push({
-                                    "ID_Instance": instanceObjectData.id_instance,
-                                    "ID_Object": instanceObjectData.id_object,
-                                    "Env_Name": instanceObjectData.name_env
-                                })
-                            })
-
-                            setInstanceStopData(newInstanceFilterData)
-                            console.log(newInstanceFilterData)
-
-                            setConnectionDataNew(newArrConnection)
-
-                            if (response.status === 200 && response.data.response_code === 200) {
-                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnFiles(filterOwnFile)
-
-                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == 0
-                                });
-
-                                setSharedFiles(filterSharedFile)
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -1277,12 +921,7 @@ function MainUser() {
                 name: env,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
@@ -1294,209 +933,32 @@ function MainUser() {
                             id: id,
                             connect: "on",
                         }, {
-                            headers: {
-                                'Authorization': token,
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(token),
                             // withCredentials: true,
                         })
                             .then(response => {
                                 console.log(response);
                                 if (response.status === 200 && response.data.response_code === 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(true);
+                                    showRequestAlert(true);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
+                                    fetchDashboardInfo();
 
 
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                                 if (response.status === 200 && response.data.response_code !== 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(false);
+                                    showRequestAlert(false);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
+                                    fetchDashboardInfo();
 
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
-
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                             })
                             .catch(e => {
                                 console.log(e)
-                                setRequestAlert(true);
-                                setRequestAlertMessage(false);
+                                showRequestAlert(false);
 
-                                setTimeout(() => {
-                                    setRequestAlert(false);
-                                    setRequestAlertMessage(false);
-                                }, 2000);
+                                hideRequestAlertLater();
                             });
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
@@ -1504,348 +966,70 @@ function MainUser() {
                             id: id,
                             connect: "on",
                         }, {
-                            headers: {
-                                'Authorization': token,
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
+                            headers: multipartHeaders(token),
                             // withCredentials: true,
                         })
                             .then(response => {
                                 console.log(response);
                                 if (response.status === 200 && response.data.response_code === 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(true);
+                                    showRequestAlert(true);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
+                                    fetchDashboardInfo();
 
 
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                                 if (response.status === 200 && response.data.response_code !== 200) {
-                                    setRequestAlert(true);
-                                    setRequestAlertMessage(false);
+                                    showRequestAlert(false);
 
-                                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                                        headers: {
-                                            Authorization: localStorage.getItem("userToken"),
-                                            'Content-Type': 'multipart/form-data',
-                                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                                        },
-                                        // withCredentials: true,
-                                    })
-                                        .then(response => {
-                                            console.log(response);
-                                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
+                                    fetchDashboardInfo();
 
-                                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                            let newArrayApps = [];
-
-                                            arrayApplications.map(data => {
-                                                newArrayApps.push(data)
-                                            })
-
-                                            setSearchFilterData(newArrayApps)
-                                            setSearchFilterDataShared(newArrayApps)
-                                            setDataListShared(newArrayApps)
-                                            setDataList(newArrayApps)
-
-                                            setConnectionDataNewer(arrayConnection)
-
-                                            let newArrConnection = [];
-                                            let newInstanceFilterData = [];
-
-                                            for (let i = 0; i < arrayConnection.length; i++) {
-                                                for (let j = 0; j < arrayInstances.length; j++) {
-                                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                                        newArrConnection.push(arrayInstances[j]);
-                                                    }
-                                                }
-                                            }
-
-                                            arrayInstances.map(instanceObjectData => {
-                                                newInstanceFilterData.push({
-                                                    "ID_Instance": instanceObjectData.id_instance,
-                                                    "ID_Object": instanceObjectData.id_object,
-                                                    "Env_Name": instanceObjectData.name_env
-                                                })
-                                            })
-
-                                            setInstanceStopData(newInstanceFilterData)
-                                            console.log(newInstanceFilterData)
-
-                                            setConnectionDataNew(newArrConnection)
-
-                                            if (response.status === 200 && response.data.response_code === 200) {
-                                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnApplication(filterOwnData)
-
-                                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                                });
-
-                                                setOwnFiles(filterOwnFile)
-
-                                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                                    return userdata.id_owner == 0
-                                                });
-
-                                                setSharedFiles(filterSharedFile)
-                                            }
-                                        })
-                                        .catch(e => {
-                                            console.log(e)
-                                        });
-
-                                    setTimeout(() => {
-                                        setRequestAlert(false);
-                                        setRequestAlertMessage(false);
-                                    }, 2000);
+                                    hideRequestAlertLater();
                                 }
                             })
                             .catch(e => {
                                 console.log(e)
-                                setRequestAlert(true);
-                                setRequestAlertMessage(false);
+                                showRequestAlert(false);
 
-                                setTimeout(() => {
-                                    setRequestAlert(false);
-                                    setRequestAlertMessage(false);
-                                }, 2000);
+                                hideRequestAlertLater();
                             });
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else if (state === "baseimage-create" || state === "baseimage-final") {
             axios.post(DEVELOPMENT + '/phases/baseimage_delete', {
                 id: id,
                 connect: "on",
             }, {
-                headers: {
-                    'Authorization': token,
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
+                headers: multipartHeaders(token),
                 // withCredentials: true,
             })
                 .then(response => {
                     console.log(response);
                     if (response.status === 200 && response.data.response_code === 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(true);
+                        showRequestAlert(true);
 
-                        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                            headers: {
-                                Authorization: localStorage.getItem("userToken"),
-                                'Content-Type': 'multipart/form-data',
-                                'Access-Control-Allow-Origin': URL_SYSTEM,
-                                'Access-Control-Allow-Headers': URL_SYSTEM,
-                            },
-                            // withCredentials: true,
-                        })
-                            .then(response => {
-                                console.log(response);
-                                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                                let newArrayApps = [];
-
-                                arrayApplications.map(data => {
-                                    newArrayApps.push(data)
-                                })
-
-                                setSearchFilterData(newArrayApps)
-                                setSearchFilterDataShared(newArrayApps)
-                                setDataListShared(newArrayApps)
-                                setDataList(newArrayApps)
-
-                                setConnectionDataNewer(arrayConnection)
-
-                                let newArrConnection = [];
-                                let newInstanceFilterData = [];
-
-                                for (let i = 0; i < arrayConnection.length; i++) {
-                                    for (let j = 0; j < arrayInstances.length; j++) {
-                                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                            newArrConnection.push(arrayInstances[j]);
-                                        }
-                                    }
-                                }
-
-                                arrayInstances.map(instanceObjectData => {
-                                    newInstanceFilterData.push({
-                                        "ID_Instance": instanceObjectData.id_instance,
-                                        "ID_Object": instanceObjectData.id_object,
-                                        "Env_Name": instanceObjectData.name_env
-                                    })
-                                })
-
-                                setInstanceStopData(newInstanceFilterData)
-                                console.log(newInstanceFilterData)
-
-                                setConnectionDataNew(newArrConnection)
-
-                                if (response.status === 200 && response.data.response_code === 200) {
-                                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnApplication(filterOwnData)
-
-                                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                    });
-
-                                    setOwnFiles(filterOwnFile)
-
-                                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                        return userdata.id_owner == 0
-                                    });
-
-                                    setSharedFiles(filterSharedFile)
-                                }
-                            })
-                            .catch(e => {
-                                console.log(e)
-                            });
+                        fetchDashboardInfo();
 
                         localStorage.setItem("test", "")
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                     if (response.status === 200 && response.data.response_code !== 200) {
-                        setRequestAlert(true);
-                        setRequestAlertMessage(false);
+                        showRequestAlert(false);
 
-                        setTimeout(() => {
-                            setRequestAlert(false);
-                            setRequestAlertMessage(false);
-                        }, 2000);
+                        hideRequestAlertLater();
                     }
                 })
                 .catch(e => {
                     console.log(e)
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 });
         } else {
             console.log("Error")
@@ -1856,90 +1040,10 @@ function MainUser() {
         localStorage.setItem("app-data", dataID)
         localStorage.setItem("app-data-option", selectOption)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/applicationRun";
+            window.location.href = ROUTES.user.applicationRun;
         }, 2000)
     }
 
@@ -1947,90 +1051,10 @@ function MainUser() {
         localStorage.setItem("instance-object-id", objectID)
         localStorage.setItem("instance-env", selectEnv)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/instanceRun";
+            window.location.href = ROUTES.user.instanceRun;
         }, 2000)
     }
 
@@ -2040,90 +1064,10 @@ function MainUser() {
 
         localStorage.setItem("environment-type-mode", modeType)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/environmentRun";
+            window.location.href = ROUTES.user.environmentRun;
         }, 2000)
     }
 
@@ -2136,20 +1080,14 @@ function MainUser() {
             name: selectEnv,
             force: 'on'
         }, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
 
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
                     const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
@@ -2195,17 +1133,13 @@ function MainUser() {
 
                     setConnectionDataNew(newArrConnection)
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
 
                 if (response.status === 200 && response.data.response_code !== 200) {
                     console.log(response);
 
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
                     localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
                     const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
@@ -2251,20 +1185,14 @@ function MainUser() {
 
                     setConnectionDataNew(newArrConnection)
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
                 setRequestAlert(true);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -2277,91 +1205,11 @@ function MainUser() {
         localStorage.setItem("env-tasks", selectTasks)
         localStorage.setItem("env-target", selectTarget)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
             localStorage.setItem("expert-mode-baseimage", "true")
-            window.location.href = "/dashboard/expert-mode-environment-edit";
+            window.location.href = ROUTES.user.expertEnvironmentEdit;
         }, 2000)
     }
 
@@ -2373,126 +1221,29 @@ function MainUser() {
             id: objectID,
             name: selectEnv,
         }, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
-                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
-                        // withCredentials: true,
-                    })
-                        .then(response => {
-                            console.log(response);
-                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
+                    fetchDashboardInfo();
 
-                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                            let newArrayApps = [];
-
-                            arrayApplications.map(data => {
-                                newArrayApps.push(data)
-                            })
-
-                            setSearchFilterData(newArrayApps)
-                            setSearchFilterDataShared(newArrayApps)
-                            setDataListShared(newArrayApps)
-                            setDataList(newArrayApps)
-
-                            setConnectionDataNewer(arrayConnection)
-
-                            let newArrConnection = [];
-                            let newInstanceFilterData = [];
-
-                            for (let i = 0; i < arrayConnection.length; i++) {
-                                for (let j = 0; j < arrayInstances.length; j++) {
-                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                        newArrConnection.push(arrayInstances[j]);
-                                    }
-                                }
-                            }
-
-                            arrayInstances.map(instanceObjectData => {
-                                newInstanceFilterData.push({
-                                    "ID_Instance": instanceObjectData.id_instance,
-                                    "ID_Object": instanceObjectData.id_object,
-                                    "Env_Name": instanceObjectData.name_env
-                                })
-                            })
-
-                            setInstanceStopData(newInstanceFilterData)
-                            console.log(newInstanceFilterData)
-
-                            setConnectionDataNew(newArrConnection)
-
-                            if (response.status === 200 && response.data.response_code === 200) {
-                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnFiles(filterOwnFile)
-
-                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == 0
-                                });
-
-                                setSharedFiles(filterSharedFile)
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e);
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             })
     }
 
@@ -2515,218 +1266,41 @@ function MainUser() {
             id: idSelected,
             id_env: envNameSelected,
         }, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem("userToken")),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
 
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
     }
 
     const connectionSharedData = (objectID, selectEnv) => {
         localStorage.setItem("connection-shared-object-id", objectID)
         localStorage.setItem("connection-shared-env", selectEnv)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/sharedRun";
+            window.location.href = ROUTES.user.sharedRun;
         }, 2000)
     }
 
@@ -2734,90 +1308,10 @@ function MainUser() {
         localStorage.setItem("connection-object-id", objectID)
         localStorage.setItem("connection-env", selectEnv)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/connectionRun";
+            window.location.href = ROUTES.user.connectionRun;
         }, 2000)
     }
 
@@ -2826,90 +1320,10 @@ function MainUser() {
         localStorage.setItem("object-env-name", selectEnv)
         localStorage.setItem("object-state", stateObject)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/expert-mode-base-image";
+            window.location.href = ROUTES.user.expertBaseImage;
         }, 2000)
     }
 
@@ -3038,94 +1452,22 @@ function MainUser() {
     }
 
     const adminDashboardDetail = () => {
-        window.location.href = "/dashboard/admin";
+        window.location.href = ROUTES.admin.root;
     };
 
-    const changeLanguageGerman = () => {
-        i18n.changeLanguage("de")
-        localStorage.setItem('language', 'de')
-    }
+    const changeLanguageGerman = () => changeLanguage('de');
 
-    const changeLanguageEnglish = () => {
-        i18n.changeLanguage("en")
-        localStorage.setItem('language', 'en')
-    }
+    const changeLanguageEnglish = () => changeLanguage('en');
 
     const logoutValidation = () => {
-        localStorage.removeItem("role");
-        localStorage.removeItem("language");
-        localStorage.removeItem("userData");
-        localStorage.removeItem("userDataID");
-        localStorage.removeItem("objectSharedApp");
-        localStorage.removeItem("objectUserID");
-        localStorage.removeItem("application");
-        localStorage.removeItem("app-data");
-        localStorage.removeItem("app-data-option");
-        localStorage.removeItem("instance-object-id");
-        localStorage.removeItem("instance-env");
-        localStorage.removeItem("env-object-id")
-        localStorage.removeItem("env-name")
-        localStorage.removeItem("connection-object-id")
-        localStorage.removeItem("connection-env")
-        localStorage.removeItem("connection-shared-object-id")
-        localStorage.removeItem("connection-shared-env")
-        localStorage.removeItem("object-id")
-        localStorage.removeItem("object-env-name")
-        localStorage.removeItem("object-state")
-        localStorage.removeItem("messageError");
-        localStorage.removeItem("userDataName");
-        localStorage.removeItem("userToken");
-        localStorage.removeItem("userTimeToken");
-        localStorage.removeItem("userRefreshToken");
-        localStorage.removeItem("user-group-id");
-        localStorage.removeItem("desktop-group-id");
-        localStorage.removeItem("selected-environment-id")
-        localStorage.removeItem("selected-environment-name")
-        localStorage.removeItem("selected-instance-id")
-        localStorage.removeItem("selected-instance-env-name")
-        localStorage.removeItem("selected-environment-envname")
-        localStorage.removeItem("selected-connection-index")
-        localStorage.removeItem("selected-object-id")
-        localStorage.removeItem("selected-object-env-name")
-        localStorage.removeItem("selected-object-state")
-        localStorage.removeItem("expert-mode-baseimage")
-        localStorage.removeItem("expert-mode-environment")
-        localStorage.removeItem("expert-mode-environment-id")
-        localStorage.removeItem("expert-mode-environment-env")
-        localStorage.removeItem("timeUser")
-
-        localStorage.removeItem("application-viewer-id")
-        localStorage.removeItem("environment-viewer-id")
-        localStorage.removeItem("object-viewer-id")
-        localStorage.removeItem("dashboard-info")
-        localStorage.removeItem("environment-type-mode")
-
-        setTimeout(async () => {
-            const servicePartnerAuthLogout = async () => {
-                await axios.post(DEVELOPMENT + '/logout', {
-                    username: USERNAME,
-                    password: PASSWORD,
-                }, {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': '*',
-                        'Access-Control-Allow-Credentials': true,
-                    },
-                    //withCredentials: true,
-                })
-                    .then(response => {
-                        console.log(response);
-                    })
-                    .catch(e => {
-                        console.log(e)
-                    });
-            };
-            await servicePartnerAuthLogout();
-        }, 1000);
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 2000);
+        const accessToken = localStorage.getItem("userToken");
+        const refreshToken = (localStorage.getItem("userRefreshToken") || '').replace(/^\S+\s+(?=\S)/, '');
+        LOGOUT_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+        logoutRequest({accessToken, refreshToken})
+            .catch(e => console.log(e))
+            .finally(() => {
+                window.location.href = ROUTES.login;
+            });
     };
 
     const connectStart = (data) => {
@@ -3134,165 +1476,44 @@ function MainUser() {
         localStorage.setItem("connection-object-id", JSON.parse(data).id_inst)
         localStorage.setItem("connection-env", JSON.parse(data).viewer_url)
 
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setSearchFilterDataShared(newArrayApps)
-                setDataListShared(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnFiles(filterOwnFile)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
+        fetchDashboardInfo();
 
         setTimeout(() => {
-            window.location.href = "/dashboard/connectionRun";
+            window.location.href = ROUTES.user.connectionRun;
         }, 2000)
     }
 
-    const requestApplicationAdminSchema = Yup.object().shape({
-        /*id: Yup.string()
-            .required('ID invalid'),
-        username: Yup.string()
-            .required('Username invalid'),
-        appname: Yup.string()
-            .required('Application name invalid'),*/
-    });
+    const changeVMCreateUpdateAppID = bindValue(setVMCreateUpdateAppID);
 
-    const changeVMCreateUpdateAppID = event => {
-        setVMCreateUpdateAppID(event.target.value);
-    };
+    const changeVMCreateUpdateAppName = bindValue(setVMCreateUpdateAppName);
 
-    const changeVMCreateUpdateAppName = event => {
-        setVMCreateUpdateAppName(event.target.value);
-    };
+    const changeVMCreateUpdateAppIDFile = bindValue(setVMCreateUpdateAppIDFile);
 
-    const changeVMCreateUpdateAppIDFile = event => {
-        setVMCreateUpdateAppIDFile(event.target.value);
-    };
+    const changeVMCreateUpdateAppIDTemplate = bindValue(setVMCreateUpdateAppIDTemplate);
 
-    const changeVMCreateUpdateAppIDTemplate = event => {
-        setVMCreateUpdateAppIDTemplate(event.target.value);
-    };
+    const changeVMCreateUpdateAppOSType = bindValue(setVMCreateUpdateAppOSType);
 
-    const changeVMCreateUpdateAppOSType = event => {
-        setVMCreateUpdateAppOSType(event.target.value);
-    };
+    const changeVMCreateUpdateAppInstaller = bindValue(setVMCreateUpdateAppInstaller);
 
-    const changeVMCreateUpdateAppInstaller = event => {
-        setVMCreateUpdateAppInstaller(event.target.value);
-    };
+    const changeVMCreateUpdateAppInstallerARGS = bindValue(setVMCreateUpdateAppInstallerARGS);
 
-    const changeVMCreateUpdateAppInstallerARGS = event => {
-        setVMCreateUpdateAppInstallerARGS(event.target.value);
-    };
+    const changeVMCreateUpdateAppInstallerType = bindValue(setVMCreateUpdateAppInstallerType);
 
-    const changeVMCreateUpdateAppInstallerType = event => {
-        setVMCreateUpdateAppInstallerType(event.target.value);
-    };
+    const changeVMCreateUpdateAppTarget = bindValue(setVMCreateUpdateAppTarget);
 
-    const changeVMCreateUpdateAppTarget = event => {
-        setVMCreateUpdateAppTarget(event.target.value);
-    };
+    const changeVMCreateUpdateAppTargetARGS = bindValue(setVMCreateUpdateAppTargetARGS);
 
-    const changeVMCreateUpdateAppTargetARGS = event => {
-        setVMCreateUpdateAppTargetARGS(event.target.value);
-    };
+    const changeVMCreateUpdateAppVersion = bindValue(setVMCreateUpdateAppVersion);
 
-    const changeVMCreateUpdateAppVersion = event => {
-        setVMCreateUpdateAppVersion(event.target.value);
-    };
+    const changeVMFileUploadAppID = bindValue(setVMFileUploadAppID);
 
-    const changeVMFileUploadAppID = event => {
-        setVMFileUploadAppID(event.target.value);
-    };
+    const changeVMFileUploadAppName = bindValue(setVMFileUploadAppName);
 
-    const changeVMFileUploadAppName = event => {
-        setVMFileUploadAppName(event.target.value);
-    };
+    const changeVMFileUploadAppPath = bindValue(setVMFileUploadAppPath);
 
-    const changeVMFileUploadAppPath = event => {
-        setVMFileUploadAppPath(event.target.value);
-    };
+    const changeVMFileUploadAppOSType = bindValue(setVMFileUploadAppOSType);
 
-    const changeVMFileUploadAppOSType = event => {
-        setVMFileUploadAppOSType(event.target.value);
-    };
-
-    const changeVMFileUploadAppVersion = event => {
-        setVMFileUploadAppVersion(event.target.value);
-    };
+    const changeVMFileUploadAppVersion = bindValue(setVMFileUploadAppVersion);
 
     const changeVMFileUploadAppSelectFile = event => {
         if (event.target.files) {
@@ -3300,21 +1521,13 @@ function MainUser() {
         }
     };
 
-    const changeVMPhasesIDBaseimageCreate = event => {
-        setVMIDPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesIDBaseimageCreate = bindValue(setVMIDPhasesBaseimageCreate);
 
-    const changeVMPhasesObjectTypeBaseimageCreate = event => {
-        setVMObjectTypePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesObjectTypeBaseimageCreate = bindValue(setVMObjectTypePhasesBaseimageCreate);
 
-    const changeVMPhasesNameBaseimageCreate = event => {
-        setVMNamePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesNameBaseimageCreate = bindValue(setVMNamePhasesBaseimageCreate);
 
-    const changeVMPhasesRootImageBaseimageCreate = event => {
-        setVMRootImagePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesRootImageBaseimageCreate = bindValue(setVMRootImagePhasesBaseimageCreate);
 
     const changeVMPhasesDockerfileBaseimageCreate = event => {
         if (event.target.files) {
@@ -3355,29 +1568,17 @@ function MainUser() {
         }
     };
 
-    const changeVMPhasesNameVMBaseimageCreate = event => {
-        setVMNameVMPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesNameVMBaseimageCreate = bindValue(setVMNameVMPhasesBaseimageCreate);
 
-    const changeVMPhasesOSTypeBaseimageCreate = event => {
-        setVMOSTypePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesOSTypeBaseimageCreate = bindValue(setVMOSTypePhasesBaseimageCreate);
 
-    const changeVMPhasesCoresBaseimageCreate = event => {
-        setVMCoresPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesCoresBaseimageCreate = bindValue(setVMCoresPhasesBaseimageCreate);
 
-    const changeVMPhasesMemorySizeBaseimageCreate = event => {
-        setVMMemorySizePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesMemorySizeBaseimageCreate = bindValue(setVMMemorySizePhasesBaseimageCreate);
 
-    const changeVMPhasesDiskSizeBaseimageCreate = event => {
-        setVMDiskSizePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesDiskSizeBaseimageCreate = bindValue(setVMDiskSizePhasesBaseimageCreate);
 
-    const changeVMPhasesKeyboardBaseimageCreate = event => {
-        setVMKeyboardPhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMPhasesKeyboardBaseimageCreate = bindValue(setVMKeyboardPhasesBaseimageCreate);
 
     const changeVMPhasesCephPoolBaseimageCreate = event => {
         //setVMCephPoolPhasesBaseimageCreate(event.target.value);
@@ -3390,18 +1591,14 @@ function MainUser() {
         }
     };
 
-    const changeVMResolutionPhasesBaseimageCreate = event => {
-        setVMResolutionPhasesBaseimageCreate(event.target.value);
-    };
-    const changeVMContypePhasesBaseimageCreate = event => {
-        setVMContypePhasesBaseimageCreate(event.target.value);
-    };
-    const changeVMResizePhasesBaseimageCreate = event => {
-        setVMResizePhasesBaseimageCreate(event.target.value);
-    };
-    const changeVMScalePhasesBaseimageCreate = event => {
-        setVMScalePhasesBaseimageCreate(event.target.value);
-    };
+    const changeVMResolutionPhasesBaseimageCreate = bindValue(setVMResolutionPhasesBaseimageCreate);
+
+    const changeVMContypePhasesBaseimageCreate = bindValue(setVMContypePhasesBaseimageCreate);
+
+    const changeVMResizePhasesBaseimageCreate = bindValue(setVMResizePhasesBaseimageCreate);
+
+    const changeVMScalePhasesBaseimageCreate = bindValue(setVMScalePhasesBaseimageCreate);
+
     const changeVMScalePhasesBaseimageCreateChecked = () => {
         setVMScalePhasesBaseimageCreateChecked(!vmScalePhasesBaseimageCreateChecked)
 
@@ -3412,57 +1609,25 @@ function MainUser() {
         }
     };
 
-    const changeVMPhasesIDBaseimageClone = event => {
-        setVMIDPhasesBaseimageClone(event.target.value);
-    };
+    const changeVMPhasesIDBaseimageClone = bindValue(setVMIDPhasesBaseimageClone);
 
-    const changeVMPhasesNameBaseimageClone = event => {
-        setVMNamePhasesBaseimageClone(event.target.value);
-    };
+    const changeVMPhasesNameBaseimageClone = bindValue(setVMNamePhasesBaseimageClone);
 
-    const changeVMPhasesNewIDBaseimageClone = event => {
-        setVMNewIDPhasesBaseimageClone(event.target.value);
-    };
-
-    const excludeColumns = ["id_file", "id_owner", "id_template", "installer_type", "version"];
+    const changeVMPhasesNewIDBaseimageClone = bindValue(setVMNewIDPhasesBaseimageClone);
 
     const handleChange = value => {
         setSearchText(value);
         filterData(value);
     };
 
-    const filterData = (value) => {
-        const lowercasedValue = value.toLowerCase().trim();
-        if (lowercasedValue === "") setSearchFilterData(dataList);
-        else {
-            const filteredData = searchFilterData.filter(item => {
-                return Object.keys(item).some(key =>
-                    excludeColumns.includes(key) ? false : item[key].toString().toLowerCase().includes(lowercasedValue)
-                );
-            });
-            setSearchFilterData(filteredData);
-        }
-    }
-
-    const excludeColumnsShared = ["id_file", "id_owner", "id_template", "installer_type", "version"];
+    const filterData = (value) => filterBySearch(value, dataList, searchFilterData, setSearchFilterData);
 
     const handleChangeShared = value => {
         setSearchTextShared(value);
         filterDataShared(value);
     };
 
-    const filterDataShared = (value) => {
-        const lowercasedValue = value.toLowerCase().trim();
-        if (lowercasedValue === "") setSearchFilterDataShared(dataListShared);
-        else {
-            const filteredDataShared = searchFilterDataShared.filter(item => {
-                return Object.keys(item).some(key =>
-                    excludeColumnsShared.includes(key) ? false : item[key].toString().toLowerCase().includes(lowercasedValue)
-                );
-            });
-            setSearchFilterDataShared(filteredDataShared);
-        }
-    }
+    const filterDataShared = (value) => filterBySearch(value, dataListShared, searchFilterDataShared, setSearchFilterDataShared);
 
     const phasesBaseimageCreate = (event) => {
         event.preventDefault();
@@ -3507,27 +1672,16 @@ function MainUser() {
         const validData = vmPhasesObjectTypeBaseimageCreate === "vm" ? vmData : containerData;
 
         axios.post(DEVELOPMENT + '/phases/baseimage_create', validData, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -3603,29 +1757,19 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
                 setRequestAlert(true);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
@@ -3637,27 +1781,16 @@ function MainUser() {
             newid: vmPhasesNewIDBaseimageClone,
             name: vmPhasesNameBaseimageClone,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -3733,36 +1866,26 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
                 setRequestAlert(true);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
-    const createApp = (event) => {
+    const submitApp = (endpoint) => (event) => {
         event.preventDefault();
 
-        axios.post(DEVELOPMENT + '/apps/create', {
+        axios.post(DEVELOPMENT + endpoint, {
             id: vmCreateUpdateAppID,
             name: vmCreateUpdateAppName,
             id_file: vmCreateUpdateAppIDFile,
@@ -3775,27 +1898,16 @@ function MainUser() {
             target_args: vmCreateUpdateAppTargetARGS,
             version: vmCreateUpdateAppVersion,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -3871,176 +1983,30 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
-    const updateApp = (event) => {
+    const createApp = submitApp('/apps/create');
+
+    const updateApp = submitApp('/apps/update');
+
+    const submitFile = (endpoint) => (event) => {
         event.preventDefault();
 
-        axios.post(DEVELOPMENT + '/apps/update', {
-            id: vmCreateUpdateAppID,
-            name: vmCreateUpdateAppName,
-            id_file: vmCreateUpdateAppIDFile,
-            id_template: vmCreateUpdateAppIDTemplate,
-            os_type: vmCreateUpdateAppOSType,
-            installer: vmCreateUpdateAppInstaller,
-            installer_args: vmCreateUpdateAppInstallerARGS,
-            installer_type: vmCreateUpdateAppInstallerType,
-            target: vmCreateUpdateAppTarget,
-            target_args: vmCreateUpdateAppTargetARGS,
-            version: vmCreateUpdateAppVersion,
-        }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
-
-                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
-                        // withCredentials: true,
-                    })
-                        .then(response => {
-                            console.log(response);
-                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                            let newArrayApps = [];
-
-                            arrayApplications.map(data => {
-                                newArrayApps.push(data)
-                            })
-
-                            setSearchFilterData(newArrayApps)
-                            setSearchFilterDataShared(newArrayApps)
-                            setDataListShared(newArrayApps)
-                            setDataList(newArrayApps)
-
-                            setConnectionDataNewer(arrayConnection)
-
-                            let newArrConnection = [];
-                            let newInstanceFilterData = [];
-
-                            for (let i = 0; i < arrayConnection.length; i++) {
-                                for (let j = 0; j < arrayInstances.length; j++) {
-                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                        newArrConnection.push(arrayInstances[j]);
-                                    }
-                                }
-                            }
-
-                            arrayInstances.map(instanceObjectData => {
-                                newInstanceFilterData.push({
-                                    "ID_Instance": instanceObjectData.id_instance,
-                                    "ID_Object": instanceObjectData.id_object,
-                                    "Env_Name": instanceObjectData.name_env
-                                })
-                            })
-
-                            setInstanceStopData(newInstanceFilterData)
-                            console.log(newInstanceFilterData)
-
-                            setConnectionDataNew(newArrConnection)
-
-                            if (response.status === 200 && response.data.response_code === 200) {
-                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == 0
-                                });
-
-                                setSharedFiles(filterSharedFile)
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-                if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-            })
-            .catch(e => {
-                console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
-
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
-            });
-    }
-
-    const createFile = (event) => {
-        event.preventDefault();
-
-        axios.post(DEVELOPMENT + '/files/create', {
+        axios.post(DEVELOPMENT + endpoint, {
             id: vmFileUploadAppID,
             filename: vmFileUploadAppName,
             filepath: vmFileUploadAppPath,
@@ -4048,27 +2014,16 @@ function MainUser() {
             version: vmFileUploadAppVersion,
             file: vmFileUploadAppSelectFile,
         }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
+            headers: multipartHeaders(localStorage.getItem('userToken')),
             // withCredentials: true,
         })
             .then(response => {
                 console.log(response);
                 if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+                    showRequestAlert(true);
 
                     axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
+                        headers: multipartHeaders(localStorage.getItem("userToken")),
                         // withCredentials: true,
                     })
                         .then(response => {
@@ -4144,346 +2099,359 @@ function MainUser() {
                             console.log(e)
                         });
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
                 if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
+                    showRequestAlert(false);
 
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
+                    hideRequestAlertLater();
                 }
             })
             .catch(e => {
                 console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
+                showRequestAlert(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
+                hideRequestAlertLater();
             });
     }
 
-    const updateFile = (event) => {
-        event.preventDefault();
+    const createFile = submitFile('/files/create');
 
-        axios.post(DEVELOPMENT + '/files/update', {
-            id: vmFileUploadAppID,
-            filename: vmFileUploadAppName,
-            filepath: vmFileUploadAppPath,
-            os_type: vmFileUploadAppOSType,
-            version: vmFileUploadAppVersion,
-            file: vmFileUploadAppSelectFile,
-        }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
+    const updateFile = submitFile('/files/update');
 
-                    axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                        headers: {
-                            Authorization: localStorage.getItem("userToken"),
-                            'Content-Type': 'multipart/form-data',
-                            'Access-Control-Allow-Origin': URL_SYSTEM,
-                            'Access-Control-Allow-Headers': URL_SYSTEM,
-                        },
-                        // withCredentials: true,
-                    })
-                        .then(response => {
-                            console.log(response);
-                            localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                            const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                            const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                            const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
+    const renderAppForm = (mode, validationSchema, onSubmit) => (
+            <Formik
+                initialValues={{
+                    id: '',
+                    name: '',
+                    id_file: '',
+                    id_template: '',
+                    os_type: '',
+                    installer: '',
+                    installer_args: '',
+                    installer_type: '',
+                    target: '',
+                    target_args: '',
+                    version: '',
+                }}
+                validationSchema={validationSchema}
+                onSubmit={values => {
+                    console.log(values.text);
+                }}
+            >
+                {({errors, touched}) => (
+                    <Form onSubmit={onSubmit} id="form-apps-tools">
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label htmlFor={`${mode}-app-id`}>{t('vm-id')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-id`} name={`${mode}-app-id`}
+                                       value={vmCreateUpdateAppID}
+                                       onChange={changeVMCreateUpdateAppID}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-id`)}
+                                {/*<ErrorMessage name={`${mode}-app-id`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-name`}>{t('app-create-update-name')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-name`} name={`${mode}-app-name`}
+                                       value={vmCreateUpdateAppName}
+                                       onChange={changeVMCreateUpdateAppName}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-name`)}
+                                {/*<ErrorMessage name={`${mode}-app-name`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-id-file`}>{t('app-create-update-file')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-id-file`} name={`${mode}-app-id-file`}
+                                       value={vmCreateUpdateAppIDFile}
+                                       onChange={changeVMCreateUpdateAppIDFile}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-id-file`)}
+                                {/*<ErrorMessage name={`${mode}-app-id-file`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-id-template`}>{t('app-create-update-template')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-id-template`}
+                                       name={`${mode}-app-id-template`}
+                                       value={vmCreateUpdateAppIDTemplate}
+                                       onChange={changeVMCreateUpdateAppIDTemplate}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-id-template`)}
+                                {/*<ErrorMessage name={`${mode}-app-id-template`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-os-type`}>{t('app-create-update-os-type')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <select id={`${mode}-app-os-type`} name={`${mode}-app-os-type`}
+                                        value={vmCreateUpdateAppOSType}
+                                        onChange={changeVMCreateUpdateAppOSType}>
+                                    <option value="win10">Windows 10</option>
+                                    <option value="win11">Windows 11</option>
+                                    <option value="l26">Debian 12</option>
+                                </select>
+                                {/*<Field type="text" id={`${mode}-app-os-type`} name={`${mode}-app-os-type`} value={vmCreateUpdateAppOSType} onChange={changeVMCreateUpdateAppOSType}/>*/}
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-os-type`)}
+                                {/*<ErrorMessage name={`${mode}-app-os-type`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-installer`}>{t('app-create-update-installer')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-installer`}
+                                       name={`${mode}-app-installer`}
+                                       value={vmCreateUpdateAppInstaller}
+                                       onChange={changeVMCreateUpdateAppInstaller}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-installer`)}
+                                {/*<ErrorMessage name={`${mode}-app-installer`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-installer-args`}>{t('app-create-update-installer-args')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-installer-args`}
+                                       name={`${mode}-app-installer-args`}
+                                       value={vmCreateUpdateAppInstallerARGS}
+                                       onChange={changeVMCreateUpdateAppInstallerARGS}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-installer-args`)}
+                                {/*<ErrorMessage name={`${mode}-app-installer-args`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-installer-type`}>{t('app-create-update-installer-type')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <select id={`${mode}-app-installer-type`}
+                                        name={`${mode}-app-installer-type`}
+                                        value={vmCreateUpdateAppInstallerType}
+                                        onChange={changeVMCreateUpdateAppInstallerType}>
+                                    <option value="None">{t('app-installer-none')}</option>
+                                    <option
+                                        value="exec_cmd">{t('app-installer-execute-command')}</option>
+                                    <option
+                                        value="os_install">{t('app-installer-os-install')}</option>
+                                    <option
+                                        value="os_uninstall">{t('app-installer-os-uninstall')}</option>
+                                </select>
+                                {/*<Field type="text" id={`${mode}-app-installer-type`} name={`${mode}-app-installer-type`} value={vmCreateUpdateAppInstallerType} onChange={changeVMCreateUpdateAppInstallerType}/>*/}
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-installer-type`)}
+                                {/*<ErrorMessage name={`${mode}-app-installer-type`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-target`}>{t('app-create-update-target')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-target`} name={`${mode}-app-target`}
+                                       value={vmCreateUpdateAppTarget}
+                                       onChange={changeVMCreateUpdateAppTarget}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-target`)}
+                                {/*<ErrorMessage name={`${mode}-app-target`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-target-args`}>{t('app-create-update-target-args')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-target-args`}
+                                       name={`${mode}-app-target-args`}
+                                       value={vmCreateUpdateAppTargetARGS}
+                                       onChange={changeVMCreateUpdateAppTargetARGS}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-target-args`)}
+                                {/*<ErrorMessage name={`${mode}-app-target-args`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-app-version`}>{t('app-create-update-version')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-app-version`} name={`${mode}-app-version`}
+                                       value={vmCreateUpdateAppVersion}
+                                       onChange={changeVMCreateUpdateAppVersion}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-app-version`)}
+                                {/*<ErrorMessage name={`${mode}-app-version`}>
+                        </ErrorMessage>*/}
+                            </div>
+                        </ReactBootstrap.Row>
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                                <ReactBootstrap.Button
+                                    type="submit"
+                                    variant="primary"
+                                    id="submit"
+                                    disabled={vmCreateUpdateAppID.length > 0 && vmCreateUpdateAppName.length > 0 && vmCreateUpdateAppOSType.length > 0 && vmCreateUpdateAppInstallerType.length > 0 && vmCreateUpdateAppTarget.length > 0 && vmCreateUpdateAppVersion.length > 0 ? false : true}>
+                                    {t('submit')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Col>
+                        </ReactBootstrap.Row>
+                    </Form>
+                )}
+            </Formik>
+    );
 
-                            setAllAvailableInstances(response.data.response_data.dashboardinfo.available_instances);
-
-                            let newArrayApps = [];
-
-                            arrayApplications.map(data => {
-                                newArrayApps.push(data)
-                            })
-
-                            setSearchFilterData(newArrayApps)
-                            setSearchFilterDataShared(newArrayApps)
-                            setDataListShared(newArrayApps)
-                            setDataList(newArrayApps)
-
-                            setConnectionDataNewer(arrayConnection)
-
-                            let newArrConnection = [];
-                            let newInstanceFilterData = [];
-
-                            for (let i = 0; i < arrayConnection.length; i++) {
-                                for (let j = 0; j < arrayInstances.length; j++) {
-                                    if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                        newArrConnection.push(arrayInstances[j]);
-                                    }
-                                }
-                            }
-
-                            arrayInstances.map(instanceObjectData => {
-                                newInstanceFilterData.push({
-                                    "ID_Instance": instanceObjectData.id_instance,
-                                    "ID_Object": instanceObjectData.id_object,
-                                    "Env_Name": instanceObjectData.name_env
-                                })
-                            })
-
-                            setInstanceStopData(newInstanceFilterData)
-                            console.log(newInstanceFilterData)
-
-                            setConnectionDataNew(newArrConnection)
-
-                            if (response.status === 200 && response.data.response_code === 200) {
-                                setDashboardInfo(response.data.response_data.dashboardinfo)
-                                setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                                const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                                });
-
-                                setOwnApplication(filterOwnData)
-
-                                const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                                    return userdata.id_owner == 0
-                                });
-
-                                setSharedFiles(filterSharedFile)
-                            }
-                        })
-                        .catch(e => {
-                            console.log(e)
-                        });
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-                if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-            })
-            .catch(e => {
-                console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
-
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
-            });
-    }
-
-    const createAppSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-        id_file: Yup.string()
-            .required('File invalid'),
-        id_template: Yup.string()
-            .required('ID Template invalid'),
-        os_type: Yup.string()
-            .required('OS Type invalid'),
-        installer: Yup.string()
-            .required('Installer invalid'),
-        installer_args: Yup.string()
-            .required('Installer ARGS invalid'),
-        installer_type: Yup.string()
-            .required('Installer Type invalid'),
-        target: Yup.string()
-            .required('Target invalid'),
-        target_args: Yup.string()
-            .required('Target ARGS invalid'),
-        version: Yup.string()
-            .required('Version invalid'),
-    });
-
-    const updateAppSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-        id_file: Yup.string()
-            .required('File invalid'),
-        id_template: Yup.string()
-            .required('ID Template invalid'),
-        os_type: Yup.string()
-            .required('OS Type invalid'),
-        installer: Yup.string()
-            .required('Installer invalid'),
-        installer_args: Yup.string()
-            .required('Installer ARGS invalid'),
-        installer_type: Yup.string()
-            .required('Installer Type invalid'),
-        target: Yup.string()
-            .required('Target invalid'),
-        target_args: Yup.string()
-            .required('Target ARGS invalid'),
-        version: Yup.string()
-            .required('Version invalid'),
-    });
-
-    const createFileSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        filename: Yup.string()
-            .required('Name invalid'),
-        filepath: Yup.string()
-            .required('Path invalid'),
-        os_type: Yup.string()
-            .required('OS Type invalid'),
-        version: Yup.string()
-            .required('Version invalid'),
-        file: Yup.string()
-            .required('File invalid'),
-    });
-
-    const updateFileSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        filename: Yup.string()
-            .required('Name invalid'),
-        filepath: Yup.string()
-            .required('Path invalid'),
-        os_type: Yup.string()
-            .required('OS Type invalid'),
-        version: Yup.string()
-            .required('Version invalid'),
-        file: Yup.string()
-            .required('File invalid'),
-    });
-
-    const phasesBaseimageCreateContainerSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        obj_type: Yup.string()
-            .required('Object type invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-        rootimage: Yup.string()
-            .required('Root image invalid'),
-        cores: Yup.string()
-            .required('Cores invalid'),
-        memsize: Yup.string()
-            .required('Memory size invalid'),
-        disksize: Yup.string()
-            .required('Disk size invalid'),
-        dockerfile: Yup.mixed()
-            .required('Dockerfile invalid'),
-        ceph_public: Yup.string()
-            .required('CEPH public invalid'),
-        ceph_shared: Yup.string()
-            .required('CEPH shared invalid'),
-        ceph_user: Yup.string()
-            .required('CEPH user invalid'),
-        viewer_resolution: Yup.string()
-            .required('Resolution invalid'),
-        viewer_contype: Yup.string()
-            .required('Contype invalid'),
-        viewer_resize: Yup.string()
-            .required('Resize invalid'),
-        viewer_scale: Yup.string()
-            .required('Scale invalid'),
-    });
-
-    const phasesBaseimageCreateVMSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        obj_type: Yup.string()
-            .required('Object type invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-        os_type: Yup.string()
-            .required('OS type invalid'),
-        cores: Yup.string()
-            .required('Cores invalid'),
-        memsize: Yup.string()
-            .required('Memory size invalid'),
-        disksize: Yup.string()
-            .required('Disk size invalid'),
-        kb: Yup.string()
-            .required('Keyboard language invalid'),
-        ceph_pool: Yup.string()
-            .required('CEPH pool invalid'),
-    });
-
-    const phasesBaseimageCloneSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        newid: Yup.string()
-            .required('New ID invalid'),
-        name: Yup.string()
-            .required('Name invalid'),
-    });
-
-    const vmDataSchema = {
-        id: "",
-        obj_type: "",
-        name: "",
-        os_type: "",
-        cores: "",
-        memsize: "",
-        disksize: "",
-        kb: "",
-        ceph_pool: "",
-        ceph_public: "",
-        ceph_shared: "",
-        ceph_user: "",
-        viewer_contype: "",
-        viewer_resolution: "",
-        viewer_resize: "",
-        viewer_scale: "",
-    }
-
-    const containerDataSchema = {
-        id: "",
-        obj_type: "",
-        name: "",
-        rootimage: "",
-        cores: "",
-        memsize: "",
-        disksize: "",
-        dockerfile: "",
-        ceph_public: "",
-        ceph_shared: "",
-        ceph_user: "",
-        viewer_contype: "",
-        viewer_resolution: "",
-        viewer_resize: "",
-        viewer_scale: "",
-    }
+    const renderFileForm = (mode, validationSchema, onSubmit) => (
+            <Formik
+                initialValues={{
+                    id: '',
+                    filename: '',
+                    filepath: '',
+                    os_type: '',
+                    version: '',
+                    file: '',
+                }}
+                validationSchema={validationSchema}
+                onSubmit={values => {
+                    console.log(values.text);
+                }}
+            >
+                {({errors, touched}) => (
+                    <Form onSubmit={onSubmit} id="form-apps-tools">
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label htmlFor={`${mode}-file-id`}>{t('vm-id')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-id`} name={`${mode}-file-id`}
+                                       value={vmFileUploadAppID}
+                                       onChange={changeVMFileUploadAppID}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-id`)}
+                                {/*<ErrorMessage name={`${mode}-file-id`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-name`}>{t('file-create-update-name')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-name`} name={`${mode}-file-name`}
+                                       value={vmFileUploadAppName}
+                                       onChange={changeVMFileUploadAppName}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-name`)}
+                                {/*<ErrorMessage name={`${mode}-file-name`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-path`}>{t('file-create-update-path')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-path`} name={`${mode}-file-path`}
+                                       value={vmFileUploadAppPath}
+                                       onChange={changeVMFileUploadAppPath}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-path`)}
+                                {/*<ErrorMessage name={`${mode}-file-path`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-os-type`}>{t('file-create-update-os-type')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <select id={`${mode}-file-os-type`} name={`${mode}-file-os-type`}
+                                        value={vmFileUploadAppOSType}
+                                        onChange={changeVMFileUploadAppOSType}>
+                                    <option value="win10">Windows 10</option>
+                                    <option value="win11">Windows 11</option>
+                                    <option value="l26">Debian 12</option>
+                                </select>
+                                {/*<Field type="text" id={`${mode}-file-os-type`} name={`${mode}-file-os-type`} value={vmFileUploadAppOSType} onChange={changeVMFileUploadAppOSType}/>*/}
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-os-type`)}
+                                {/*<ErrorMessage name={`${mode}-file-os-type`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-version`}>{t('file-create-update-version')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <Field type="text" id={`${mode}-file-version`}
+                                       name={`${mode}-file-version`} value={vmFileUploadAppVersion}
+                                       onChange={changeVMFileUploadAppVersion}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-version`)}
+                                {/*<ErrorMessage name={`${mode}-file-version`}>
+                        </ErrorMessage>*/}
+                            </div>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <label
+                                    htmlFor={`${mode}-file-file`}>{t('file-create-update-file')}</label>
+                            </ReactBootstrap.Col>
+                            <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                <input type="file" id={`${mode}-file-file`} name={`${mode}-file-file`}
+                                       onChange={changeVMFileUploadAppSelectFile}/>
+                            </ReactBootstrap.Col>
+                            <div className="error-text">
+                                {t(`error-${mode}-file-file`)}
+                                {/*<ErrorMessage name={`${mode}-file-file`}>
+                        </ErrorMessage>*/}
+                            </div>
+                        </ReactBootstrap.Row>
+                        <ReactBootstrap.Row>
+                            <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+                                <ReactBootstrap.Button
+                                    type="submit"
+                                    variant="primary"
+                                    id="submit"
+                                    disabled={vmFileUploadAppID.length > 0 && vmFileUploadAppName.length > 0 && vmFileUploadAppOSType.length > 0 && vmFileUploadAppVersion.length > 0 && vmFileUploadAppPath.length > 0 && vmFileUploadAppSelectFile !== "" ? false : true}>
+                                    {t('submit')}
+                                </ReactBootstrap.Button>
+                            </ReactBootstrap.Col>
+                        </ReactBootstrap.Row>
+                    </Form>
+                )}
+            </Formik>
+    );
 
     return (
         <>
@@ -4496,7 +2464,7 @@ function MainUser() {
                         <ReactBootstrap.Navbar.Toggle aria-controls="basic-navbar-nav"/>
                         <ReactBootstrap.Navbar.Collapse id="basic-navbar-nav">
                             <ReactBootstrap.Nav className="justify-content-end" style={{width: "100%"}}>
-                                <ReactBootstrap.Nav.Link href="/dashboard">
+                                <ReactBootstrap.Nav.Link href={ROUTES.dashboard}>
                                     {t('home')}
                                 </ReactBootstrap.Nav.Link>
                                 <ReactBootstrap.NavDropdown title={t('available_connections')} id="basic-nav-dropdown">
@@ -5978,668 +3946,16 @@ function MainUser() {
                                 </Formik>
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="app-create" title={t('app-create')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        name: '',
-                                        id_file: '',
-                                        id_template: '',
-                                        os_type: '',
-                                        installer: '',
-                                        installer_args: '',
-                                        installer_type: '',
-                                        target: '',
-                                        target_args: '',
-                                        version: '',
-                                    }}
-                                    validationSchema={createAppSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createApp} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="create-app-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-id" name="create-app-id"
-                                                           value={vmCreateUpdateAppID}
-                                                           onChange={changeVMCreateUpdateAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-id')}
-                                                    {/*<ErrorMessage name="create-app-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-name">{t('app-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-name" name="create-app-name"
-                                                           value={vmCreateUpdateAppName}
-                                                           onChange={changeVMCreateUpdateAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-name')}
-                                                    {/*<ErrorMessage name="create-app-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-id-file">{t('app-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-id-file" name="create-app-id-file"
-                                                           value={vmCreateUpdateAppIDFile}
-                                                           onChange={changeVMCreateUpdateAppIDFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-id-file')}
-                                                    {/*<ErrorMessage name="create-app-id-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-id-template">{t('app-create-update-template')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-id-template"
-                                                           name="create-app-id-template"
-                                                           value={vmCreateUpdateAppIDTemplate}
-                                                           onChange={changeVMCreateUpdateAppIDTemplate}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-id-template')}
-                                                    {/*<ErrorMessage name="create-app-id-template">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-os-type">{t('app-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="create-app-os-type" name="create-app-os-type"
-                                                            value={vmCreateUpdateAppOSType}
-                                                            onChange={changeVMCreateUpdateAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="create-app-os-type" name="create-app-os-type" value={vmCreateUpdateAppOSType} onChange={changeVMCreateUpdateAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-os-type')}
-                                                    {/*<ErrorMessage name="create-app-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-installer">{t('app-create-update-installer')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-installer"
-                                                           name="create-app-installer"
-                                                           value={vmCreateUpdateAppInstaller}
-                                                           onChange={changeVMCreateUpdateAppInstaller}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-installer')}
-                                                    {/*<ErrorMessage name="create-app-installer">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-installer-args">{t('app-create-update-installer-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-installer-args"
-                                                           name="create-app-installer-args"
-                                                           value={vmCreateUpdateAppInstallerARGS}
-                                                           onChange={changeVMCreateUpdateAppInstallerARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-installer-args')}
-                                                    {/*<ErrorMessage name="create-app-installer-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-installer-type">{t('app-create-update-installer-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="create-app-installer-type"
-                                                            name="create-app-installer-type"
-                                                            value={vmCreateUpdateAppInstallerType}
-                                                            onChange={changeVMCreateUpdateAppInstallerType}>
-                                                        <option value="None">{t('app-installer-none')}</option>
-                                                        <option
-                                                            value="exec_cmd">{t('app-installer-execute-command')}</option>
-                                                        <option
-                                                            value="os_install">{t('app-installer-os-install')}</option>
-                                                        <option
-                                                            value="os_uninstall">{t('app-installer-os-uninstall')}</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="create-app-installer-type" name="create-app-installer-type" value={vmCreateUpdateAppInstallerType} onChange={changeVMCreateUpdateAppInstallerType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-installer-type')}
-                                                    {/*<ErrorMessage name="create-app-installer-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-target">{t('app-create-update-target')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-target" name="create-app-target"
-                                                           value={vmCreateUpdateAppTarget}
-                                                           onChange={changeVMCreateUpdateAppTarget}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-target')}
-                                                    {/*<ErrorMessage name="create-app-target">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-target-args">{t('app-create-update-target-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-target-args"
-                                                           name="create-app-target-args"
-                                                           value={vmCreateUpdateAppTargetARGS}
-                                                           onChange={changeVMCreateUpdateAppTargetARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-target-args')}
-                                                    {/*<ErrorMessage name="create-app-target-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-app-version">{t('app-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-app-version" name="create-app-version"
-                                                           value={vmCreateUpdateAppVersion}
-                                                           onChange={changeVMCreateUpdateAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-app-version')}
-                                                    {/*<ErrorMessage name="create-app-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmCreateUpdateAppID.length > 0 && vmCreateUpdateAppName.length > 0 && vmCreateUpdateAppOSType.length > 0 && vmCreateUpdateAppInstallerType.length > 0 && vmCreateUpdateAppTarget.length > 0 && vmCreateUpdateAppVersion.length > 0 ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderAppForm('create', createAppSchema, createApp)}
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="app-update" title={t('app-update')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        name: '',
-                                        id_file: '',
-                                        id_template: '',
-                                        os_type: '',
-                                        installer: '',
-                                        installer_args: '',
-                                        installer_type: '',
-                                        target: '',
-                                        target_args: '',
-                                        version: '',
-                                    }}
-                                    validationSchema={updateAppSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={updateApp} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="update-app-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-id" name="update-app-id"
-                                                           value={vmCreateUpdateAppID}
-                                                           onChange={changeVMCreateUpdateAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-id')}
-                                                    {/*<ErrorMessage name="update-app-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-name">{t('app-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-name" name="update-app-name"
-                                                           value={vmCreateUpdateAppName}
-                                                           onChange={changeVMCreateUpdateAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-name')}
-                                                    {/*<ErrorMessage name="update-app-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-id-file">{t('app-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-id-file" name="update-app-id-file"
-                                                           value={vmCreateUpdateAppIDFile}
-                                                           onChange={changeVMCreateUpdateAppIDFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-id-file')}
-                                                    {/*<ErrorMessage name="update-app-id-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-id-template">{t('app-create-update-template')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-id-template"
-                                                           name="update-app-id-template"
-                                                           value={vmCreateUpdateAppIDTemplate}
-                                                           onChange={changeVMCreateUpdateAppIDTemplate}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-id-template')}
-                                                    {/*<ErrorMessage name="update-app-id-template">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-os-type">{t('app-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="update-app-os-type" name="update-app-os-type"
-                                                            value={vmCreateUpdateAppOSType}
-                                                            onChange={changeVMCreateUpdateAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="update-app-os-type" name="update-app-os-type" value={vmCreateUpdateAppOSType} onChange={changeVMCreateUpdateAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-os-type')}
-                                                    {/*<ErrorMessage name="update-app-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-installer">{t('app-create-update-installer')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-installer"
-                                                           name="update-app-installer"
-                                                           value={vmCreateUpdateAppInstaller}
-                                                           onChange={changeVMCreateUpdateAppInstaller}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-installer')}
-                                                    {/*<ErrorMessage name="update-app-installer">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-installer-args">{t('app-create-update-installer-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-installer-args"
-                                                           name="update-app-installer-args"
-                                                           value={vmCreateUpdateAppInstallerARGS}
-                                                           onChange={changeVMCreateUpdateAppInstallerARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-installer-args')}
-                                                    {/*<ErrorMessage name="update-app-installer-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-installer-type">{t('app-create-update-installer-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="update-app-installer-type"
-                                                            name="update-app-installer-type"
-                                                            value={vmCreateUpdateAppInstallerType}
-                                                            onChange={changeVMCreateUpdateAppInstallerType}>
-                                                        <option value="None">{t('app-installer-none')}</option>
-                                                        <option
-                                                            value="exec_cmd">{t('app-installer-execute-command')}</option>
-                                                        <option
-                                                            value="os_install">{t('app-installer-os-install')}</option>
-                                                        <option
-                                                            value="os_uninstall">{t('app-installer-os-uninstall')}</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="update-app-installer-type" name="update-app-installer-type" value={vmCreateUpdateAppInstallerType} onChange={changeVMCreateUpdateAppInstallerType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-installer-type')}
-                                                    {/*<ErrorMessage name="update-app-installer-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-target">{t('app-create-update-target')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-target" name="update-app-target"
-                                                           value={vmCreateUpdateAppTarget}
-                                                           onChange={changeVMCreateUpdateAppTarget}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-target')}
-                                                    {/*<ErrorMessage name="update-app-target">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-target-args">{t('app-create-update-target-args')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-target-args"
-                                                           name="update-app-target-args"
-                                                           value={vmCreateUpdateAppTargetARGS}
-                                                           onChange={changeVMCreateUpdateAppTargetARGS}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-target-args')}
-                                                    {/*<ErrorMessage name="update-app-target-args">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-app-version">{t('app-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-app-version" name="update-app-version"
-                                                           value={vmCreateUpdateAppVersion}
-                                                           onChange={changeVMCreateUpdateAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-app-version')}
-                                                    {/*<ErrorMessage name="update-app-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmCreateUpdateAppID.length > 0 && vmCreateUpdateAppName.length > 0 && vmCreateUpdateAppOSType.length > 0 && vmCreateUpdateAppInstallerType.length > 0 && vmCreateUpdateAppTarget.length > 0 && vmCreateUpdateAppVersion.length > 0 ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderAppForm('update', updateAppSchema, updateApp)}
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="file-create" title={t('file-create')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        filename: '',
-                                        filepath: '',
-                                        os_type: '',
-                                        version: '',
-                                        file: '',
-                                    }}
-                                    validationSchema={createFileSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={createFile} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="create-file-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-id" name="create-file-id"
-                                                           value={vmFileUploadAppID}
-                                                           onChange={changeVMFileUploadAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-id')}
-                                                    {/*<ErrorMessage name="create-file-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-name">{t('file-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-name" name="create-file-name"
-                                                           value={vmFileUploadAppName}
-                                                           onChange={changeVMFileUploadAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-name')}
-                                                    {/*<ErrorMessage name="create-file-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-path">{t('file-create-update-path')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-path" name="create-file-path"
-                                                           value={vmFileUploadAppPath}
-                                                           onChange={changeVMFileUploadAppPath}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-path')}
-                                                    {/*<ErrorMessage name="create-file-path">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-os-type">{t('file-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="create-file-os-type" name="create-file-os-type"
-                                                            value={vmFileUploadAppOSType}
-                                                            onChange={changeVMFileUploadAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="create-file-os-type" name="create-file-os-type" value={vmFileUploadAppOSType} onChange={changeVMFileUploadAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-os-type')}
-                                                    {/*<ErrorMessage name="create-file-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-version">{t('file-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="create-file-version"
-                                                           name="create-file-version" value={vmFileUploadAppVersion}
-                                                           onChange={changeVMFileUploadAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-version')}
-                                                    {/*<ErrorMessage name="create-file-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="create-file-file">{t('file-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <input type="file" id="create-file-file" name="create-file-file"
-                                                           onChange={changeVMFileUploadAppSelectFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-create-file-file')}
-                                                    {/*<ErrorMessage name="create-file-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmFileUploadAppID.length > 0 && vmFileUploadAppName.length > 0 && vmFileUploadAppOSType.length > 0 && vmFileUploadAppVersion.length > 0 && vmFileUploadAppPath.length > 0 && vmFileUploadAppSelectFile !== "" ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderFileForm('create', createFileSchema, createFile)}
                             </ReactBootstrap.Tab>
                             <ReactBootstrap.Tab eventKey="file-update" title={t('file-update')}>
-                                <Formik
-                                    initialValues={{
-                                        id: '',
-                                        filename: '',
-                                        filepath: '',
-                                        os_type: '',
-                                        version: '',
-                                        file: '',
-                                    }}
-                                    validationSchema={updateFileSchema}
-                                    onSubmit={values => {
-                                        console.log(values.text);
-                                    }}
-                                >
-                                    {({errors, touched}) => (
-                                        <Form onSubmit={updateFile} id="form-apps-tools">
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label htmlFor="update-file-id">{t('vm-id')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-id" name="update-file-id"
-                                                           value={vmFileUploadAppID}
-                                                           onChange={changeVMFileUploadAppID}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-id')}
-                                                    {/*<ErrorMessage name="update-file-id">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-name">{t('file-create-update-name')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-name" name="update-file-name"
-                                                           value={vmFileUploadAppName}
-                                                           onChange={changeVMFileUploadAppName}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-name')}
-                                                    {/*<ErrorMessage name="update-file-name">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-path">{t('file-create-update-path')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-path" name="update-file-path"
-                                                           value={vmFileUploadAppPath}
-                                                           onChange={changeVMFileUploadAppPath}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-path')}
-                                                    {/*<ErrorMessage name="update-file-path">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-os-type">{t('file-create-update-os-type')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <select id="update-file-os-type" name="update-file-os-type"
-                                                            value={vmFileUploadAppOSType}
-                                                            onChange={changeVMFileUploadAppOSType}>
-                                                        <option value="win10">Windows 10</option>
-                                                        <option value="win11">Windows 11</option>
-                                                        <option value="l26">Debian 12</option>
-                                                    </select>
-                                                    {/*<Field type="text" id="update-file-os-type" name="update-file-os-type" value={vmFileUploadAppOSType} onChange={changeVMFileUploadAppOSType}/>*/}
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-os-type')}
-                                                    {/*<ErrorMessage name="update-file-os-type">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-version">{t('file-create-update-version')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <Field type="text" id="update-file-version"
-                                                           name="update-file-version" value={vmFileUploadAppVersion}
-                                                           onChange={changeVMFileUploadAppVersion}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-version')}
-                                                    {/*<ErrorMessage name="update-file-version">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <label
-                                                        htmlFor="update-file-file">{t('file-create-update-file')}</label>
-                                                </ReactBootstrap.Col>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                                    <input type="file" id="update-file-file" name="update-file-file"
-                                                           onChange={changeVMFileUploadAppSelectFile}/>
-                                                </ReactBootstrap.Col>
-                                                <div className="error-text">
-                                                    {t('error-update-file-file')}
-                                                    {/*<ErrorMessage name="update-file-file">
-                                            </ErrorMessage>*/}
-                                                </div>
-                                            </ReactBootstrap.Row>
-                                            <ReactBootstrap.Row>
-                                                <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                                                    <ReactBootstrap.Button
-                                                        type="submit"
-                                                        variant="primary"
-                                                        id="submit"
-                                                        disabled={vmFileUploadAppID.length > 0 && vmFileUploadAppName.length > 0 && vmFileUploadAppOSType.length > 0 && vmFileUploadAppVersion.length > 0 && vmFileUploadAppPath.length > 0 && vmFileUploadAppSelectFile !== "" ? false : true}>
-                                                        {t('submit')}
-                                                    </ReactBootstrap.Button>
-                                                </ReactBootstrap.Col>
-                                            </ReactBootstrap.Row>
-                                        </Form>
-                                    )}
-                                </Formik>
+                                {renderFileForm('update', updateFileSchema, updateFile)}
                             </ReactBootstrap.Tab>
                         </ReactBootstrap.Tabs>
                     </ReactBootstrap.Modal.Body>

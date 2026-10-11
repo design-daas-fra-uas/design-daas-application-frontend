@@ -1,7 +1,15 @@
+:root {
+    --color-text: #000;
+    --color-background: #fff;
+    --color-success: #008000;
+    --color-danger: #800000;
+    --color-accent: #800080;
+}
+
 /* Custom */
 
 iframe {
-    width: calc(96vw);
+    width: 96vw;
     height: calc(100vh);
 }
 
@@ -24,10 +32,6 @@ option {
 
 input[type="checkbox"],
 input[type="radio"] {
-    -ms-transform: scale(1.5);
-    -moz-transform: scale(1.5);
-    -webkit-transform: scale(1.5);
-    -o-transform: scale(1.5);
     transform: scale(1.5);
     padding: 10px;
 }
@@ -88,7 +92,6 @@ a,
 #monitoring,
 #desktop,
 #desktop-details,
-#desktop-groups,
 #environmentImage,
 #snapshotsOverview,
 #settingsOverview,
@@ -145,13 +148,13 @@ a,
 .right-position {
     text-align: right;
     padding-right: 7.5px;
-    background-color: #008000;
+    background-color: var(--color-success);
 }
 
 .right-position-bottom {
     text-align: right;
     padding-right: 7.5px;
-    background-color: #800000;
+    background-color: var(--color-danger);
 }
 
 #dashboardUser > div:nth-child(3) > div,
@@ -194,7 +197,7 @@ a,
 #objectEnvironmentSetup > div:nth-child(2) > div > div,
 #objectStartSetup > div:nth-child(2) > div > div {
     padding: 100px 50px;
-    border: 2px solid #000;
+    border: 2px solid var(--color-text);
 }
 
 #dashboardUser .link-daas-design > div,
@@ -285,7 +288,7 @@ a,
 .bottom-footer-fix-file svg,
 .bottom-footer-fix-monitoring svg {
     font-size: 50px !important;
-    background-color: #fff;
+    background-color: var(--color-background);
     border-radius: 50px;
 }
 
@@ -359,7 +362,7 @@ a,
 .link-daas-design {
     padding: 0px !important;
     border: none !important;
-    color: #000 !important;
+    color: var(--color-text) !important;
     text-decoration: none !important;
     width: 100%;
     min-height: 70px;
@@ -368,9 +371,9 @@ a,
 
 .link-daas-design > div {
     text-decoration: none !important;
-    color: #000 !important;
+    color: var(--color-text) !important;
     padding: 20px !important;
-    border: 2px solid #000 !important;
+    border: 2px solid var(--color-text) !important;
     text-align: center;
     margin-bottom: 10px;
 }
@@ -399,15 +402,13 @@ a,
 }
 
 #desktop ul,
-#desktop-details ul,
-#desktop-groups ul {
+#desktop-details ul {
     list-style-type: none;
     padding-left: 0px;
 }
 
 #desktop ul > li,
-#desktop-details ul > li,
-#desktop-groups ul > li {
+#desktop-details ul > li {
     margin: 15px auto;
 }
 
@@ -537,17 +538,17 @@ a,
 }
 
 .design-main-container-baseimage-details {
-    background-color: #008000;
+    background-color: var(--color-success);
     height: calc(55vh);
 }
 
 .design-main-container-baseimage-system {
-    background-color: #800080;
+    background-color: var(--color-accent);
     min-height: calc(22.1vh);
 }
 
 .more-height {
-    background-color: #800080;
+    background-color: var(--color-accent);
     min-height: calc(27.15vh) !important;
 }
 
@@ -573,20 +574,20 @@ a,
 
 .design-main-container-baseimage-details-table-headline,
 .design-main-container-baseimage-system-table-headline {
-    border: 2px solid #000;
+    border: 2px solid var(--color-text);
     font-weight: bold;
 }
 
 .design-main-container-baseimage-details-table-subheadline,
 .design-main-container-baseimage-system-table-subheadline {
-    border: 1px solid #000;
+    border: 1px solid var(--color-text);
 }
 
 .design-main-container-baseimage-details-table-element-title,
 .design-main-container-baseimage-details-table-element-value,
 .design-main-container-baseimage-system-table-element-title,
 .design-main-container-baseimage-system-table-element-value {
-    border: 1px solid #000;
+    border: 1px solid var(--color-text);
     text-align: center;
     width: 50%;
     display: inline-block;
@@ -594,9 +595,9 @@ a,
 
 .design-second-container {
     width: 100%;
-    background-color: #800000;
+    background-color: var(--color-danger);
     height: calc(9.5vh);
-    border: 1px solid #000;
+    border: 1px solid var(--color-text);
 }
 
 .is-bigger-main {
@@ -622,7 +623,7 @@ a,
 #createEnvironment .design-buttons-baseImage-element > div,
 #runningApplicationSystem .design-buttons-baseImage-element > div {
     margin: auto;
-    border: 1px solid #fff;
+    border: 1px solid var(--color-background);
     border-radius: 10px;
     background-color: #f00;
     padding: 10px;
@@ -688,7 +689,7 @@ a,
 .design-buttons-baseImage-element-custom > div {
     width: 75px;
     margin: 10px auto;
-    border: 1px solid #fff;
+    border: 1px solid var(--color-background);
     border-radius: 10px;
     background-color: #cc99ff;
     padding: 10px;
@@ -697,7 +698,7 @@ a,
 
 .base-image-linux,
 .base-image-windows {
-    border: 1px solid #000;
+    border: 1px solid var(--color-text);
     padding: 10px;
     text-align: center;
     width: 100px;
@@ -717,7 +718,7 @@ a,
 
 .design-main-container > div:first-child {
     flex: 75%;
-    border: 1px solid #000;
+    border: 1px solid var(--color-text);
     height: calc(80vh);
 }
 
@@ -728,7 +729,7 @@ a,
 
 .design-main-container > div:last-child {
     flex: 25%;
-    border: 1px solid #000;
+    border: 1px solid var(--color-text);
 }
 
 #dashboardAdmin ul > li > span > svg,
@@ -747,7 +748,6 @@ a,
 #monitoring > div > div > div,
 #desktop > div > div > div,
 #desktop-details > div > div > div,
-#desktop-groups > div > div > div,
 #settingsOverview > div > div > div,
 #settingsOverviewVirtualEnvironment > div > div > div,
 #settingsOverviewConfigurationVirtualEnvironment > div > div > div,
@@ -768,7 +768,6 @@ a,
 #monitoring a,
 #desktop a,
 #desktop-details a,
-#desktop-groups a,
 #settingsOverview a,
 #settingsOverviewVirtualEnvironment a,
 #settingsOverviewConfigurationVirtualEnvironment a,
@@ -784,13 +783,12 @@ a,
 #settingsOverviewApps a,
 #settingsOverviewFiles a {
     text-decoration: none;
-    color: #000;
+    color: var(--color-text);
 }
 
 #monitoring a > span,
 #desktop a > span,
 #desktop-details a > span,
-#desktop-groups a > span,
 #settingsOverview a > span,
 #settingsOverviewVirtualEnvironment a > span,
 #settingsOverviewConfigurationVirtualEnvironment a > span,
@@ -815,7 +813,6 @@ a,
 #monitoring .row:nth-child(3) > div,
 #desktop .row:nth-child(3) > div,
 #desktop-details .row:nth-child(3) > div,
-#desktop-groups .row:nth-child(3) > div,
 #settingsOverview .row:nth-child(3) > div,
 #settingsOverviewVirtualEnvironment .row:nth-child(3) > div,
 #settingsOverviewConfigurationVirtualEnvironment .row:nth-child(3) > div,
@@ -827,12 +824,12 @@ a,
 #settingsOverviewInstanceVirtualEnvironment .row:nth-child(3) > div,
 #settingsOverviewAdmins .row:nth-child(3) > div,
 #settingsOverviewUsers .row:nth-child(3) > div {
-    color: #fff;
+    color: var(--color-background);
 }
 
 #desktop .row:nth-child(3) > div,
 #desktop .row:nth-child(3) > div > div > ul > li > span {
-    color: #000 !important;
+    color: var(--color-text) !important;
 }
 
 #environmentImage > .row:first-child,
@@ -858,16 +855,16 @@ a,
 }
 
 .request-success-alert {
-    color: #fff;
-    background-color: #008000;
+    color: var(--color-background);
+    background-color: var(--color-success);
     padding: 10px;
     text-align: center;
     border-radius: 10px;
 }
 
 .request-fail-alert {
-    color: #fff;
-    background-color: #800000;
+    color: var(--color-background);
+    background-color: var(--color-danger);
     padding: 10px;
     text-align: center;
     border-radius: 10px;
@@ -894,7 +891,8 @@ input[type=password] {
     width: 100%;
 }
 
-#submit {
+#submit,
+.submit-full-width {
     width: 100%;
 }
 
@@ -921,7 +919,14 @@ label {
 }
 
 .error-text {
-    display: none;
+    color: #dc3545;
+    font-size: 0.875rem;
+    min-height: 1.25rem;
+}
+
+.form-control.is-invalid,
+.select-field.is-invalid {
+    border-color: #dc3545;
 }
 
 #login > div:nth-child(1) > div > h2,
@@ -978,7 +983,7 @@ label {
 #updating-user-data label,
 #updating-user-data input {
     margin-bottom: 10px;
-    color: #000;
+    color: var(--color-text);
     width: 100%;
 }
 
@@ -999,7 +1004,6 @@ label {
 #form-node-dhcp > .row > div,
 #form-node-iptables > .row > div,
 #form-instance-app > .row > div,
-#form-instance-os-package > .row > div,
 #form-instance-upload > .row > div,
 #form-instance-mount > .row > div,
 #form-instance-connection-icmp > .row > div,
@@ -1087,7 +1091,6 @@ label {
 #form-node-dhcp div,
 #form-node-iptables div,
 #form-instance-app div,
-#form-instance-os-package div,
 #form-instance-upload div,
 #form-instance-mount div,
 #form-instance-connection-icmp div,
@@ -1140,7 +1143,6 @@ label {
 #form-main-user-request div,
 #expert-mode-object-finalize div,
 #expert-mode-environment-finalize div,
-#docker-image-list div,
 #form-viewer-disconnection div,
 #form-viewer-connection div,
 #form-viewer-settings div,
@@ -1155,7 +1157,7 @@ label {
 #form-limit-remove div,
 #form-limit-all div,
 .form-monitoring-data div {
-    color: #000 !important;
+    color: var(--color-text) !important;
 }
 
 .scrollbar-menu-apps-main {
@@ -1290,4 +1292,25 @@ label {
   to {
     transform: rotate(360deg);
   }
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.icon-button svg {
+    font-size: 40px !important;
+    background-color: var(--color-background);
+    border-radius: 40px;
+}
+
+button.link-daas-design {
+    background: none;
+    font: inherit;
+    cursor: pointer;
 }

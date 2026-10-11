@@ -1,17 +1,14 @@
-import apiClient from './client';
+import apiClient, { publicClient } from './client';
 
-export const getUsers = () => apiClient.get('/users').then((response) => response.data);
+export const getUsers = ({ signal } = {}) => apiClient.get('/users', { signal });
 
-export const createUser = (payload) => apiClient.post('/user', payload).then((response) => response.data);
+export const createUser = (payload) => apiClient.post('/user', payload);
 
 export const updateUser = (id, payload) =>
-    apiClient.patch(`/user/${id}`, payload).then((response) => response.data);
+    apiClient.patch(`/user/${id}`, payload);
 
-export const enableUser = (id) => apiClient.post(`/user/${id}/enable`, {}).then((response) => response.data);
+export const enableUser = (id) => apiClient.patch(`/user/${id}/enable`);
 
-export const disableUser = (id) => apiClient.post(`/user/${id}/disable`, {}).then((response) => response.data);
+export const disableUser = (id) => apiClient.patch(`/user/${id}/disable`);
 
-export const validateEmail = (payload) =>
-    apiClient
-        .post('/user/validate_email', payload, { headers: { 'Content-Type': 'application/json' } })
-        .then((response) => response);
+export const validateEmail = (payload) => publicClient.post('/user/validate_email', payload);

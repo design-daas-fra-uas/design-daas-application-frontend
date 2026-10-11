@@ -1,5 +1,5 @@
 import apiClient from './client';
 
-export const getAdmins = () => apiClient.get('/admins').then((response) => response.data);
+export const getAdmins = ({ signal } = {}) => apiClient.get('/admins', { signal });
 
-export const createAdmin = (payload) => apiClient.post('/admin', payload).then((response) => response.data);
+export const createAdmin = (payload) => apiClient.post('/admin', payload);
