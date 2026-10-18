@@ -1,6 +1,6 @@
 # Development - Server setup
 
-FROM node:18.6.0-alpine AS development
+FROM node:26.12.0-alpine AS development
 
 # Add a work directory
 WORKDIR /app
@@ -16,7 +16,7 @@ CMD [ "npm", "start" ]
 
 # Production setup
 
-FROM node:18.6.0-alpine AS production
+FROM node:26.12.0-alpine AS production
 
 # Add a work directory
 WORKDIR /app
