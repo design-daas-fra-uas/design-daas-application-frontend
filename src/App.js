@@ -8,7 +8,7 @@ import '@fortawesome/fontawesome-free/js/all.js';
 import './App.css';
 
 import './i18n';
-import { clearSession, getRole, scheduleTokenRefresh, subscribeToSession } from './auth/tokenManager';
+import { getRole, scheduleTokenRefresh, subscribeToSession } from './auth/tokenManager';
 import { ROUTES } from './routes';
 import ErrorBoundary from './components/ErrorBoundary';
 
