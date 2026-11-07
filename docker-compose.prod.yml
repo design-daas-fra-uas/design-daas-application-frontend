@@ -6,4 +6,4 @@ services:
     container_name: 'daas-design-prod'
     restart: 'always'
     ports:
-      - '8080:80'
+      - '8081:80'

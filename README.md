@@ -41,7 +41,7 @@ npm run preview       # serve ./build locally
 
 ```sh
 docker compose -f docker-compose.dev.yml up      # dev server with hot reload on :3000
-docker compose -f docker-compose.prod.yml build  # nginx image serving the build on :8080
+docker compose -f docker-compose.prod.yml build  # nginx image serving the build on :8081
 docker image save -o designapplication.tar design-daas-application-frontend-web
 ```
 
