@@ -21,6 +21,13 @@ export default [
   reactHooks.configs.flat.recommended,
   {
     rules: {
+      // Hook rules come from the official react-hooks plugin above.
+      '@eslint-react/exhaustive-deps': 'off',
+      '@eslint-react/purity': 'off',
+      '@eslint-react/rules-of-hooks': 'off',
+      '@eslint-react/set-state-in-effect': 'off',
+      // Flags acronym casing such as `[vmID, setVMID]`.
+      '@eslint-react/use-state': 'off',
       'no-console': 'warn',
       'no-unused-vars': ['warn', { ignoreRestSiblings: true }],
     },
