@@ -52,8 +52,8 @@ nav {
 a,
 .link-daas-design,
 .all-data,
-#dashboardAdmin ul > li > span > svg,
-#environmentImage div > svg,
+#dashboardAdmin ul > li > span > i[class*='fa-'],
+#environmentImage div > i[class*='fa-'],
 #dashboardUser > div:nth-child(3) > div > div,
 #applicationStart > div:nth-child(2) > div > div,
 #environmentStart > div:nth-child(2) > div > div,
@@ -212,21 +212,21 @@ a,
   margin-top: -2px;
 }
 
-#dashboardUser .link-daas-design svg,
-#dashboardExpert .link-daas-design svg,
-#applicationStart .link-daas-design svg,
-#environmentStart .link-daas-design svg,
-#demoOverview .link-daas-design svg,
-#demoOverviewLinux .link-daas-design svg,
-#demoOverviewWindows .link-daas-design svg,
-#demoOverviewDocker .link-daas-design svg,
-#applicationRunning .link-daas-design svg,
-#connectionRunning .link-daas-design svg,
-#environmentRunning .link-daas-design svg,
-#instanceRunning .link-daas-design svg,
-#objectBaseImageSetup .link-daas-design svg,
-#objectEnvironmentSetup .link-daas-design svg,
-#objectStartSetup .link-daas-design svg {
+#dashboardUser .link-daas-design i[class*='fa-'],
+#dashboardExpert .link-daas-design i[class*='fa-'],
+#applicationStart .link-daas-design i[class*='fa-'],
+#environmentStart .link-daas-design i[class*='fa-'],
+#demoOverview .link-daas-design i[class*='fa-'],
+#demoOverviewLinux .link-daas-design i[class*='fa-'],
+#demoOverviewWindows .link-daas-design i[class*='fa-'],
+#demoOverviewDocker .link-daas-design i[class*='fa-'],
+#applicationRunning .link-daas-design i[class*='fa-'],
+#connectionRunning .link-daas-design i[class*='fa-'],
+#environmentRunning .link-daas-design i[class*='fa-'],
+#instanceRunning .link-daas-design i[class*='fa-'],
+#objectBaseImageSetup .link-daas-design i[class*='fa-'],
+#objectEnvironmentSetup .link-daas-design i[class*='fa-'],
+#objectStartSetup .link-daas-design i[class*='fa-'] {
   padding-left: 10px;
   font-size: 18px !important;
 }
@@ -272,12 +272,12 @@ a,
   z-index: 1000;
 }
 
-.bottom-footer-fix svg,
-.bottom-footer-fix-info svg,
-.bottom-footer-fix-refresh svg,
-.bottom-footer-fix-contact svg,
-.bottom-footer-fix-file svg,
-.bottom-footer-fix-monitoring svg {
+.bottom-footer-fix i[class*='fa-'],
+.bottom-footer-fix-info i[class*='fa-'],
+.bottom-footer-fix-refresh i[class*='fa-'],
+.bottom-footer-fix-contact i[class*='fa-'],
+.bottom-footer-fix-file i[class*='fa-'],
+.bottom-footer-fix-monitoring i[class*='fa-'] {
   font-size: 50px !important;
   background-color: var(--color-background);
   border-radius: 50px;
@@ -365,22 +365,22 @@ a,
   color: #000000 !important;
 }
 
-#dashboardUser svg,
-#dashboardExpert svg,
-#applicationStart svg,
-#environmentStart svg,
-#demoOverview svg,
-#demoOverviewLinux svg,
-#demoOverviewWindows svg,
-#demoOverviewDocker svg,
-#dashboardAdmin svg,
-#dashboardAdminSettingsAdmin svg,
-#dashboardAdminSettingsUser svg,
-#applicationRunning svg,
-#connectionRunning svg,
-#environmentRunning svg,
-#instanceRunning svg,
-#objectBaseImageSetup svg {
+#dashboardUser i[class*='fa-'],
+#dashboardExpert i[class*='fa-'],
+#applicationStart i[class*='fa-'],
+#environmentStart i[class*='fa-'],
+#demoOverview i[class*='fa-'],
+#demoOverviewLinux i[class*='fa-'],
+#demoOverviewWindows i[class*='fa-'],
+#demoOverviewDocker i[class*='fa-'],
+#dashboardAdmin i[class*='fa-'],
+#dashboardAdminSettingsAdmin i[class*='fa-'],
+#dashboardAdminSettingsUser i[class*='fa-'],
+#applicationRunning i[class*='fa-'],
+#connectionRunning i[class*='fa-'],
+#environmentRunning i[class*='fa-'],
+#instanceRunning i[class*='fa-'],
+#objectBaseImageSetup i[class*='fa-'] {
   font-size: 80px;
 }
 
@@ -714,9 +714,9 @@ a,
   border: 1px solid var(--color-text);
 }
 
-#dashboardAdmin ul > li > span > svg,
-#dashboardAdminSettingsUser ul > li > span > svg,
-#dashboardAdminSettingsAdmin ul > li > span > svg {
+#dashboardAdmin ul > li > span > i[class*='fa-'],
+#dashboardAdminSettingsUser ul > li > span > i[class*='fa-'],
+#dashboardAdminSettingsAdmin ul > li > span > i[class*='fa-'] {
   font-size: 20px !important;
 }
 
@@ -1277,7 +1277,7 @@ label {
   cursor: pointer;
 }
 
-.icon-button svg {
+.icon-button i[class*='fa-'] {
   font-size: 40px !important;
   background-color: var(--color-background);
   border-radius: 40px;
