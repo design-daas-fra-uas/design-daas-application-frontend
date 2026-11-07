@@ -1,4 +1,4 @@
-import { filterBySearch, ownedBy } from './dashboardData';
+import { filterBySearch, getCurrentUserId, ownedBy } from './dashboardData';
 
 describe('ownedBy', () => {
   const items = [
@@ -44,5 +44,14 @@ describe('filterBySearch', () => {
   it('always searches the full list, so a shorter query widens the result', () => {
     expect(filterBySearch(apps, 'firefox')).toHaveLength(1);
     expect(filterBySearch(apps, 'f')).toHaveLength(2);
+  });
+});
+
+describe('getCurrentUserId', () => {
+  it('is null without a stored id, so nothing counts as owned by the user', () => {
+    localStorage.removeItem('userDataID');
+    expect(getCurrentUserId()).toBeNull();
+    localStorage.setItem('userDataID', '7');
+    expect(getCurrentUserId()).toBe(7);
   });
 });

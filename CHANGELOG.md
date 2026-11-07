@@ -3,6 +3,38 @@
 **Size of the change:** 58 files, +3,998 / −7,852 lines (the codebase got smaller overall).
 
 ---
+## [2.2.0]
+
+The user dashboard (`mainUser.jsx`) was split into small components and hooks.
+
+**Size of the change:** `mainUser.jsx` went from 1,354 to 148 lines. The parts live in `src/views/dashboard/user/dashboard/` (~750 lines with no copy-paste). `src` is now 7,140 lines and there are 56 tests.
+
+### Changed
+
+- **Structure** (`src/views/dashboard/user/dashboard/`):
+  - `useUserDashboard`: loads the session, then the dashboard info, and derives own/shared apps and files.
+  - `dashboardApi`: start/stop/delete of objects and environments, file details. It rejects backend error codes with `DaasRequestError`.
+  - `useDashboardRequest`: one place for the success/failure banner and error logging.
+  - Components: `UsageSummary`, `ObjectControls`, `EnvironmentControls`, `ApplicationList` (own apps and the shared-apps tab), `AppIcons`, `DashboardToolbar`, `InfoModal`, `CreateModal`, `RequestAppModal`, `FilesModal` (including the details dialog).
+- **Selection state:** the selected object, its running instance and the selected environment are now React state. They used to go through 13 `selected-*` / `object-id-instance` `localStorage` keys that no other page read. As a result the "Stop" button now updates as soon as an object is selected, started or stopped.
+- **Toolbar:** the floating toolbar icons are real `<button>`s with labels ("Refresh", "Files", …) instead of clickable `<div>`s.
+- **Request language:** the "request an application" call uses the active i18next language instead of re-reading `localStorage`.
+
+### Fixed
+
+- **Own vs. shared items:** without a stored user id (e.g. the session call failed), the id became `Number(null) = 0`, the owner id of shared items, so shared apps and files were listed as the user's own. An unknown user id now means "no own items".
+- **Own applications:** "No data available" could be shown twice, or not at all when the user owned no app. It is now shown once, exactly when the (searched) list is empty. The same applies to the shared apps tab.
+- **Environment edit:** an environment without apps or tasks stored the string `"undefined"` for the edit page, which could not be parsed; it now stores `''`.
+
+### Removed
+
+- **Values written but never read:** `userDataName`, `object-env-name`, `object-state`, `env-name-object` and a leftover `test` key.
+- The remaining commented-out "detail view" block.
+
+### Not done yet
+
+- Not tested against a running backend. The dashboard was checked in a browser with a stubbed `dashboard_info` response: usage, object/environment selection, own and shared apps, files and all modals.
+
 ## [2.1.0]
 
 Toolchain and dependency upgrade, then a second review pass that rewrote the remaining hand-written form pages as configuration.

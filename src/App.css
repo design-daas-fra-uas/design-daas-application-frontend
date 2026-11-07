@@ -1288,3 +1288,14 @@ button.link-daas-design {
   font: inherit;
   cursor: pointer;
 }
+
+/* Floating dashboard toolbar buttons (positioned by their bottom-footer-fix-* class);
+   the id keeps them out of the full-width `#dashboardUser button` rule. */
+#dashboardUser .toolbar-button {
+  width: auto;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}

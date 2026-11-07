@@ -26,5 +26,9 @@ export const filterBySearch = (items, query) => {
   );
 };
 
-// The logged-in user's id, stored after the session lookup.
-export const getCurrentUserId = () => Number(localStorage.getItem('userDataID'));
+// The logged-in user's id, stored after the session lookup; null when unknown
+// (Number(null) would be 0, the owner id of shared items).
+export const getCurrentUserId = () => {
+  const stored = localStorage.getItem('userDataID');
+  return stored ? Number(stored) : null;
+};
