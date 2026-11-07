@@ -1,5 +1,5 @@
-# ---- development: CRA dev server with hot reload ----
-FROM node:18.20.8-alpine AS development
+# ---- development: Vite dev server with hot reload ----
+FROM node:26.13.0-alpine AS development
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . .
 CMD ["npm", "start"]
 
 # ---- production build ----
-FROM node:18.20.8-alpine AS production
+FROM node:26.13.0-alpine AS production
 
 WORKDIR /app
 
@@ -27,11 +27,10 @@ ARG REACT_APP_AUTH_API_URL=
 ARG REACT_APP_OAUTH_CLIENT_ID=
 ARG REACT_APP_LOG_LEVEL=
 
-# Lint runs in CI; skip CRA's build-time ESLint plugin here.
-RUN DISABLE_ESLINT_PLUGIN=true npm run build
+RUN npm run build
 
 # ---- server: static files behind nginx ----
-FROM nginx:1.27-alpine AS server
+FROM nginx:1.30.6-alpine AS server
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/
