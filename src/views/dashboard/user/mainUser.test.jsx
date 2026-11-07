@@ -50,7 +50,7 @@ it('loads the session first, then shows usage and only the own applications', as
 
 it('narrows the own applications by search and widens them again', async () => {
   renderDashboard();
-  const search = await screen.findByRole('textbox');
+  const search = await screen.findByRole('searchbox');
 
   await userEvent.type(search, 'zzz');
   expect(screen.queryByText('My editor')).not.toBeInTheDocument();
