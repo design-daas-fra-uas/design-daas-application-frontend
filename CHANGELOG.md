@@ -3,6 +3,24 @@
 **Size of the change:** 58 files, +3,998 / −7,852 lines (the codebase got smaller overall).
 
 ---
+## [2.2.1]
+
+Fixes found by checking the frontend's requests against the DaaS backend's routes (`design-daas/src/app/plugins/*/…_routes.py`).
+
+### Fixed
+
+- **Stopping an environment from the user dashboard always failed:** `stopObject` sent the running *instance* id as `id` to `/phases/environment_stop`, which looks up the *object* by `id`. It now sends the object id (`id_object`); base images are still stopped by instance (`/phases/baseimage_stop`).
+- **Viewer resize and scale were ignored:** the create forms (VM, container, base image, virtual environment) sent `viewer_resize` as `none` / `semi` / `full` and `viewer_scale` as a checkbox (`on` / `''`). The backend only accepts `none` / `browser` and `none` / `up` / `down` / `both` and resets anything else to `none`, so objects never got server-side resizing. Both are now selects with exactly the backend's values (`VIEWER_RESIZE`, `VIEWER_SCALE` in `components/actions/fields.js`).
+
+### Removed
+
+- Three admin actions whose endpoints do not exist in the backend, so they could only fail:
+  - "Filesystem" (`/inst/vminvoke_cephfs`) on the instance settings page,
+  - "Roundtrip" (`/tests/measure_rtt`) on the instance settings page,
+  - "Start" (`/tasks/start_prepared`) on the task settings page,
+  - and their now unused translations (`vm-instance-mount-ceph`, `vm-instance-roundtrip`, `vm-iteration`, `start-tasks`).
+
+---
 ## [2.2.0]
 
 The user dashboard (`mainUser.jsx`) was split into small components and hooks.

@@ -33,9 +33,11 @@ export const startObject = async ({ id_object: id, id_user: env, object_state: s
   return { instanceId: response.data.id_instance, viewerUrl: response.data.response_url };
 };
 
-export const stopObject = ({ id_user: env, object_state: state }, instanceId) =>
+// Environments are stopped by object id and environment name, base images by
+// their running instance.
+export const stopObject = ({ id_object: id, id_user: env, object_state: state }, instanceId) =>
   kindOf(state) === 'environment'
-    ? post('/phases/environment_stop', { id: instanceId, name: env, force: 'on' })
+    ? post('/phases/environment_stop', { id, name: env, force: 'on' })
     : post('/phases/baseimage_stop', { id_instance: instanceId, force: 'on' });
 
 // An environment object is removed with its environment first; that step may

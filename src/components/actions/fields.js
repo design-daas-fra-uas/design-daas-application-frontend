@@ -35,10 +35,17 @@ export const VIEWER_CONTYPES = [
   ['instvnc', 'Instance VNC (Docker default)'],
   ['rdp', 'RDP (Windows only)'],
 ];
+// The values the DaaS backend accepts; it resets anything else to 'none'.
+// 'browser' resizes the instance's screen to the viewer window.
 export const VIEWER_RESIZE = [
-  ['none', 'None (Do nothing)'],
-  ['semi', 'Semi (Allow instance)'],
-  ['full', 'Full (Enforce JS)'],
+  ['none', 'None (keep the instance resolution)'],
+  ['browser', 'Browser (resize the instance to the window)'],
+];
+export const VIEWER_SCALE = [
+  ['none', 'None'],
+  ['up', 'Up'],
+  ['down', 'Down'],
+  ['both', 'Both'],
 ];
 export const ROOT_IMAGES = [
   ['x11vnc', 'x11vnc'],
@@ -67,7 +74,7 @@ export const viewerFields = (options) => [
   text('viewer_resolution', 'vm-resolution', options),
   select('viewer_contype', 'vm-contype', VIEWER_CONTYPES, options),
   select('viewer_resize', 'vm-resize', VIEWER_RESIZE, options),
-  checkbox('viewer_scale', 'vm-scale', options),
+  select('viewer_scale', 'vm-scale', VIEWER_SCALE, options),
 ];
 
 export const isVisible = (field, values) => !field.visible || field.visible(values);

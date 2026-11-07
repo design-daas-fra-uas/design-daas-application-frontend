@@ -27,10 +27,17 @@ it('starts environments and base images through their own endpoints', async () =
   expect(daasClient.post).toHaveBeenLastCalledWith('/phases/baseimage_start', { id: 'o2', connect: 'on' });
 });
 
-it('stops the running instance', async () => {
+it('stops base images by instance and environments by object id', async () => {
   daasClient.post.mockResolvedValue(ok());
   await stopObject(baseImage, 'i9');
-  expect(daasClient.post).toHaveBeenCalledWith('/phases/baseimage_stop', { id_instance: 'i9', force: 'on' });
+  expect(daasClient.post).toHaveBeenLastCalledWith('/phases/baseimage_stop', { id_instance: 'i9', force: 'on' });
+
+  await stopObject(environment, 'i9');
+  expect(daasClient.post).toHaveBeenLastCalledWith('/phases/environment_stop', {
+    id: 'o1',
+    name: 'env1',
+    force: 'on',
+  });
 });
 
 it('deletes the base image even when deleting the environment fails', async () => {

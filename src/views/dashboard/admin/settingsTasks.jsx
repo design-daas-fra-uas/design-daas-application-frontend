@@ -11,13 +11,6 @@ const TASK_STATES = [
 
 const ACTIONS = [
   {
-    key: 'start-tasks',
-    title: 'start-tasks',
-    endpoint: '/tasks/start_prepared',
-    fields: [required(text('id_object', 'vm-id-object'))],
-    result: 'viewer',
-  },
-  {
     key: 'get-tasks',
     title: 'get-tasks',
     endpoint: '/tasks/get',

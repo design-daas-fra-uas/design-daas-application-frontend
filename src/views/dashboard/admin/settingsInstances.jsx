@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import ActionPage from '../../../components/actions/ActionPage';
-import { cephFields, checkbox, file, required, select, text } from '../../../components/actions/fields';
+import { checkbox, file, required, text } from '../../../components/actions/fields';
 
 const target = () => [required(text('id', 'vm-id')), text('id_env', 'vm-env')];
 
@@ -26,19 +26,6 @@ const ACTIONS = [
     endpoint: '/inst/vminvoke_upload',
     fields: [...target(), file('file', 'vm-file'), checkbox('execute', 'vm-execute')],
   },
-  {
-    key: 'instance-mount',
-    title: 'vm-instance-mount-ceph',
-    endpoint: '/inst/vminvoke_cephfs',
-    fields: [
-      ...target(),
-      select('cmd', 'vm-command', [
-        ['mount', 'mount'],
-        ['unmount', 'unmount'],
-      ]),
-      ...cephFields(),
-    ],
-  },
   { key: 'instance-list', title: 'vm-instance-list', endpoint: '/inst/list', result: 'data' },
   {
     key: 'instance-connection-icmp',
@@ -51,18 +38,6 @@ const ACTIONS = [
     title: 'vm-instance-connection-ssh',
     endpoint: '/inst/connection_test_ssh',
     fields: target(),
-  },
-  {
-    key: 'instance-roundtrip',
-    title: 'vm-instance-roundtrip',
-    endpoint: '/tests/measure_rtt',
-    fields: [
-      ...target(),
-      text('iter', 'vm-iteration'),
-      text('name', 'vm-name'),
-      text('cmd', 'vm-command'),
-      text('args', 'vm-arguments'),
-    ],
   },
 ];
 
