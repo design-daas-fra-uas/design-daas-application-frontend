@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +21,11 @@ function SettingsAdminsDetails() {
     <PageLayout id="settingsOverviewAdmins" title={t('user-management')}>
       <Row>
         <Col xs={12}>
-          <AsyncContent status={status} onRetry={reload} notFoundText={t('admin-not-found', 'Administrator not found.')}>
+          <AsyncContent
+            status={status}
+            onRetry={reload}
+            notFoundText={t('admin-not-found', 'Administrator not found.')}
+          >
             {() => (
               <ul>
                 <li>

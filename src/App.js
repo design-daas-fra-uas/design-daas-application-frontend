@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -130,22 +130,24 @@ function App() {
   return (
     <Router>
       <ErrorBoundary>
-      <Suspense fallback={<PageFallback />}>
-        <Routes>
-          <Route path={ROUTES.login} element={<Login />} />
-          <Route path={ROUTES.registration} element={<Registration />} />
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path={ROUTES.login} element={<Login />} />
+            <Route path={ROUTES.registration} element={<Registration />} />
 
-          <Route element={<RequireRole role={userRole} />}>
-            <Route path={ROUTES.dashboard} element={<Dashboard />} />
-          </Route>
-          <Route element={<RequireRole role={userRole} roles={['user', 'admin']} />}>{renderRoutes(RUN_ROUTES)}</Route>
-          <Route element={<RequireRole role={userRole} roles={['user']} />}>{renderRoutes(USER_ROUTES)}</Route>
-          <Route element={<RequireRole role={userRole} roles={['expert']} />}>{renderRoutes(EXPERT_ROUTES)}</Route>
-          <Route element={<RequireRole role={userRole} roles={['admin']} />}>{renderRoutes(ADMIN_ROUTES)}</Route>
+            <Route element={<RequireRole role={userRole} />}>
+              <Route path={ROUTES.dashboard} element={<Dashboard />} />
+            </Route>
+            <Route element={<RequireRole role={userRole} roles={['user', 'admin']} />}>
+              {renderRoutes(RUN_ROUTES)}
+            </Route>
+            <Route element={<RequireRole role={userRole} roles={['user']} />}>{renderRoutes(USER_ROUTES)}</Route>
+            <Route element={<RequireRole role={userRole} roles={['expert']} />}>{renderRoutes(EXPERT_ROUTES)}</Route>
+            <Route element={<RequireRole role={userRole} roles={['admin']} />}>{renderRoutes(ADMIN_ROUTES)}</Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </ErrorBoundary>
     </Router>
   );

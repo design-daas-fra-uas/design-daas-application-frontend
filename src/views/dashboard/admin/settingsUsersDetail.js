@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Alert, Button, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -18,22 +18,27 @@ import { getUsers, updateUser, disableUser, enableUser } from '../../../api/user
 const findUserById = async (id) => (await getUsers()).find((user) => String(user.id) === String(id)) ?? null;
 
 function SettingsUsersDetail() {
-    const { id } = useParams();
-    const { t } = useTranslation();
-    const [isToggling, setIsToggling] = useState(false);
-    const mounted = useRef(true);
-    useEffect(() => {
-        mounted.current = true;
-        return () => { mounted.current = false; };
-    }, []);
-    const [actionError, setActionError] = useState('');
-    const { data: user, status, reload } = useResource(() => findUserById(id), [id]);
+  const { id } = useParams();
+  const { t } = useTranslation();
+  const [isToggling, setIsToggling] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const [actionError, setActionError] = useState('');
+  const { data: user, status, reload } = useResource(() => findUserById(id), [id]);
 
-    const updateUserSchema = useMemo(() => Yup.object().shape({
-        name: Yup.string()
-            .required(t('error-name', 'Username invalid')),
+  const updateUserSchema = useMemo(
+    () =>
+      Yup.object().shape({
+        name: Yup.string().required(t('error-name', 'Username invalid')),
         email: emailSchema(t),
-    }), [t]);
+      }),
+    [t],
+  );
 
     // Saving and refreshing share one error message; the refresh is silent so the form stays mounted.
     // `reload` reports failure by returning false instead of throwing.
@@ -50,99 +55,110 @@ function SettingsUsersDetail() {
         }
     };
 
-    const updateUserAccount = ({ name, email }) =>
-        runAction(() => updateUser(user.id, { name: name.trim(), email: email.trim() }));
+  const updateUserAccount = ({ name, email }) =>
+    runAction(() => updateUser(user.id, { name: name.trim(), email: email.trim() }));
 
-    const toggleUserAccount = async (action) => {
-        if (isToggling) {
-            return;
-        }
-        setIsToggling(true);
-        try {
-            await runAction(() => action(user.id));
-        } finally {
-            if (mounted.current) {
-                setIsToggling(false);
-            }
-        }
-    };
+  const toggleUserAccount = async (action) => {
+    if (isToggling) {
+      return;
+    }
+    setIsToggling(true);
+    try {
+      await runAction(() => action(user.id));
+    } finally {
+      if (mounted.current) {
+        setIsToggling(false);
+      }
+    }
+  };
 
-    return (
-        <PageLayout id="settingsOverviewUsers" title={t('user-management')} wrapTitle>
-            <AsyncContent status={status} onRetry={reload} notFoundText={t('user-not-found', 'User not found.')}>
-                {() => (
-                    <>
-                        {actionError && <Alert variant="danger">{actionError}</Alert>}
-                        <Row>
-                            <Col xs={12} sm={6}>
-                                <div>
-                                    <ul>
-                                        <li>
-                                            <span>{t('username')}: {user.name}</span>
-                                        </li>
-                                        <li>
-                                            <span>{t('email')}: {user.email}</span>
-                                        </li>
-                                        <li>
-                                            <span>{t('status', 'Status')}: {user.enabled ? t('active') : t('inactive')}</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </Col>
-                            <Col xs={12} sm={6} className="text-sm-end">
-                                <div>
-                                    <ul>
-                                        <li>
-                                            <span>
-                                                <Button
-                                                    type="button"
-                                                    variant="primary"
-                                                    disabled={isToggling}
-                                                    onClick={() => toggleUserAccount(user.enabled ? disableUser : enableUser)}
-                                                >
-                                                    {user.enabled ? t('disable') : t('enable')}
-                                                </Button>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col xs={12}>
-                                <Formik
-                                    key={user.id}
-                                    enableReinitialize
-                                    initialValues={{ name: user.name || '', email: user.email || '' }}
-                                    validationSchema={updateUserSchema}
-                                    onSubmit={updateUserAccount}
-                                >
-                                    {({ isValid, dirty, isSubmitting }) => (
-                                        <Form>
-                                            <Row id="updating-user-data">
-                                                <FormField name="name" label={t('username')} />
-                                                <FormField name="email" label={t('email')} type="email" />
-                                            </Row>
-                                            <Row>
-                                                <Col xs={12}>
-                                                    <Button type="submit" variant="primary" className="submit-full-width" disabled={!isValid || !dirty || isSubmitting}>
-                                                        {t('submit')}
-                                                    </Button>
-                                                </Col>
-                                            </Row>
-                                        </Form>
-                                    )}
-                                </Formik>
-                            </Col>
-                        </Row>
-                    </>
-                )}
-            </AsyncContent>
+  return (
+    <PageLayout id="settingsOverviewUsers" title={t('user-management')} wrapTitle>
+      <AsyncContent status={status} onRetry={reload} notFoundText={t('user-not-found', 'User not found.')}>
+        {() => (
+          <>
+            {actionError && <Alert variant="danger">{actionError}</Alert>}
             <Row>
-                <BackLink to={ROUTES.admin.users} />
+              <Col xs={12} sm={6}>
+                <div>
+                  <ul>
+                    <li>
+                      <span>
+                        {t('username')}: {user.name}
+                      </span>
+                    </li>
+                    <li>
+                      <span>
+                        {t('email')}: {user.email}
+                      </span>
+                    </li>
+                    <li>
+                      <span>
+                        {t('status', 'Status')}: {user.enabled ? t('active') : t('inactive')}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </Col>
+              <Col xs={12} sm={6} className="text-sm-end">
+                <div>
+                  <ul>
+                    <li>
+                      <span>
+                        <Button
+                          type="button"
+                          variant="primary"
+                          disabled={isToggling}
+                          onClick={() => toggleUserAccount(user.enabled ? disableUser : enableUser)}
+                        >
+                          {user.enabled ? t('disable') : t('enable')}
+                        </Button>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </Col>
             </Row>
-        </PageLayout>
-    );
+            <Row>
+              <Col xs={12}>
+                <Formik
+                  key={user.id}
+                  enableReinitialize
+                  initialValues={{ name: user.name || '', email: user.email || '' }}
+                  validationSchema={updateUserSchema}
+                  onSubmit={updateUserAccount}
+                >
+                  {({ isValid, dirty, isSubmitting }) => (
+                    <Form>
+                      <Row id="updating-user-data">
+                        <FormField name="name" label={t('username')} />
+                        <FormField name="email" label={t('email')} type="email" />
+                      </Row>
+                      <Row>
+                        <Col xs={12}>
+                          <Button
+                            type="submit"
+                            variant="primary"
+                            className="submit-full-width"
+                            disabled={!isValid || !dirty || isSubmitting}
+                          >
+                            {t('submit')}
+                          </Button>
+                        </Col>
+                      </Row>
+                    </Form>
+                  )}
+                </Formik>
+              </Col>
+            </Row>
+          </>
+        )}
+      </AsyncContent>
+      <Row>
+        <BackLink to={ROUTES.admin.users} />
+      </Row>
+    </PageLayout>
+  );
 }
 
 export default SettingsUsersDetail;

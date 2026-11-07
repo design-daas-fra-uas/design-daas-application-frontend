@@ -17,7 +17,7 @@ export default function useNotice(autoHideMs = 4000) {
         timer.current = setTimeout(() => setNotice(null), autoHideMs);
       }
     },
-    [autoHideMs]
+    [autoHideMs],
   );
 
   return [notice, showNotice];

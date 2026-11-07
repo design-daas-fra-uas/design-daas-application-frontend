@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Alert, Button, Col, Modal, Row, Tab, Tabs } from 'react-bootstrap';
 import { Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +23,11 @@ function SubmitRow({ disabled }) {
 function CreateGroupForm({ onSubmit }) {
   const { t } = useTranslation();
   const schema = useMemo(
-    () => Yup.object().shape({ description: Yup.string().required(t('error-create-group-new', 'Description is required')) }),
-    [t]
+    () =>
+      Yup.object().shape({
+        description: Yup.string().required(t('error-create-group-new', 'Description is required')),
+      }),
+    [t],
   );
 
   return (
@@ -46,8 +49,11 @@ const NO_GROUP = '0';
 function UpdateGroupForm({ groups, onSubmit }) {
   const { t } = useTranslation();
   const schema = useMemo(
-    () => Yup.object().shape({ description: Yup.string().required(t('error-update-group-new', 'Description is required')) }),
-    [t]
+    () =>
+      Yup.object().shape({
+        description: Yup.string().required(t('error-update-group-new', 'Description is required')),
+      }),
+    [t],
   );
 
   const findGroup = (groupId) => groups.find((group) => String(group.id) === groupId) ?? null;
@@ -68,7 +74,13 @@ function UpdateGroupForm({ groups, onSubmit }) {
         return (
           <Form>
             <Row>
-              <FormField name="groupId" label={t('group-choice')} htmlFor="update-group-select" as="select" onChange={selectGroup}>
+              <FormField
+                name="groupId"
+                label={t('group-choice')}
+                htmlFor="update-group-select"
+                as="select"
+                onChange={selectGroup}
+              >
                 <option value={NO_GROUP}>{t('select-group')}</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
@@ -98,7 +110,11 @@ function GroupModal({ show, onHide, error, groups, onCreate, onUpdate }) {
         <Modal.Title>{t('create-update-group')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {error && <Alert variant="danger" role="alert">{t('request-failed', 'The request failed. Please try again.')}</Alert>}
+        {error && (
+          <Alert variant="danger" role="alert">
+            {t('request-failed', 'The request failed. Please try again.')}
+          </Alert>
+        )}
         <Tabs defaultActiveKey="create-group" id="create-update-group">
           <Tab eventKey="create-group" title={t('create-group')}>
             <CreateGroupForm onSubmit={onCreate} />

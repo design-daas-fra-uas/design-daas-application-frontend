@@ -18,8 +18,8 @@ export const getRole = () => localStorage.getItem(ROLE_KEY);
 const sessionListeners = new Set();
 const notifySessionChange = () => sessionListeners.forEach((listener) => listener());
 
-// Lets React code react to login/logout instead of reading localStorage once.
-// Also reacts to session changes made in other tabs. Returns an unsubscribe function.
+// Lets React code react to login/logout, including changes made in other tabs.
+// Returns an unsubscribe function.
 export const subscribeToSession = (listener) => {
   sessionListeners.add(listener);
   const onStorage = (event) => {
@@ -50,7 +50,8 @@ const updateTokensAfterRefresh = ({ tokenType, accessToken, refreshToken }) => {
   localStorage.setItem(TOKEN_TIME_KEY, String(new Date().getTime()));
 };
 
-// Silent refresh used by the API client when the backend answers 401.
+// Exchanges the refresh token for new tokens. Concurrent callers share one
+// request. Resolves to the new Authorization header value.
 let refreshPromise = null;
 export const refreshSession = () => {
   if (!refreshPromise) {

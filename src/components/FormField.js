@@ -1,4 +1,3 @@
-import React from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
 import { Field, ErrorMessage, useField } from 'formik';
 
@@ -18,7 +17,16 @@ function FormField({ name, label, htmlFor, type = 'text', as, className, childre
         <label htmlFor={fieldId}>{label}</label>
       </ReactBootstrap.Col>
       <ReactBootstrap.Col xs={12}>
-        <Field id={fieldId} name={name} type={as ? undefined : type} as={as} className={fieldClassName} aria-invalid={hasError} aria-describedby={`${fieldId}-error`} {...fieldProps}>
+        <Field
+          id={fieldId}
+          name={name}
+          type={as ? undefined : type}
+          as={as}
+          className={fieldClassName}
+          aria-invalid={hasError}
+          aria-describedby={`${fieldId}-error`}
+          {...fieldProps}
+        >
           {children}
         </Field>
       </ReactBootstrap.Col>

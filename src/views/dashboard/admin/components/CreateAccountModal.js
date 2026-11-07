@@ -1,4 +1,3 @@
-import React from 'react';
 import { Alert, Button, Col, Modal, Row, Tab, Tabs } from 'react-bootstrap';
 import { Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +19,12 @@ function AccountForm({ idSuffix, initialValues, validationSchema, onSubmit, chil
           </Row>
           <Row>
             <Col xs={12}>
-              <Button type="submit" variant="primary" className="submit-full-width" disabled={!isValid || !dirty || isSubmitting}>
+              <Button
+                type="submit"
+                variant="primary"
+                className="submit-full-width"
+                disabled={!isValid || !dirty || isSubmitting}
+              >
                 {t('submit')}
               </Button>
             </Col>

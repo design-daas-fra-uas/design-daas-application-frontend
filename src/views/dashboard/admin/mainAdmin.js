@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +21,8 @@ const SECTION_LABEL_KEYS = { admins: 'admins', users: 'users', groups: 'group' }
 function MainAdmin() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { admins, users, groups, loading, loadErrors, reload, refreshAdmins, refreshUsers, refreshGroups } = useDashboardData();
+  const { admins, users, groups, loading, loadErrors, reload, refreshAdmins, refreshUsers, refreshGroups } =
+    useDashboardData();
   const [notice, showNotice] = useNotice();
 
   const [groupModalOpen, setGroupModalOpen] = useState(false);
@@ -31,14 +32,15 @@ function MainAdmin() {
   const closeGroupModal = () => setGroupModalOpen(false);
   const closeAccountModal = () => setAccountModalOpen(false);
 
-  const { saveError, clearSaveError, createGroup, updateGroup, createUserAccount, createAdminAccount } = useAdminActions({
-    showNotice,
-    refreshGroups,
-    refreshUsers,
-    refreshAdmins,
-    closeGroupModal,
-    closeAccountModal,
-  });
+  const { saveError, clearSaveError, createGroup, updateGroup, createUserAccount, createAdminAccount } =
+    useAdminActions({
+      showNotice,
+      refreshGroups,
+      refreshUsers,
+      refreshAdmins,
+      closeGroupModal,
+      closeAccountModal,
+    });
 
   const openModal = (open) => () => {
     clearSaveError();
@@ -80,7 +82,8 @@ function MainAdmin() {
         <Row>
           <Col xs={12}>
             <Alert variant="danger" role="alert">
-              {t('load-error', 'Could not load the data. Please try again.')} ({loadErrors.map((name) => t(SECTION_LABEL_KEYS[name])).join(', ')}){' '}
+              {t('load-error', 'Could not load the data. Please try again.')} (
+              {loadErrors.map((name) => t(SECTION_LABEL_KEYS[name])).join(', ')}){' '}
               <Button variant="link" className="p-0 align-baseline" onClick={reload}>
                 {t('retry', 'Retry')}
               </Button>
@@ -109,7 +112,14 @@ function MainAdmin() {
         <QuickLinks />
       </Row>
 
-      <GroupModal show={groupModalOpen} onHide={hideModal(closeGroupModal)} error={saveError} groups={groups} onCreate={createGroup} onUpdate={updateGroup} />
+      <GroupModal
+        show={groupModalOpen}
+        onHide={hideModal(closeGroupModal)}
+        error={saveError}
+        groups={groups}
+        onCreate={createGroup}
+        onUpdate={updateGroup}
+      />
       <CreateAccountModal
         show={accountModalOpen}
         onHide={hideModal(closeAccountModal)}

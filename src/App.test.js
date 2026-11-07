@@ -5,4 +5,3 @@ test('renders without crashing', () => {
   const { container } = render(<App />);
   expect(container).toBeTruthy();
 });
-

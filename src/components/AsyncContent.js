@@ -1,4 +1,3 @@
-import React from 'react';
 import { Alert, Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 

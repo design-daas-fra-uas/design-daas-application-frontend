@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Col, Container, Row, Tab, Tabs } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -53,7 +53,9 @@ function Login() {
         <Tabs activeKey={activeTab} onSelect={setActiveTab}>
           {ROLES.map((role) => (
             <Tab key={role} eventKey={role} title={t(role)}>
-              {activeTab === role && <LoginForm key={role} role={role} onLogin={(values) => loginWithRole(values, role)} />}
+              {activeTab === role && (
+                <LoginForm key={role} role={role} onLogin={(values) => loginWithRole(values, role)} />
+              )}
             </Tab>
           ))}
         </Tabs>

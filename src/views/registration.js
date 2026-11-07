@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
@@ -36,7 +36,7 @@ function Registration() {
         email: emailSchema(t),
         registrationCode: Yup.string().required(t('error-user-code', 'Registration code is required.')),
       }),
-    [t]
+    [t],
   );
 
   const registerUser = async ({ email, registrationCode }, { resetForm }) => {
@@ -77,7 +77,12 @@ function Registration() {
 
                   <Row>
                     <Col xs={12}>
-                      <Button type="submit" variant="primary" className="submit-full-width" disabled={!isValid || !dirty || isSubmitting}>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        className="submit-full-width"
+                        disabled={!isValid || !dirty || isSubmitting}
+                      >
                         {isSubmitting ? t('loading', 'Loading...') : t('submit')}
                       </Button>
                     </Col>

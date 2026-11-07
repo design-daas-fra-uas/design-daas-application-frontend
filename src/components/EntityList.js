@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 // Admin list: one row per item with a name, a settings button and an info
@@ -14,7 +13,12 @@ function EntityList({ items, onSettings, onInfo, limit }) {
         <li key={item.id ?? item.name}>
           <span>{item.name}</span>
           <span>
-            <button type="button" className="icon-button" aria-label={t('settings', 'Settings')} onClick={() => onSettings(item)}>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={t('settings', 'Settings')}
+              onClick={() => onSettings(item)}
+            >
               <i className="fa-solid fa-gear" aria-hidden="true" />
             </button>
           </span>

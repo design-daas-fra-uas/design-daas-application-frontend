@@ -1,5 +1,10 @@
 import React from 'react';
 
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('ErrorBoundary');
+
+// Last line of defence: shows a reload button instead of a blank page when a view crashes.
 export default class ErrorBoundary extends React.Component {
   state = { failed: false };
 
@@ -8,7 +13,7 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error(error, info);
+    log.error(`Unhandled render error: ${error.message}`, info.componentStack);
   }
 
   render() {

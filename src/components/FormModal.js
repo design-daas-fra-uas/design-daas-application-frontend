@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert, Button, Col, Modal, Row } from 'react-bootstrap';
 import { Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
+
+import { createLogger } from '../utils/logger';
+const log = createLogger('FormModal');
 
 // Modal with a Formik form (the children are the form fields) and a submit
 // button. `onSubmit(values)` should throw when saving fails: the error is shown
@@ -33,7 +36,7 @@ function FormModal({
     try {
       await onSubmit(values);
     } catch (error) {
-      console.error(error);
+      log.error('Submitting the form failed', error);
       const conflictMessage = error?.response?.status === 409 ? error.response.data?.message : '';
       setSubmitError(conflictMessage || t('request-failed', 'The request failed. Please try again.'));
       return;
@@ -43,7 +46,7 @@ function FormModal({
     try {
       await onSaved?.();
     } catch (error) {
-      console.error(error);
+      log.error('Submitting the form failed', error);
     }
   };
 
@@ -53,8 +56,17 @@ function FormModal({
         <Modal.Title id={titleId}>{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {submitError && <Alert variant="danger" role="alert">{submitError}</Alert>}
-        <Formik enableReinitialize initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        {submitError && (
+          <Alert variant="danger" role="alert">
+            {submitError}
+          </Alert>
+        )}
+        <Formik
+          enableReinitialize
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
           {({ isValid, dirty, isSubmitting }) => (
             <Form>
               <Row>{children}</Row>
