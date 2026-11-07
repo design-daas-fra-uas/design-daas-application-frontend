@@ -1,53 +1,59 @@
 import axios from 'axios';
 
-import { DEVELOPMENT_INTERN } from '../constants/constants';
-import { clearSession, getAccessToken, refreshSession } from '../auth/tokenManager';
+import { AUTH_API_URL, DAAS_API_URL } from '../constants/constants';
+import { clearSession, getAccessToken, isSessionInvalid, refreshSession } from '../auth/tokenManager';
 
 const unwrapData = (response) => response.data;
 
-// Shared axios instance for authenticated backend calls. Responses resolve to
-// `response.data`.
-const apiClient = axios.create({
-    baseURL: DEVELOPMENT_INTERN,
-});
-
-// Same base URL, but without auth headers or the 401 refresh flow.
-export const publicClient = axios.create({
-    baseURL: DEVELOPMENT_INTERN,
-});
-publicClient.interceptors.response.use(unwrapData);
-
-apiClient.interceptors.request.use((config) => {
+// Adds the current access token to every request and, on a 401, refreshes the
+// session once and retries the original request. With `unwrap`, responses
+// resolve to `response.data` (the retried request is already unwrapped).
+const authorize = (client, { unwrap = false } = {}) => {
+  client.interceptors.request.use((config) => {
     if (!config.headers.has('Authorization')) {
-        config.headers.set('Authorization', getAccessToken());
+      config.headers.set('Authorization', getAccessToken());
     }
-
     return config;
-});
+  });
 
-// Only a rejected refresh token (or a missing session) ends the session;
-// transient network/server errors must not log the user out.
-const isSessionInvalid = (refreshError) => {
-    const status = refreshError?.response?.status;
-    return status === 400 || status === 401 || refreshError?.message === 'No session';
-};
-
-apiClient.interceptors.response.use(unwrapData, async (error) => {
+  client.interceptors.response.use(unwrap ? unwrapData : undefined, async (error) => {
     const original = error.config;
     if (error.response?.status !== 401 || !original || original._retried) {
-        return Promise.reject(error);
+      return Promise.reject(error);
     }
     original._retried = true;
     try {
-        const token = await refreshSession();
-        original.headers.set('Authorization', token);
-        return apiClient(original);
+      const token = await refreshSession();
+      original.headers.set('Authorization', token);
+      return client(original);
     } catch (refreshError) {
-        if (isSessionInvalid(refreshError)) {
-            clearSession();
-        }
-        return Promise.reject(error);
+      if (isSessionInvalid(refreshError)) {
+        clearSession();
+      }
+      return Promise.reject(error);
     }
-});
+  });
+
+  return client;
+};
+
+// Java backend (users, groups, desktops). Responses resolve to `response.data`.
+const apiClient = authorize(axios.create({ baseURL: AUTH_API_URL }), { unwrap: true });
+
+// Java backend without auth headers or the refresh flow (e.g. email validation).
+export const publicClient = axios.create({ baseURL: AUTH_API_URL });
+publicClient.interceptors.response.use(unwrapData);
+
+// Python DaaS backend (VMs, containers, viewer, monitoring). It expects
+// multipart form bodies and wraps results in `{ response_code, response_data }`,
+// so the full axios response is returned; use `isDaasSuccess` to check it.
+export const daasClient = authorize(
+  axios.create({
+    baseURL: DAAS_API_URL,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+);
+
+export const isDaasSuccess = (response) => response?.status === 200 && response?.data?.response_code === 200;
 
 export default apiClient;

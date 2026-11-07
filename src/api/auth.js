@@ -1,37 +1,33 @@
 import axios from 'axios';
 
-import { DEVELOPMENT_INTERN, OAUTH_CLIENT_ID } from '../constants/constants';
+import { AUTH_API_URL, OAUTH_CLIENT_ID } from '../constants/constants';
 
 // Unauthenticated calls used before a session exists (login/token refresh).
 // These intentionally bypass the shared `client.js` instance.
-const TOKEN_URL = `${DEVELOPMENT_INTERN}/oauth2/user/token`;
+const TOKEN_URL = `${AUTH_API_URL}/oauth2/user/token`;
 
-const LOGOUT_URL = `${DEVELOPMENT_INTERN}/oauth2/user/logout`;
+const LOGOUT_URL = `${AUTH_API_URL}/oauth2/user/logout`;
 
 const toFormBody = (fields) =>
-    Object.entries(fields)
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-        .join('&');
+  Object.entries(fields)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
 
 const postToken = (fields) =>
-    axios.post(TOKEN_URL, toFormBody({ ...fields, client_id: OAUTH_CLIENT_ID }), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
+  axios.post(TOKEN_URL, toFormBody({ ...fields, client_id: OAUTH_CLIENT_ID }), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 
 export const loginWithPassword = ({ username, password, role }) =>
-    postToken({ grant_type: 'password', username, password, scope: role });
+  postToken({ grant_type: 'password', username, password, scope: role });
 
 export const refreshAccessToken = ({ refreshToken }) =>
-    postToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
+  postToken({ grant_type: 'refresh_token', refresh_token: refreshToken });
 
 export const logoutRequest = ({ accessToken, refreshToken }) =>
-    axios.post(
-        LOGOUT_URL,
-        toFormBody(refreshToken ? { refresh_token: refreshToken } : {}),
-        {
-            headers: {
-                Authorization: accessToken,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        },
-    );
+  axios.post(LOGOUT_URL, toFormBody(refreshToken ? { refresh_token: refreshToken } : {}), {
+    headers: {
+      Authorization: accessToken,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
