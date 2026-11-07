@@ -1,0 +1,41 @@
+import { Link } from 'react-router';
+import * as ReactBootstrap from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
+
+import Header from '../components/header';
+
+import { ROUTES } from '../routes';
+
+function NotFound() {
+  const { t } = useTranslation();
+  return (
+    <>
+      <Header />
+      <ReactBootstrap.Container id="error">
+        <ReactBootstrap.Row>
+          <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
+            <div>
+              <div>
+                <h2>Error - 404</h2>
+              </div>
+              <div>
+                <h2>{t('Error-Title')}</h2>
+              </div>
+            </div>
+            <div>
+              <div>{t('Error-text-one')}</div>
+              <div>{t('Error-text-two')}</div>
+            </div>
+            <div>
+              <div>
+                <Link to={ROUTES.login}>{t('back-link')}</Link>
+              </div>
+            </div>
+          </ReactBootstrap.Col>
+        </ReactBootstrap.Row>
+      </ReactBootstrap.Container>
+    </>
+  );
+}
+
+export default NotFound;

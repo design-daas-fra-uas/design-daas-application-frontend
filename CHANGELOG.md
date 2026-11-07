@@ -5,6 +5,113 @@
 ---
 ## [2.0.0]
 
+Code review and refactoring of the whole frontend: dead and duplicated code removed, the remaining logic moved into shared modules, and the bugs found along the way fixed.
+
+**Size of the change:** `src` went from 50,474 to 23,714 lines (−53 %). Lint went from 600 warnings to 0 (`--max-warnings=0` in CI), and tests went from 1 to 33.
+
+### Breaking / behavior changes
+
+- **Hard-coded service credentials removed.** `USERNAME`/`PASSWORD` were deleted from `constants.js`. Nothing used them any more, but they are still in the git history of a public repo. ⚠️ **Rotate that password.**
+- **Constants renamed.** `DEVELOPMENT` → `DAAS_API_URL` and `DEVELOPMENT_INTERN` → `AUTH_API_URL`. `TEST`, `LIVE`, `*_INTERN`, `URL_SYSTEM` and `URL_SYSTEM_WITHOUT_PORT` were removed (unused). The `REACT_APP_*` build args are unchanged.
+- **Client-side navigation.** In-app navigation now uses React Router instead of `window.location.href`, so pages no longer reload fully. The exception is opening a connection from the header, which still reloads so the viewer restarts.
+- **Request banners** ("request successful/failed") now hide after 2 s everywhere. A few pages used 5 s or 10 s.
+- **Monitoring**
+  - The user page's "total" count is now tasks + files + apps, as on the admin page. It used to be `utilization.objects`.
+  - The user page now also has a "Host" tab.
+  - The refresh button now shows a success or failure banner.
+- **Logout** clears all of the app's `localStorage` (tokens, selections, language) instead of a hand-maintained key list that had drifted out of date.
+- **Removed calls with no effect:** `/phases/object_list` + `/phases/object_status` on the user dashboard (their result was only written to an unused key), the empty-handler `/monitoring/get_monitor_info` and `/admin/get_monitor_info`, and the `dashboard-info` localStorage cache (written but never read).
+
+### Fixed
+
+- **Session**
+  - After login the refresh token was stored as `Bearer <token>`, and the hourly background refresh sent it that way. It is now stored and sent bare, and old stored values are still read correctly.
+  - The hourly refresh now ends the session only if the refresh token is rejected (400/401). Network or server errors no longer log the user out.
+- **CI** triggered on `main`, but this repo uses `master`. Pushes never ran CI and no image was ever pushed to GHCR.
+- **Docker image create** (`settingsDocker`) sent `ceph_public` and `ceph_shared` from the **ceph_user** checkbox.
+- **User dashboard**
+  - "My files" was not refreshed after creating or cloning a base image or creating or updating an app or file. Four copies of the refresh code called `setOwnApplication` twice and never `setOwnFiles`.
+  - On the first visit after login, own apps and files could be empty: the dashboard loaded before the session call had stored the user id. Session → dashboard is now sequential.
+  - Selecting an object stored the wrong running instance (empty) unless that instance was last in the list.
+  - Stopping an environment read dashboard data from the *stop* response. When that data was missing, it threw after showing "successful", so the banner flipped to "failed". It now refetches the dashboard instead.
+  - Search narrowed the already-filtered list, so deleting characters never widened the results, and `null` values crashed it.
+  - The "request an application" message was not URL-encoded in the request path, so text with `/`, `?` or `#` broke the URL. The page now also shows success or failure.
+- **Monitoring**
+  - The admin "Tasks" sections and the owner-search "Tasks" tab showed **file** fields instead of task fields.
+  - Owner search showed its results after a fixed 10 s delay instead of when loaded.
+  - Owner search always displayed the raw text `error-vm-id-owner-all`, a missing translation key.
+- **Viewer pages**
+  - The loading spinner was switched on only after the response arrived, and off again immediately, so it never appeared.
+  - `settingsPhase` had three iframes with the same id, so only the first one was ever filled.
+- **Header** called the dashboard API on the login page too, because its guard `token !== "" || token !== undefined` was always true.
+- **Checkbox handlers** kept an inverted duplicate `"on"`/`""` state. It was harmless because submissions used the `…Checked` flag; the duplicate is removed.
+- **Timers**
+  - Alert timers no longer update state after a page is left.
+  - The viewer-session redirect timer is cleared when the page unmounts.
+- **Tooling**
+  - `docker-compose.prod.yml` mapped ports `8080`/`8443`, but nginx listens on `80`, so the container was unreachable. It now maps `8080:80`.
+  - The Jest run hung on CRA's "babel-plugin-proposal-private-property-in-object" warning timer. The plugin is now declared as a devDependency.
+
+### Added
+
+- `src/utils/logger.js`: leveled, scoped logger (`createLogger('Name')`). It reduces axios errors to method, URL, status and body. Level comes from `REACT_APP_LOG_LEVEL`; the default is `debug` in development, `warn` in production and silent in tests. ESLint `no-console` keeps views off `console`.
+- `src/api/client.js`: one `authorize()` setup shared by both backends (auth header, one refresh-and-retry on 401). New `daasClient` for the DaaS backend and `isDaasSuccess()`.
+- `src/api/phases.js`: start/run/connect calls that resolve to the viewer URL, plus `DaasRequestError` and `withFallback()`.
+- `src/api/session.js` (`getSession`) and `requestApplication` in `src/api/users.js`.
+- `logout()` in `src/auth/tokenManager.js`: the only logout implementation (the header and the dashboard each had their own copy).
+- **Components**
+  - `RequestAlert` with the `useRequestAlert` hook (replaces ~390 hand-written `setRequestAlert(true)` … `setTimeout(…, 2000)` blocks).
+  - `ViewerFrame` (replaces 21 copies of an `XMLHttpRequest` + `getElementById(...).srcdoc` loader).
+  - `RefreshButton`: an accessible `<button>` instead of a clickable `<div>`.
+- **Viewer module** (`src/views/dashboard/user/viewer/`): `ViewerPage` and `useViewerSession` (spinner → viewer, or error and back to the dashboard after 5 s), plus `cachedViewer` for reusing an already started viewer.
+- **Monitoring module** (`src/views/dashboard/monitoring/`): `monitoringConfig` (categories, endpoints, fields), `useMonitoring` (parallel loading; a failing category falls back to empty) and `MonitoringSections` (counts, tabs, record lists).
+- `src/views/dashboard/user/dashboardData.js`: pure `ownedBy`, `filterBySearch` and `getCurrentUserId` helpers.
+- `src/utils/formik.js`: `SUBMIT_HANDLED_BY_FORM` explains why the legacy forms' Formik `onSubmit` does nothing (they submit through `<Form onSubmit>`).
+- **Tests** (33): token manager (storage, refresh, concurrent refresh, logout), phase API and fallback, request alert hook, monitoring loader and sections, dashboard helpers, viewer page.
+- **Tooling**
+  - Prettier (`.prettierrc.json`) with `npm run format` / `format:check`.
+  - `npm run lint` (zero warnings allowed).
+  - CI now runs lint and the format check before the tests.
+
+### Changed
+
+- **Monitoring:** `monitoring.js` (11,106 lines) and `monitoringUser.js` (3,226 lines) were one layout copy-pasted for 3 scopes × 8 categories. They are now ~110 lines of pages on the shared monitoring module.
+- **Viewer pages:** `applicationRunning`, `environmentRunning`, `instanceRunning`, `sharedRunning`, `connectionRunning` and `objectStartSetup` went from ~1,600 lines to ~110. Each now only says what to start.
+- **User dashboard** (`mainUser.js`, 4,179 → 2,514 lines)
+  - Eight inline copies of the dashboard refresh were replaced by one `fetchDashboardInfo`.
+  - Its own copy of the navbar was replaced by `<Header connections={…} />`.
+  - The filtered lists are derived values instead of state.
+  - The object and environment select handlers were rewritten.
+- **Header** was rewritten: it loads only `available_connections` and only when logged in, uses buttons for actions, and adds keys to its lists.
+- **Python-backend calls:** all ~230 went through `daasClient` instead of `axios` with copy-pasted headers.
+- **Back links:** the clickable `<div>` back links on 14 pages became the existing `BackLink` component, a real link.
+- **Expert setup pages** take their initial values from `useState(...)` instead of setting them in a mount effect.
+- **Formatting:** the whole `src` tree was formatted with Prettier (single quotes, 2-space indent, 120 columns). This makes up a large part of the diff.
+- **Dockerfile**
+  - Installs with `npm ci` from the lockfile (it ran `npm install` on `package.json` alone).
+  - Node is pinned to `18.20.8-alpine` and nginx to `1.27-alpine`.
+  - `chmod -R 777 /var /run` was dropped.
+  - Accepts `REACT_APP_LOG_LEVEL`.
+  - `.dockerignore` now also excludes `build`, `.git`, coverage and `.env*`.
+- **Compose files:** the obsolete `version:` key and commented-out volumes were removed.
+
+### Removed
+
+- **Dead views** (not routed or imported anywhere): `demo/*`, `settingsAuthentification`, `createBaseImage`, `createSystem`, `createEnvironmentBase`, `environmentImage`, `snapshotsOverview`, `runningApplicationSystem`, `expert/mainExpert`, `components/footer`, `logo.svg`, `reportWebVitals`.
+- **Commented-out code:** ~1,300 blocks, including whole hidden forms (e.g. the "viewer settings" tab) and their handlers and state.
+- **Unused code:** ~280 imports, variables, functions and `useState` pairs, plus 45 redundant checkbox states.
+- **Logging noise:** every `console.log(response)` after a request (noise, and it logged response data); `console.log(e)` became `log.error(...)`.
+- **Fake CORS request headers** (`Access-Control-Allow-*`) on XHR requests.
+- **Unused dependencies:** `bootstrap-icons`, `move-js`, `scrolling-tabs-bootstrap-5`, `web-vitals`, `react-router` (`react-router-dom` stays).
+- **`yarn.lock`:** npm is used everywhere (CI, Docker), and the two lockfiles had diverged.
+- **CSS:** the unused `.show-alert` / `.hide-alert` classes.
+
+### Not done yet / next steps
+
+- The big admin and expert form pages still keep one `useState` and one change handler per field: `settingsPhase` (3.8k lines), `settingsVirtualEnvironment` (2.1k), `settingsDocker` (1.9k), `settingsInstances` (1.6k), `settingsApps` (1.4k), `settingsFiles` (1k), the `objectEnvironmentSetup*` pages and the forms in `mainUser`. The next step is to let Formik own the values and describe each form as config, as was done for monitoring.
+- The main bundle is still ~700 kB, mostly `@fortawesome/fontawesome-free/js/all.js`, which carries every icon to render ten. Switching to the webfont CSS needs the `svg` selectors in `App.css` adapted and a visual check.
+- Everything was verified with lint, unit tests and a production build, but **not against a running backend**. Please smoke-test login, the dashboards, starting and stopping objects, monitoring and the viewer pages before deploying.
+
 ## [1.0.0] 
 
 ### Breaking / behavior changes
