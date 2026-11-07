@@ -4,8 +4,8 @@
 // Default: `debug` in development, `warn` in production builds, `silent` in tests.
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40, silent: 100 };
 
-const DEFAULT_LEVEL = { production: 'warn', test: 'silent' }[process.env.NODE_ENV] || 'debug';
-const threshold = LEVELS[process.env.REACT_APP_LOG_LEVEL] ?? LEVELS[DEFAULT_LEVEL];
+const DEFAULT_LEVEL = { production: 'warn', test: 'silent' }[import.meta.env.MODE] || 'debug';
+const threshold = LEVELS[import.meta.env.REACT_APP_LOG_LEVEL] ?? LEVELS[DEFAULT_LEVEL];
 
 // Axios errors carry the whole request/response; keep only what helps debugging.
 const describe = (value) => {

@@ -7,9 +7,9 @@
 const BACKEND_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
 // DaaS backend (VMs, containers, viewer, monitoring).
-export const DAAS_API_URL = process.env.REACT_APP_DAAS_API_URL || `http://${BACKEND_HOST}:5000`;
+export const DAAS_API_URL = import.meta.env.REACT_APP_DAAS_API_URL || `http://${BACKEND_HOST}:5000`;
 
 // Java backend (login, users, groups, desktops).
-export const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || `http://${BACKEND_HOST}:8080`;
+export const AUTH_API_URL = import.meta.env.REACT_APP_AUTH_API_URL || `http://${BACKEND_HOST}:8080`;
 
-export const OAUTH_CLIENT_ID = process.env.REACT_APP_OAUTH_CLIENT_ID || 'test-client';
+export const OAUTH_CLIENT_ID = import.meta.env.REACT_APP_OAUTH_CLIENT_ID || 'test-client';

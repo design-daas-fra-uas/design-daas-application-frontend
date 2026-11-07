@@ -1,15 +1,15 @@
 import { daasClient } from './client';
 import { DaasRequestError, startBaseImage, startEnvironment, withFallback } from './phases';
 
-jest.mock('./client', () => ({
-  daasClient: { post: jest.fn() },
+vi.mock('./client', () => ({
+  daasClient: { post: vi.fn() },
   isDaasSuccess: (response) => response?.status === 200 && response?.data?.response_code === 200,
 }));
 
 const ok = (url) => ({ status: 200, data: { response_code: 200, response_url: url } });
 const backendError = { status: 200, data: { response_code: 400 } };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => vi.clearAllMocks());
 
 describe('phase requests', () => {
   it('resolve to the viewer URL', async () => {
@@ -41,7 +41,7 @@ describe('withFallback', () => {
 
   it('does not hide network errors behind the fallback', async () => {
     daasClient.post.mockRejectedValue(new Error('Network Error'));
-    const fallback = jest.fn();
+    const fallback = vi.fn();
     await expect(withFallback(() => startEnvironment('obj', 'env'), fallback)).rejects.toThrow('Network Error');
     expect(fallback).not.toHaveBeenCalled();
   });

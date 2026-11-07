@@ -2,14 +2,14 @@ import { daasClient } from '../../../api/client';
 import { EMPTY_MONITORING } from './monitoringConfig';
 import { fetchMonitoring } from './useMonitoring';
 
-jest.mock('../../../api/client', () => ({
-  daasClient: { post: jest.fn() },
+vi.mock('../../../api/client', () => ({
+  daasClient: { post: vi.fn() },
   isDaasSuccess: (response) => response?.status === 200 && response?.data?.response_code === 200,
 }));
 
 const ok = (data) => ({ status: 200, data: { response_code: 200, response_data: data } });
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => vi.clearAllMocks());
 
 it('loads every category of a scope and unwraps list payloads', async () => {
   daasClient.post.mockImplementation((path) => {

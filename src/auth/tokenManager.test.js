@@ -11,9 +11,9 @@ import {
   subscribeToSession,
 } from './tokenManager';
 
-jest.mock('../api/auth', () => ({
-  refreshAccessToken: jest.fn(),
-  logoutRequest: jest.fn(),
+vi.mock('../api/auth', () => ({
+  refreshAccessToken: vi.fn(),
+  logoutRequest: vi.fn(),
 }));
 
 const login = () =>
@@ -21,7 +21,7 @@ const login = () =>
 
 beforeEach(() => {
   localStorage.clear();
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('session storage', () => {
@@ -38,7 +38,7 @@ describe('session storage', () => {
   });
 
   it('notifies subscribers on login and logout', () => {
-    const listener = jest.fn();
+    const listener = vi.fn();
     const unsubscribe = subscribeToSession(listener);
     login();
     clearSession();
