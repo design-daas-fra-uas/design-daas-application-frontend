@@ -1,6 +1,6 @@
 {
   "name": "design-daas-application-frontend",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -37,6 +37,7 @@
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
     "@vitejs/plugin-react": "^6.2.1",
     "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.14.0",
