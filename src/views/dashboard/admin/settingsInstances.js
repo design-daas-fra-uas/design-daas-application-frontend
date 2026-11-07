@@ -1,11 +1,8 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
+import { useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import {Formik, Form, Field, ErrorMessage} from 'formik';
+import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import axios from "axios";
-import {useMediaQuery} from "react-responsive";
 
 import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, DEVELOPMENT_INTERN, TEST_INTERN, LIVE_INTERN, URL_SYSTEM} from "../../../constants/constants";
 

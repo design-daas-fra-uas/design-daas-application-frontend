@@ -118,14 +118,9 @@ function App() {
 
   useEffect(() => subscribeToSession(() => setUserRole(getRole())), []);
 
-  // Silent token refresh for the whole logged-in session. When it fails the
-  // session is cleared, which updates userRole and the route guards redirect to login.
-  useEffect(() => {
-    if (!userRole) {
-      return undefined;
-    }
-    return scheduleTokenRefresh(() => clearSession());
-  }, [userRole]);
+  // Silent token refresh while logged in. An expired session is cleared, which
+  // updates userRole and the route guards redirect to login.
+  useEffect(() => (userRole ? scheduleTokenRefresh() : undefined), [userRole]);
 
   return (
     <Router>

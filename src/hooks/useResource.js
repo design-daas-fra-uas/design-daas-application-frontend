@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { createLogger } from '../utils/logger';
+const log = createLogger('useResource');
+
 const LOADING = { data: null, status: 'loading' };
 
 // Loads a resource and tracks its status:
@@ -37,7 +40,7 @@ export default function useResource(loader, deps = []) {
       if (id !== requestId.current) {
         return false;
       }
-      console.error(error);
+      log.error('reload', error);
       const notFound = error?.response?.status === 404;
       setState((previous) => ({
         data: notFound ? null : previous.data,

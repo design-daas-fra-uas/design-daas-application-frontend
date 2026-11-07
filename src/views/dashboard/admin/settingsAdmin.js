@@ -10,6 +10,7 @@ import {useMediaQuery} from "react-responsive";
 import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, DEVELOPMENT_INTERN, TEST_INTERN, LIVE_INTERN, URL_SYSTEM} from "../../../constants/constants";
 
 import Header from "../../../components/header";
+import { createLogger } from '../../../utils/logger';
 
 function SettingsAdminAssign() {
     const params = useParams(); // Example: {params.id}
@@ -81,9 +82,10 @@ function SettingsAdminAssign() {
                 }, 2000);
             });
     }
+        log.error('adminAssignObjectToUser failed', e);
 
-    const adminAppToUser = (event) => {
-        event.preventDefault();
+  const adminAppToUser = (event) => {
+    event.preventDefault();
 
         axios.post(DEVELOPMENT + '/admin/assign_app', {
             appid: vmAdminAppID,
@@ -130,8 +132,8 @@ function SettingsAdminAssign() {
             });
     }
 
-    const taskList = (event) => {
-        event.preventDefault();
+  const taskList = (event) => {
+    event.preventDefault();
 
         axios.post(DEVELOPMENT + '/admin/tasklist', {
             id_owner: taskListOwnerID,
@@ -179,6 +181,7 @@ function SettingsAdminAssign() {
                 }, 2000);
             });
     }
+        log.error('taskList failed', e);
 
     const taskStop = (event) => {
         event.preventDefault();
@@ -242,33 +245,33 @@ function SettingsAdminAssign() {
         setTaskStopInstanceID(event.target.value);
     };
 
-    const changeTaskStopID = event => {
-        setTaskStopID(event.target.value);
-    };
+  const changeTaskStopID = (event) => {
+    setTaskStopID(event.target.value);
+  };
 
-    const changeTaskListOwnerID = event => {
-        setTaskListOwnerID(event.target.value);
-    };
+  const changeTaskListOwnerID = (event) => {
+    setTaskListOwnerID(event.target.value);
+  };
 
-    const changeTaskListObjectID = event => {
-        setTaskListObjectID(event.target.value);
-    };
+  const changeTaskListObjectID = (event) => {
+    setTaskListObjectID(event.target.value);
+  };
 
-    const changeTaskListInstanceID = event => {
-        setTaskListInstanceID(event.target.value);
-    };
+  const changeTaskListInstanceID = (event) => {
+    setTaskListInstanceID(event.target.value);
+  };
 
-    const changeTaskListStatus = event => {
-        setTaskListStatus(event.target.value);
-    };
+  const changeTaskListStatus = (event) => {
+    setTaskListStatus(event.target.value);
+  };
 
-    const changeVMAdminID = event => {
-        setVMAdminID(event.target.value);
-    };
+  const changeVMAdminID = (event) => {
+    setVMAdminID(event.target.value);
+  };
 
-    const changeVMAdminUser = event => {
-        setVMAdminUser(event.target.value);
-    };
+  const changeVMAdminUser = (event) => {
+    setVMAdminUser(event.target.value);
+  };
 
     const changeVMAdminAppID = event => {
         setVMAdminAppID(event.target.value);

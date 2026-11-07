@@ -47,7 +47,11 @@ function CreateAccountModal({ show, onHide, error, groups, onCreateUser, onCreat
         <Modal.Title>{t('create-user')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {error && <Alert variant="danger" role="alert">{t('request-failed', 'The request failed. Please try again.')}</Alert>}
+        {error && (
+          <Alert variant="danger" role="alert">
+            {t('request-failed', 'The request failed. Please try again.')}
+          </Alert>
+        )}
         <Tabs defaultActiveKey="user" id="user-admin-creator">
           <Tab eventKey="user" title={t('user')}>
             <AccountForm

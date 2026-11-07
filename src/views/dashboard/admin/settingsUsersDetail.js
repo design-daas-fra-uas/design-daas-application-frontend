@@ -15,6 +15,9 @@ import { emailSchema } from '../../../utils/validation';
 
 import { getUsers, updateUser, disableUser, enableUser } from '../../../api/users';
 
+import { createLogger } from '../../../utils/logger';
+const log = createLogger('SettingsUsersDetail');
+
 const findUserById = async (id) => (await getUsers()).find((user) => String(user.id) === String(id)) ?? null;
 
 function SettingsUsersDetail() {
@@ -40,20 +43,20 @@ function SettingsUsersDetail() {
     [t],
   );
 
-    // Saving and refreshing share one error message; the refresh is silent so the form stays mounted.
-    // `reload` reports failure by returning false instead of throwing.
-    const runAction = async (action) => {
-        setActionError('');
-        try {
-            await action();
-            if (!(await reload({ silent: true }))) {
-                throw new Error('Refresh after save failed');
-            }
-        } catch (e) {
-            console.error(e);
-            setActionError(t('update-error', 'The request failed. Please try again.'));
-        }
-    };
+  // Saving and refreshing share one error message; the refresh is silent so the form stays mounted.
+  // `reload` reports failure by returning false instead of throwing.
+  const runAction = async (action) => {
+    setActionError('');
+    try {
+      await action();
+      if (!(await reload({ silent: true }))) {
+        throw new Error('Refresh after save failed');
+      }
+    } catch (e) {
+      log.error('runAction', e);
+      setActionError(t('update-error', 'The request failed. Please try again.'));
+    }
+  };
 
   const updateUserAccount = ({ name, email }) =>
     runAction(() => updateUser(user.id, { name: name.trim(), email: email.trim() }));

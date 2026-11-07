@@ -1,5 +1,4 @@
-import React, {useEffect, useState} from 'react';
-import {Link, useParams} from 'react-router-dom';
+import { useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import {Formik, Form, Field, ErrorMessage} from 'formik';
@@ -620,8 +619,8 @@ function SettingsDocker() {
             });
     }
 
-    const dockerContainerStop = (event) => {
-        event.preventDefault();
+  const dockerContainerStop = (event) => {
+    event.preventDefault();
 
         axios.post(DEVELOPMENT + '/container/container_stop', {
             id_instance: vmIDInstanceDockerContainerStop,
@@ -668,8 +667,8 @@ function SettingsDocker() {
             });
     }
 
-    const dockerContainerList = (event) => {
-        event.preventDefault();
+  const dockerContainerList = (event) => {
+    event.preventDefault();
 
         axios.post(DEVELOPMENT + '/container/container_list', {
             onlyuser: vmPhasesDockerListCheckedUser ? "on" : "",
@@ -724,19 +723,14 @@ function SettingsDocker() {
                 setVMSubmitDockerContainerList(true);
                 setVMDataDockerContainerList([]);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 10000);
+        setTimeout(() => {
+          setVMSubmitDockerContainerList(false);
+        }, 10000);
+      });
+  };
 
-                setTimeout(() => {
-                    setVMSubmitDockerContainerList(false);
-                }, 10000);
-            });
-    }
-
-    const dockerContainerLogs = (event) => {
-        event.preventDefault();
+  const dockerContainerLogs = (event) => {
+    event.preventDefault();
 
         axios.post(DEVELOPMENT + '/container/container_logs', {
             id: vmIDDockerContainerLogs,
@@ -780,35 +774,31 @@ function SettingsDocker() {
                 setRequestAlertMessage(false);
                 setVMDataDockerContainerLogsSubmit(false);
 
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
-                setVMDataDockerContainerLogs("");
-            });
+        setVMDataDockerContainerLogs('');
+      });
+  };
+
+  const changeVMIDDockerImageInspect = (event) => {
+    setVMIDDockerImageInspect(event.target.value);
+  };
+
+  const changeVMIDDockerImageCreate = (event) => {
+    setVMIDDockerImageCreate(event.target.value);
+  };
+
+  const changeVMNameDockerImageCreate = (event) => {
+    setVMNameDockerImageCreate(event.target.value);
+  };
+
+  const changeVMDockerfile = (event) => {
+    if (event.target.files) {
+      setVMDockerfile(event.target.files[0]);
     }
+  };
 
-    const changeVMIDDockerImageInspect = event => {
-        setVMIDDockerImageInspect(event.target.value);
-    };
-
-    const changeVMIDDockerImageCreate = event => {
-        setVMIDDockerImageCreate(event.target.value);
-    };
-
-    const changeVMNameDockerImageCreate = event => {
-        setVMNameDockerImageCreate(event.target.value);
-    };
-
-    const changeVMDockerfile = event => {
-        if (event.target.files) {
-            setVMDockerfile(event.target.files[0]);
-        }
-    };
-
-    const changeVMCoresDockerImageCreate = event => {
-        setVMCoresDockerImageCreate(event.target.value);
-    };
+  const changeVMCoresDockerImageCreate = (event) => {
+    setVMCoresDockerImageCreate(event.target.value);
+  };
 
     const changeVMMemsizeDockerImageCreate = event => {
         setVMMemsizeDockerImageCreate(event.target.value);

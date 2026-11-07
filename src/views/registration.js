@@ -13,6 +13,9 @@ import { emailSchema } from '../utils/validation';
 
 import { validateEmail } from '../api/users';
 
+import { createLogger } from '../utils/logger';
+const log = createLogger('Registration');
+
 const REDIRECT_DELAY = 4000;
 const INITIAL_VALUES = { email: '', registrationCode: '' };
 
@@ -50,7 +53,7 @@ function Registration() {
       setFeedback({ visible: true, success: true });
       resetForm();
     } catch (error) {
-      console.error(error);
+      log.error('registerUser', error);
       setFeedback({ visible: true, success: false });
     }
   };

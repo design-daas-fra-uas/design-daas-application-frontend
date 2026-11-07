@@ -1,14 +1,16 @@
-// Centralizes all token/session localStorage access and the background
-// refresh-token polling so views don't duplicate this logic (previously
-// hard-coded inside src/views/login.js).
-import { refreshAccessToken } from '../api/auth';
+// Single owner of the login session in localStorage: tokens, role, the
+// background refresh and logout. Views must not touch these keys directly.
+import { logoutRequest, refreshAccessToken } from '../api/auth';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('Session');
 
 const TOKEN_KEY = 'userToken';
 const REFRESH_TOKEN_KEY = 'userRefreshToken';
 const TOKEN_TIME_KEY = 'userTimeToken';
 const ROLE_KEY = 'role';
 
-const REFRESH_INTERVAL_MS = 3600000;
+const REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 
 export const getAccessToken = () => localStorage.getItem(TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
@@ -55,17 +57,16 @@ const updateTokensAfterRefresh = ({ tokenType, accessToken, refreshToken }) => {
 let refreshPromise = null;
 export const refreshSession = () => {
   if (!refreshPromise) {
-    const refreshToken = (getRefreshToken() || '').replace(/^\S+\s+(?=\S)/, '');
-    const role = getRole();
-    if (!refreshToken || !role) {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken || !getRole()) {
       return Promise.reject(new Error('No session'));
     }
-    refreshPromise = refreshAccessToken({ refreshToken, role })
-      .then((res) => {
-        updateTokensAfterRefresh({
-          tokenType: res.data.token_type,
-          accessToken: res.data.access_token,
-          refreshToken: res.data.refresh_token,
+    refreshPromise = refreshAccessToken({ refreshToken })
+      .then(({ data }) => {
+        storeTokens({
+          tokenType: data.token_type,
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
         });
         return getAccessToken();
       })
@@ -109,8 +110,10 @@ export const scheduleTokenRefresh = (onSessionExpired) => {
       })
       .catch(() => {
         clearSession();
-        onSessionExpired();
-      });
+      } else {
+        log.warn('Background token refresh failed, will retry', error);
+      }
+    });
   }, REFRESH_INTERVAL_MS);
 
   return () => clearInterval(intervalId);
