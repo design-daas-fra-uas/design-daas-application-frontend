@@ -8,10 +8,15 @@
 // VM itself or from a remote browser (e.g. http://<vm-ip>:3000).
 const BACKEND_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
 
-export const DEVELOPMENT = `http://${BACKEND_HOST}:5000`;
+// Backend URLs. Set at build time with the REACT_APP_* build args (the
+// design-daas installer passes them from installer/daas.env); without them
+// the dev defaults on the current host are used.
+// DaaS backend (VMs, containers, viewer)
+export const DEVELOPMENT = process.env.REACT_APP_DAAS_API_URL || `http://${BACKEND_HOST}:5000`;
 export const TEST = 'https://cluster.daas-design.de:443';
 export const LIVE = 'https://cluster.daas-design.de:443';
-export const DEVELOPMENT_INTERN = `http://${BACKEND_HOST}:8080`;
+// Java backend (login, users, permissions)
+export const DEVELOPMENT_INTERN = process.env.REACT_APP_AUTH_API_URL || `http://${BACKEND_HOST}:8080`;
 export const TEST_INTERN = 'https://backend.application.daas-design.de';
 export const LIVE_INTERN = 'https://backend.application.daas-design.de';
 

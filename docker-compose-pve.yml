@@ -1,0 +1,12 @@
+version: "3.3"
+services:
+  web:
+    build:
+      context: "."
+      target: "server"
+    container_name: "daas-frontend"
+    restart: "always"
+    # volumes:
+    # - '/usr/src/app/node_modules'
+    ports:
+      - "127.0.0.1:5001:80"

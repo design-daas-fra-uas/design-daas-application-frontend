@@ -30,6 +30,12 @@ RUN npm install
 # Copy app files
 COPY . .
 
+# Backend URLs baked into the build (see src/constants/constants.js);
+# empty = built-in defaults
+ARG REACT_APP_DAAS_API_URL=
+ARG REACT_APP_AUTH_API_URL=
+ARG REACT_APP_OAUTH_CLIENT_ID=
+
 # Build the application (disable ESLint plugin to avoid jest/globals env error)
 RUN DISABLE_ESLINT_PLUGIN=true npm run build
 

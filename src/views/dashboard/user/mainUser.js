@@ -84,6 +84,11 @@ const filterBySearch = (value, fullList, currentList, setFilteredList) => {
 
 const bindValue = setter => event => setter(event.target.value);
 
+// "used/max (Max)"; the backend stores "no limit" as a negative max (-1)
+const formatUsage = (used, max, t) => (
+    Number(max) < 0 ? `${used} (${t('no-limit')})` : `${used}/${max} (Max)`
+);
+
 function MainUser() {
     const [baseimageCreate, setBaseimageCreate] = useState(false);
     const [environmentCreate, setEnvironmentCreate] = useState(false);
@@ -2573,19 +2578,19 @@ function MainUser() {
                                         <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}
                                                             className="text-center">
                                             <div>
-                                                {t('count-vm-max')} {dashboardInfo.utilized_ressources.object_vms}/{dashboardInfo.available_ressources.vm_max} (Max)
+                                                {t('count-vm-max')} {formatUsage(dashboardInfo.utilized_ressources.object_vms, dashboardInfo.available_ressources.vm_max, t)}
                                             </div>
                                         </ReactBootstrap.Col>
                                         <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}
                                                             className="text-center">
                                             <div>
-                                                {t('count-container-max')} {dashboardInfo.utilized_ressources.object_images}/{dashboardInfo.available_ressources.container_max} (Max)
+                                                {t('count-container-max')} {formatUsage(dashboardInfo.utilized_ressources.object_images, dashboardInfo.available_ressources.container_max, t)}
                                             </div>
                                         </ReactBootstrap.Col>
                                         <ReactBootstrap.Col xs={12} sm={12} md={6} lg={4} xl={4}
                                                             className="text-center">
                                             <div>
-                                                {t('count-objects-max')} {dashboardInfo.utilized_ressources.objects}/{dashboardInfo.available_ressources.obj_max} (Max)
+                                                {t('count-objects-max')} {formatUsage(dashboardInfo.utilized_ressources.objects, dashboardInfo.available_ressources.obj_max, t)}
                                             </div>
                                         </ReactBootstrap.Col>
                                     </ReactBootstrap.Row>
