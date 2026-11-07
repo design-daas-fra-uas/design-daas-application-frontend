@@ -3,6 +3,91 @@
 **Size of the change:** 58 files, +3,998 / −7,852 lines (the codebase got smaller overall).
 
 ---
+## [2.1.0]
+
+Toolchain and dependency upgrade, then a second review pass that rewrote the remaining hand-written form pages as configuration.
+
+**Size of the change:** `src` went from 23,714 to 8,169 lines (−66 %). Tests went from 33 to 45. Lint is still at 0 warnings, now under ESLint 10 and the React Compiler rules.
+
+### Upgrades
+
+- **Node 26 LTS** (was 18, which reached end of life in April 2025). It is set in `.nvmrc` and `engines`; Docker uses `node:26.13.0-alpine` and CI reads `.nvmrc`.
+- **Create React App → Vite 8.** CRA (`react-scripts`) is deprecated and unmaintained. `npm start`, `npm run build` (output still in `build/`), port 3000 and the `REACT_APP_*` variables all stay the same; Vite is configured to accept that prefix.
+  - `public/index.html` moved to `index.html`.
+  - Files containing JSX were renamed from `.js` to `.jsx`.
+  - New `npm run preview`.
+- **Jest → Vitest 4.** `npm test` runs once; use `npm run test:watch` and `npm run test:coverage` for watch mode and coverage. `jest.fn`/`jest.mock` became `vi.fn`/`vi.mock`.
+- **Libraries:** React 19.3, `react-router` 7 (replaces `react-router-dom`), i18next 26 / react-i18next 17, axios 1.21, Bootstrap 5.3.8, Formik 2.4.9, Yup 1.7, react-responsive 10, Testing Library 16 + jest-dom 7 + user-event 14, Prettier 3.9.
+  - Majors released this week (i18next 27, react-i18next 18, jsdom 31) were left one major behind on purpose.
+- **Font Awesome 7 via CSS webfont** instead of `js/all.js`, which converted every `<i>` into an inline SVG at runtime.
+  - The main bundle went from ~700 kB to 265 kB (83 kB gzipped).
+  - The 43 `… svg` icon rules in `App.css` now target the `<i class="fa-…">` elements.
+- **ESLint 10** with a flat config (`eslint.config.js`), `@eslint-react`, `react-hooks` 7 (React Compiler rules) and `testing-library`.
+  - `eslint-plugin-jsx-a11y` was dropped because it doesn't support ESLint 10 yet.
+- **CI:**
+  - checkout, setup-node and upload-artifact moved to v7; CodeQL to v4.
+  - Docker actions moved to their current majors; dependency-review to v5; gitleaks to 8.30.1.
+- **Docker:** nginx was moved to `1.30.6-alpine` (current stable).
+- `npm audit` reports 0 vulnerabilities in production dependencies. The 4 moderate dev-only findings come from `minimatch`, pulled in by the testing-library ESLint plugin.
+
+### Breaking / behavior changes
+
+- **Admin settings pages** (Phases, Virtual environments, Docker, Instances, Apps, Files, Tasks, Admin, Limitation, Node, Connection) are now generated from configuration, so a few behaviors changed:
+  - Create and update tabs no longer share typed values; each tab keeps its own form.
+  - Results show **all** fields the backend returns, including nested lists, instead of a hand-picked subset.
+  - Results stay visible. The Docker image list used to hide after 2 s and the container list after 10 s.
+  - **Selects now send the value they display:**
+    - The viewer-connection type used to send `''` until it was changed; it now sends `sysvnc`.
+    - The "None" installer option used to send `None`; it now sends `none`, matching the default.
+  - Environment start/run/stop no longer requires the "connect"/"force" checkbox to be ticked before submitting.
+  - **Docker image create** no longer shows the cores/memory/disk fields: they were required but never sent to the backend. ⚠️ Check whether the backend should receive them.
+  - The `cfg_tasklist` / `cfg_applist` / `cfg_set_target` JSON parameters are built with `JSON.stringify`, so quotes in user input no longer produce broken JSON.
+- **Expert environment setup:** the environment name is entered once at the top and used by every step. Before, each step had its own synced copy.
+- The unused `timeUser` localStorage entry is no longer written.
+
+### Fixed
+
+- **Placeholder error texts:** 307 untranslated keys (`error-create-file-id`, `error-vm-id-docker-image-create`, …) were shown in red under every field of the old forms ever since `.error-text` was made visible. Forms now show "This field is required." only after a required field was left empty.
+- **"Get app" / "Get file"** never showed their result: they checked `.length` on an object.
+- **Admin "Task list"** sent its request but never showed the response.
+- **Spinners:** the loading spinner on viewer starts (VM, container, base image, environment, connection) now shows while the request runs.
+- **Icons:** dashboard icons used `class=` instead of `className`, which React warns about.
+- **Missing list keys** in the user dashboard (apps, shared apps, files, object and environment selects).
+- **`useResource`** set state during render through a ref and synchronously in an effect (React Compiler rules). It now uses a layout effect for the loader ref and resets during render when the deps change.
+- **`UserInfoModal`** wrote a ref during render; it now keeps the last user in state.
+
+### Added
+
+- `src/components/actions/`: config-driven DaaS forms.
+  - `fields.js`: field helpers (`text`, `select`, `checkbox`, `file`, `required`, `visible`/`param` options), validation and request parameters (checkboxes as `on`/`''`).
+  - `ActionForm`, `ActionPanel` (form, then result/viewer/spinner), `ActionPage` (tabs + banner + back link), `ResultView` (records, lists, logs) and `useDaasAction` (POST, success check, banner, logging).
+  - `forms.js`: the base image, app and file field sets shared by the admin pages and the user dashboard.
+- `src/views/dashboard/user/setup/`: one expert-mode wizard (`EnvironmentSetup`, `configSteps`, `SetupLayout`) for the new-environment, edit-environment and base-image pages.
+- `tasklistParam` / `applistParam` / `targetParam` in `src/api/phases.js`.
+- **Tests** (+12): action fields, `ActionPanel` (validation, request body, success/failure, custom body), `ResultView`, cfg parameters, and the environment wizard's locking.
+- `field-required` translation (en/de).
+- README rewritten for Node 26 / Vite (configuration table, scripts, layout, Docker).
+
+### Changed
+
+- **Admin settings pages:** 11 pages went from ~13,000 lines to ~800. Each is now a list of `{ endpoint, fields, result }` actions instead of one `useState` + change handler per field.
+- **Expert setup pages:** `objectEnvironmentSetup`, `objectEnvironmentSetupEdit` and `objectBaseImageSetup` went from ~2,300 lines to ~400 (wizard included).
+- **User dashboard** (`mainUser`, 2,514 → 1,354 lines): the create/clone object, app and file forms use the shared field sets. Their ~45 state variables, handlers and Yup schemas were removed.
+- **Iframe sandbox:** the viewer iframe keeps `allow-scripts allow-same-origin` (the viewer needs both), now with an explicit comment and lint exception.
+
+### Removed
+
+- `src/utils/formik.js` and `mainUserSchemas.js` (no longer used).
+- `react-scripts`, `@babel/plugin-proposal-private-property-in-object` and `react-router-dom`.
+- ~15 MB of unused images and fonts in `src/assets`: Roboto fonts, background/graphic images and partner logos that nothing referenced.
+- `CUSTOM.md` (CRA boilerplate) and `src/assets/Dockerfile.design` (a one-line stray file).
+
+### Not done yet / next steps
+
+- Still **not tested against a running backend.** Every request body was compared against the old code, and the pages were checked in a browser, but please smoke-test the admin pages (especially Phases → base image create, Docker, VMs), the expert setup and the dashboard before deploying.
+- `mainUser` (1.3k lines) still renders its object and app lists inline. Splitting it into components is the next cleanup.
+- The viewer iframe runs the backend's page with the app's origin (`allow-same-origin`), so that page can read the stored tokens. Serving the viewer from its own origin would remove that risk.
+
 ## [2.0.0]
 
 Code review and refactoring of the whole frontend: dead and duplicated code removed, the remaining logic moved into shared modules, and the bugs found along the way fixed.
