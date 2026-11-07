@@ -1,122 +1,71 @@
 import { useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
+import BackLink from '../../../components/BackLink';
 import { useTranslation } from 'react-i18next';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 
 import Header from '../../../components/header';
 
-import Header from "../../../components/header";
+import { daasClient } from '../../../api/client';
+import { createLogger } from '../../../utils/logger';
+import RequestAlert from '../../../components/RequestAlert';
+import useRequestAlert from '../../../hooks/useRequestAlert';
+import { ROUTES } from '../../../routes';
+import { SUBMIT_HANDLED_BY_FORM } from '../../../utils/formik';
+const log = createLogger('SettingsNode');
 
 function SettingsNode() {
-    const params = useParams(); // Example: {params.id}
-    const [vmIDConfigDHCP, setVMIDConfigDHCP] = useState("");
-    const [vmIDConfigDHCPEnv, setVMIDConfigDHCPEnv] = useState("");
-    const [vmIDConfigIptables, setVMIDConfigIptables] = useState("");
-    const [vmIDConfigIptablesEnv, setVMIDConfigIptablesEnv] = useState("");
-    const [requestAlert, setRequestAlert] = useState(false);
-    const [requestAlertMessage, setRequestAlertMessage] = useState(false);
-    const { t, i18n } = useTranslation();
+  const [vmIDConfigDHCP, setVMIDConfigDHCP] = useState('');
+  const [vmIDConfigDHCPEnv, setVMIDConfigDHCPEnv] = useState('');
+  const [vmIDConfigIptables, setVMIDConfigIptables] = useState('');
+  const [vmIDConfigIptablesEnv, setVMIDConfigIptablesEnv] = useState('');
+  const { requestAlert, showRequestAlert } = useRequestAlert();
+  const { t } = useTranslation();
 
-    const isNotDesktop = useMediaQuery({
-        query: '(max-width: 1200px)'
-    })
+  const dhcpVirtualEnvironment = (event) => {
+    event.preventDefault();
 
-    const dhcpVirtualEnvironment = (event) => {
-        event.preventDefault();
-
-        axios.post(DEVELOPMENT + '/node/vmconfigure_dhcp', {
-            id: vmIDConfigDHCP,
-            id_env: vmIDConfigDHCPEnv,
-        }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-                if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-            })
-            .catch(e => {
-                console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
-
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
-            });
-    }
+    daasClient
+      .post('/node/vmconfigure_dhcp', {
+        id: vmIDConfigDHCP,
+        id_env: vmIDConfigDHCPEnv,
+      })
+      .then((response) => {
+        if (response.status === 200 && response.data.response_code === 200) {
+          showRequestAlert(true);
+        }
+        if (response.status === 200 && response.data.response_code !== 200) {
+          showRequestAlert(false);
+        }
+      })
+      .catch((e) => {
+        log.error('dhcpVirtualEnvironment failed', e);
+        showRequestAlert(false);
+      });
+  };
 
   const iptablesVirtualEnvironment = (event) => {
     event.preventDefault();
 
-        axios.post(DEVELOPMENT + '/node/vmconfigure_iptables', {
-            id: vmIDConfigIptables,
-            id_env: vmIDConfigIptablesEnv,
-        }, {
-            headers: {
-                'Authorization': localStorage.getItem('userToken'),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(true);
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-                if (response.status === 200 && response.data.response_code !== 200) {
-                    setRequestAlert(true);
-                    setRequestAlertMessage(false);
-
-                    setTimeout(() => {
-                        setRequestAlert(false);
-                        setRequestAlertMessage(false);
-                    }, 2000);
-                }
-            })
-            .catch(e => {
-                console.log(e)
-                setRequestAlert(true);
-                setRequestAlertMessage(false);
-
-                setTimeout(() => {
-                    setRequestAlert(false);
-                    setRequestAlertMessage(false);
-                }, 2000);
-            });
-    }
+    daasClient
+      .post('/node/vmconfigure_iptables', {
+        id: vmIDConfigIptables,
+        id_env: vmIDConfigIptablesEnv,
+      })
+      .then((response) => {
+        if (response.status === 200 && response.data.response_code === 200) {
+          showRequestAlert(true);
+        }
+        if (response.status === 200 && response.data.response_code !== 200) {
+          showRequestAlert(false);
+        }
+      })
+      .catch((e) => {
+        log.error('iptablesVirtualEnvironment failed', e);
+        showRequestAlert(false);
+      });
+  };
 
   const changeVMIDConfigDHCP = (event) => {
     setVMIDConfigDHCP(event.target.value);
@@ -131,16 +80,10 @@ function SettingsNode() {
     setVMIDConfigIptablesEnv(event.target.value);
   };
 
-    const backToDashboard = () => {
-        window.location.href = "/dashboard/admin";
-    };
-
-    const dhcpVMSchema = Yup.object().shape({
-        id: Yup.string()
-            .required('ID invalid'),
-        id_env: Yup.string()
-            .required('ID Environment invalid'),
-    });
+  const dhcpVMSchema = Yup.object().shape({
+    id: Yup.string().required('ID invalid'),
+    id_env: Yup.string().required('ID Environment invalid'),
+  });
 
   const iptablesVMSchema = Yup.object().shape({
     id: Yup.string().required('ID invalid'),

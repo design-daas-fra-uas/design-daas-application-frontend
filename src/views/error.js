@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 import Header from '../components/header';
 
+import { ROUTES } from '../routes';
+
 function NotFound() {
   const { t } = useTranslation();
   return (
@@ -26,9 +28,7 @@ function NotFound() {
             </div>
             <div>
               <div>
-                <Link to="/">
-                  {t('back-link')}
-                </Link>
+                <Link to={ROUTES.login}>{t('back-link')}</Link>
               </div>
             </div>
           </ReactBootstrap.Col>
