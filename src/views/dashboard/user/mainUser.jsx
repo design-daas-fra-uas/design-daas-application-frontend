@@ -21,11 +21,13 @@ import UsageSummary from './dashboard/UsageSummary';
 import useDashboardRequest from './dashboard/useDashboardRequest';
 import useUserDashboard from './dashboard/useUserDashboard';
 
-function SectionTitle({ children }) {
+// White card with a heading, used for each dashboard section.
+function Panel({ title, children }) {
   return (
-    <Col xs={12} className="text-left">
-      <h3>{children}</h3>
-    </Col>
+    <section className="panel">
+      <h3 className="panel-title">{title}</h3>
+      {children}
+    </section>
   );
 }
 
@@ -52,32 +54,32 @@ function MainUser() {
 
   const toolbar = [
     role === 'user' && {
-      position: 'bottom-footer-fix-monitoring',
+      name: 'monitoring',
       icon: 'fa-gear',
       label: 'monitoring',
       onClick: () => navigate(ROUTES.user.monitoring),
     },
-    { position: 'bottom-footer-fix-refresh', icon: 'fa-arrows-rotate', label: 'refresh', onClick: reload },
+    { name: 'refresh', icon: 'fa-arrows-rotate', label: 'refresh', onClick: reload },
     {
-      position: 'bottom-footer-fix-info',
+      name: 'info',
       icon: 'fa-circle-info',
       label: 'info-detail',
       onClick: () => setOpenModal('info'),
     },
     {
-      position: 'bottom-footer-fix-file',
+      name: 'file',
       icon: 'fa-file',
       label: 'all-available-files',
       onClick: () => setOpenModal('files'),
     },
     {
-      position: 'bottom-footer-fix-contact',
+      name: 'contact',
       icon: 'fa-envelope',
       label: 'request-app',
       onClick: () => setOpenModal('request'),
     },
     {
-      position: 'bottom-footer-fix',
+      name: 'create',
       icon: 'fa-circle-plus',
       label: 'create-update-share-data',
       onClick: () => setOpenModal('create'),
@@ -87,35 +89,34 @@ function MainUser() {
   return (
     <>
       <Header connections={dashboard.connections} />
-      <Container id="dashboardUser">
+      <Container id="dashboardUser" className="page page-with-toolbar">
         <Row>
           <Col xs={12} className="text-center">
-            <h2>{t('overview')}</h2>
+            <h2 className="page-title">{t('overview')}</h2>
           </Col>
         </Row>
         {role === 'admin' && (
-          <Col xs={12} className="text-center">
-            <Button variant="primary" onClick={() => navigate(ROUTES.admin.root)}>
+          <div className="page-actions">
+            <Button variant="outline-primary" onClick={() => navigate(ROUTES.admin.root)}>
               {t('go-to-admin-dashboard')}
             </Button>
-          </Col>
+          </div>
         )}
         {info ? (
-          <Row id="dashboard_info_details">
+          <div id="dashboard_info_details">
             <UsageSummary utilized={info.utilized_ressources} available={info.available_ressources} />
-            <SectionTitle>{t('available_objects')}</SectionTitle>
-            <ObjectControls objects={dashboard.objects} instances={dashboard.instances} run={run} reload={reload} />
-            <SectionTitle>{t('available_environments')}</SectionTitle>
-            <EnvironmentControls environments={dashboard.environments} run={run} reload={reload} />
-            <SectionTitle>{t('available_applications')}</SectionTitle>
-            <ApplicationList apps={dashboard.ownApps} onOpen={openApplication} />
-          </Row>
+            <Panel title={t('available_objects')}>
+              <ObjectControls objects={dashboard.objects} instances={dashboard.instances} run={run} reload={reload} />
+            </Panel>
+            <Panel title={t('available_environments')}>
+              <EnvironmentControls environments={dashboard.environments} run={run} reload={reload} />
+            </Panel>
+            <Panel title={t('available_applications')}>
+              <ApplicationList apps={dashboard.ownApps} onOpen={openApplication} />
+            </Panel>
+          </div>
         ) : (
-          <Row>
-            <Col xs={12} className="text-center">
-              {t('no-data-available')}
-            </Col>
-          </Row>
+          <p className="empty-state">{t('no-data-available')}</p>
         )}
         <DashboardToolbar buttons={toolbar} />
         <InfoModal show={openModal === 'info'} onHide={closeModal} />

@@ -10,7 +10,7 @@ it('shows a placeholder for empty results', () => {
 
 it('shows records as key/value rows, including nested lists', () => {
   render(<ResultView data={{ id: 3, current: [{ id_task: 't-1' }] }} />);
-  expect(screen.getByText('id:')).toBeInTheDocument();
+  expect(screen.getByText('id')).toBeInTheDocument();
   expect(screen.getByText('3')).toBeInTheDocument();
   expect(screen.getByText('t-1')).toBeInTheDocument();
 });

@@ -21,19 +21,21 @@ function ActionPage({ id, title, tabsId, actions, backTo = ROUTES.admin.root }) 
   return (
     <>
       <Header />
-      <Container id={id} fluid>
+      <Container id={id} className="page">
         <Row>
           <Col xs={12} className="text-center">
-            <h2>{title}</h2>
+            <h2 className="page-title">{title}</h2>
           </Col>
         </Row>
-        <Tabs defaultActiveKey={actions[0].key} id={tabsId}>
-          {actions.map((action) => (
-            <Tab key={action.key} eventKey={action.key} title={tabTitle(action.title, t)}>
-              {action.content || <ActionPanel action={action} showRequestAlert={showRequestAlert} />}
-            </Tab>
-          ))}
-        </Tabs>
+        <div className="panel panel-tabs">
+          <Tabs defaultActiveKey={actions[0].key} id={tabsId}>
+            {actions.map((action) => (
+              <Tab key={action.key} eventKey={action.key} title={tabTitle(action.title, t)}>
+                {action.content || <ActionPanel action={action} showRequestAlert={showRequestAlert} />}
+              </Tab>
+            ))}
+          </Tabs>
+        </div>
         <Row>
           <Col xs={12}>
             <RequestAlert alert={requestAlert} />

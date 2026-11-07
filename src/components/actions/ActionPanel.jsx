@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Col, Row } from 'react-bootstrap';
 
 import LoadingSpinner from '../../assets/animation/loadingspinner.svg';
 import ViewerFrame from '../ViewerFrame';
@@ -13,16 +12,8 @@ function ViewerResult({ action, result }) {
   const connected = !action.connectField || result.values[action.connectField];
   return (
     <>
-      <Row>
-        <Col xs={12}>URL: {result.data.url}</Col>
-      </Row>
-      {connected && (
-        <Row>
-          <Col xs={12}>
-            <ViewerFrame request={result.data} />
-          </Col>
-        </Row>
-      )}
+      <p className="result-url">URL: {result.data.url}</p>
+      {connected && <ViewerFrame request={result.data} />}
     </>
   );
 }
@@ -58,11 +49,7 @@ function ActionPanel({ action, showRequestAlert, disabled }) {
         submitLabel={action.submitLabel}
         disabled={disabled}
       />
-      {output && (
-        <Row>
-          <Col xs={12}>{output}</Col>
-        </Row>
-      )}
+      {output && <div className="action-result">{output}</div>}
     </>
   );
 }

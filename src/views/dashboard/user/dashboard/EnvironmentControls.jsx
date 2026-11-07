@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Col } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
@@ -54,53 +54,42 @@ function EnvironmentControls({ environments, run, reload }) {
   };
 
   if (environments.length === 0) {
-    return (
-      <Col xs={12} className="text-left">
-        {t('no-data-available')}
-      </Col>
-    );
+    return <p className="empty-state">{t('no-data-available')}</p>;
   }
 
   return (
     <>
-      <Col xs={12} className="text-left">
-        <select
-          id="available-environments"
-          aria-label={t('available_environments')}
-          value={selectedKey}
-          onChange={(event) => setSelectedKey(event.target.value)}
-        >
-          <option value="">{t('no-environment')}</option>
-          {environments.map((environment) => (
-            <option key={keyOf(environment)} value={keyOf(environment)}>
-              {`${t('id-text')}${environment.id_env}, ${t('name-text')}${environment.name}, ${t('object-text')}${environment.id_object}`}
-            </option>
-          ))}
-        </select>
-      </Col>
-      <Col xs={12} md={3} className="text-center button-dashboard-update">
+      <select
+        id="available-environments"
+        className="form-select"
+        aria-label={t('available_environments')}
+        value={selectedKey}
+        onChange={(event) => setSelectedKey(event.target.value)}
+      >
+        <option value="">{t('no-environment')}</option>
+        {environments.map((environment) => (
+          <option key={keyOf(environment)} value={keyOf(environment)}>
+            {`${t('id-text')}${environment.id_env}, ${t('name-text')}${environment.name}, ${t('object-text')}${environment.id_object}`}
+          </option>
+        ))}
+      </select>
+      <div className="control-buttons">
         <Button variant="primary" disabled={!selected} onClick={() => open('start')}>
           {t('start-headline')}
         </Button>
         <Button variant="primary" disabled={!selected} onClick={() => open('run')}>
           {t('run-headline')}
         </Button>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
-        <Button variant="primary" disabled={!selected} onClick={stop}>
+        <Button variant="outline-primary" disabled={!selected} onClick={stop}>
           {t('stop-headline')}
         </Button>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
-        <Button variant="primary" disabled={!selected} onClick={edit}>
+        <Button variant="outline-primary" disabled={!selected} onClick={edit}>
           {t('edit-headline')}
         </Button>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
-        <Button variant="primary" disabled={!selected} onClick={remove}>
+        <Button variant="outline-danger" disabled={!selected} onClick={remove}>
           {t('delete-headline')}
         </Button>
-      </Col>
+      </div>
     </>
   );
 }

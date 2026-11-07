@@ -38,7 +38,7 @@ function CreateModal({ show, onHide, sharedApps, onOpenApp, showRequestAlert, on
       <Modal.Body>
         <Tabs defaultActiveKey="app-shared" id="user-app-view">
           <Tab eventKey="app-shared" title={t('app-shared')}>
-            <ApplicationList apps={sharedApps} onOpen={onOpenApp} compact />
+            <ApplicationList apps={sharedApps} onOpen={onOpenApp} />
           </Tab>
           {ACTIONS.map((action) => (
             <Tab key={action.key} eventKey={action.key} title={t(action.key)}>

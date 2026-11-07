@@ -12,8 +12,8 @@ export function appIcons(app) {
   return [OS_ICONS[app.os_type], TYPE_ICONS[app.object_type], app.id_file ? FILE_ICON : undefined].filter(Boolean);
 }
 
-export function Icon({ name, className = '' }) {
-  return <i className={`${name} fa-xl ${className}`.trim()} aria-hidden="true" />;
+export function Icon({ name }) {
+  return <i className={`${name} app-icon`} aria-hidden="true" />;
 }
 
 // Legend of the icons above, shown in the info modal.
@@ -25,12 +25,8 @@ export const ICON_LEGEND = [
   [FILE_ICON, 'file-text'],
 ];
 
-function AppIcons({ app, className }) {
-  return appIcons(app).map((icon) => (
-    <span key={icon}>
-      <Icon name={icon} className={className} />
-    </span>
-  ));
+function AppIcons({ app }) {
+  return appIcons(app).map((icon) => <Icon key={icon} name={icon} />);
 }
 
 export default AppIcons;

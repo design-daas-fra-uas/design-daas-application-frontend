@@ -8,7 +8,7 @@ function EntityList({ items, onSettings, onInfo, limit }) {
   const displayedItems = typeof limit === 'number' ? items.slice(0, limit) : items;
 
   return (
-    <ul>
+    <ul className="entity-list">
       {displayedItems.map((item) => (
         <li key={item.id ?? item.name}>
           <span>{item.name}</span>

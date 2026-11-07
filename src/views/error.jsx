@@ -11,7 +11,7 @@ function NotFound() {
   return (
     <>
       <Header />
-      <ReactBootstrap.Container id="error">
+      <ReactBootstrap.Container id="error" className="page page-narrow">
         <ReactBootstrap.Row>
           <ReactBootstrap.Col xs={12} sm={12} md={12} lg={12} xl={12}>
             <div>

@@ -43,10 +43,10 @@ function Login() {
   return (
     <>
       <Header />
-      <Container id="login">
+      <Container id="login" className="page page-narrow">
         <Row>
           <Col xs={12}>
-            <h2>{t('login')}</h2>
+            <h2 className="page-title">{t('login')}</h2>
           </Col>
         </Row>
 

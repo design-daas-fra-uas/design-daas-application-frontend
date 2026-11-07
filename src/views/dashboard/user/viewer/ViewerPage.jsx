@@ -16,7 +16,7 @@ function ViewerPage({ id, start }) {
   return (
     <>
       <Header />
-      <Container fluid id={id}>
+      <Container fluid id={id} className="page page-viewer">
         {status === 'failed' && (
           <Row>
             <Col xs={12} className="text-center" role="alert">
@@ -37,7 +37,7 @@ function ViewerPage({ id, start }) {
           </Col>
         </Row>
       </Container>
-      <Container className="user-app-env-view">
+      <Container className="page-footer">
         <Row>
           <Col xs={12}>
             <RequestAlert alert={requestAlert} />

@@ -61,10 +61,10 @@ function Registration() {
   return (
     <>
       <Header />
-      <Container id="registration">
+      <Container id="registration" className="page page-narrow">
         <Row>
           <Col xs={12}>
-            <h2>{t('validate-registration')}</h2>
+            <h2 className="page-title">{t('validate-registration')}</h2>
           </Col>
         </Row>
 

@@ -1,4 +1,3 @@
-import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 const isEmpty = (data) =>
@@ -13,18 +12,14 @@ const isRecord = (value) => value !== null && typeof value === 'object' && !Arra
 // One record as "key: value" rows; nested records and lists are shown the same way.
 function RecordView({ record }) {
   return (
-    <div className="result-record">
+    <dl className="result-record">
       {Object.entries(record).map(([key, value]) => (
-        <Row key={key}>
-          <Col xs={12} md={6}>
-            {key}:
-          </Col>
-          <Col xs={12} md={6} className="image-list-object">
-            {value !== null && typeof value === 'object' ? <ResultView data={value} /> : String(value ?? '')}
-          </Col>
-        </Row>
+        <div key={key} className="result-entry">
+          <dt>{key}</dt>
+          <dd>{value !== null && typeof value === 'object' ? <ResultView data={value} /> : String(value ?? '')}</dd>
+        </div>
       ))}
-    </div>
+    </dl>
   );
 }
 
@@ -33,7 +28,7 @@ function ResultView({ data }) {
   const { t } = useTranslation();
 
   if (isEmpty(data)) {
-    return <p>{t('no-data-available')}</p>;
+    return <p className="empty-state">{t('no-data-available')}</p>;
   }
   if (Array.isArray(data)) {
     return data.every(isRecord) ? (
@@ -41,7 +36,7 @@ function ResultView({ data }) {
       // eslint-disable-next-line @eslint-react/no-array-index-key
       data.map((record, index) => <RecordView key={record.id ?? record.daas_id ?? index} record={record} />)
     ) : (
-      <pre>{JSON.stringify(data, null, 3)}</pre>
+      <pre className="result-text">{JSON.stringify(data, null, 3)}</pre>
     );
   }
   if (isRecord(data)) {

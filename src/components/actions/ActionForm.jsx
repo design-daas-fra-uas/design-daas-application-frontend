@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Button, Col, Row } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
 
@@ -10,10 +10,10 @@ function FieldInput({ field, id, setFieldValue }) {
 
   switch (field.type) {
     case 'checkbox':
-      return <Field type="checkbox" id={id} name={field.name} />;
+      return <Field type="checkbox" id={id} name={field.name} className="form-check-input" />;
     case 'select':
       return (
-        <Field as="select" id={id} name={field.name}>
+        <Field as="select" id={id} name={field.name} className="form-select">
           {field.choices.map(([value, text]) => (
             <option key={value} value={value}>
               {field.translate ? t(text) : text}
@@ -25,13 +25,14 @@ function FieldInput({ field, id, setFieldValue }) {
       return (
         <input
           type="file"
+          className="form-control"
           id={id}
           name={field.name}
           onChange={(event) => setFieldValue(field.name, event.currentTarget.files?.[0])}
         />
       );
     default:
-      return <Field type="text" id={id} name={field.name} />;
+      return <Field type="text" id={id} name={field.name} className="form-control" />;
   }
 }
 
@@ -46,32 +47,26 @@ function ActionForm({ id, fields, onSubmit, submitLabel = 'submit', disabled = f
   return (
     <Formik initialValues={initial} initialErrors={validator(initial)} validate={validator} onSubmit={onSubmit}>
       {({ values, isValid, isSubmitting, setFieldValue }) => (
-        <Form id={id}>
+        <Form id={id} className="action-form">
           {fields
             .filter((field) => isVisible(field, values))
             .map((field) => {
               const inputId = `${id}-${field.name}`;
               return (
-                <Row key={field.name}>
-                  <Col xs={12} md={6}>
-                    <label htmlFor={inputId}>{t(field.label)}</label>
-                  </Col>
-                  <Col xs={12} md={6}>
+                <div key={field.name} className={`form-field form-field-${field.type}`}>
+                  <label htmlFor={inputId}>{t(field.label)}</label>
+                  <div className="form-field-control">
                     <FieldInput field={field} id={inputId} setFieldValue={setFieldValue} />
-                  </Col>
-                  <Col xs={12} className="error-text">
-                    <ErrorMessage name={field.name} />
-                  </Col>
-                </Row>
+                    <ErrorMessage name={field.name} component="div" className="error-text" />
+                  </div>
+                </div>
               );
             })}
-          <Row>
-            <Col xs={12}>
-              <Button type="submit" variant="primary" disabled={disabled || !isValid || isSubmitting}>
-                {t(submitLabel)}
-              </Button>
-            </Col>
-          </Row>
+          <div className="form-actions">
+            <Button type="submit" variant="primary" disabled={disabled || !isValid || isSubmitting}>
+              {t(submitLabel)}
+            </Button>
+          </div>
         </Form>
       )}
     </Formik>

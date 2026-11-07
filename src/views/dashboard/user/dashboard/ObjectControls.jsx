@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Col } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
@@ -51,45 +51,39 @@ function ObjectControls({ objects, instances, run, reload }) {
   };
 
   if (objects.length === 0) {
-    return (
-      <Col xs={12} className="text-left">
-        {t('no-data-available')}
-      </Col>
-    );
+    return <p className="empty-state">{t('no-data-available')}</p>;
   }
 
   return (
     <>
-      <Col xs={12} className="text-left">
-        <select id="available-object" aria-label={t('available_objects')} value={selectedId} onChange={select}>
-          <option value="">{t('no-object')}</option>
-          {objects.map((object) => (
-            <option key={object.id_object} value={object.id_object}>
-              {t('name-text') + object.id_user}
-            </option>
-          ))}
-        </select>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
+      <select
+        id="available-object"
+        className="form-select"
+        aria-label={t('available_objects')}
+        value={selectedId}
+        onChange={select}
+      >
+        <option value="">{t('no-object')}</option>
+        {objects.map((object) => (
+          <option key={object.id_object} value={object.id_object}>
+            {t('name-text') + object.id_user}
+          </option>
+        ))}
+      </select>
+      <div className="control-buttons">
         <Button variant="primary" disabled={!selected} onClick={start}>
           {t('start-mode')}
         </Button>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
-        <Button variant="primary" disabled={!selected || !instanceId} onClick={stop}>
+        <Button variant="outline-primary" disabled={!selected || !instanceId} onClick={stop}>
           {t('stop-mode')}
         </Button>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
-        <Button variant="primary" disabled={!selected} onClick={editInExpertMode}>
+        <Button variant="outline-primary" disabled={!selected} onClick={editInExpertMode}>
           {t('edit-headline')} ({t('expert-mode')})
         </Button>
-      </Col>
-      <Col xs={12} md={3} className="text-center">
-        <Button variant="primary" disabled={!selected} onClick={remove}>
+        <Button variant="outline-danger" disabled={!selected} onClick={remove}>
           {t('delete-mode')}
         </Button>
-      </Col>
+      </div>
     </>
   );
 }

@@ -1,4 +1,3 @@
-import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 // "used/max (Max)"; the backend stores "no limit" as a negative max (-1).
@@ -14,13 +13,14 @@ const USAGE = [
 function UsageSummary({ utilized, available }) {
   const { t } = useTranslation();
   return (
-    <Row>
+    <div className="usage-stats">
       {USAGE.map(([label, usedKey, maxKey]) => (
-        <Col key={label} xs={12} md={6} lg={4} className="text-center">
-          {t(label)} {formatUsage(utilized[usedKey], available[maxKey], t)}
-        </Col>
+        <div key={label} className="usage-stat">
+          <span className="usage-stat-label">{t(label)}</span>
+          <span className="usage-stat-value">{formatUsage(utilized[usedKey], available[maxKey], t)}</span>
+        </div>
       ))}
-    </Row>
+    </div>
   );
 }
 

@@ -56,10 +56,10 @@ export function SetupLayout({ id, requestAlert, backTo, children }) {
   return (
     <>
       <Header />
-      <Container fluid id={id}>
+      <Container id={id} className="page">
         {children}
       </Container>
-      <Container className="user-app-env-view">
+      <Container className="page-footer">
         <Row>
           <Col xs={12}>
             <RequestAlert alert={requestAlert} />
