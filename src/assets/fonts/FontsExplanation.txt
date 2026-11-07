@@ -1,7 +1,0 @@
-Roboto Regular: Navigation Bar (20pt.), Home Screen graphic text (50pt.), Footer texts (20pt.)
-
-Roboto Light: Running texts (25pt.), Dates (25pt.)(above news/publication titles)
-
-Roboto Medium: Titles (35pt.)
-
-Roboto Bold: Button Text (25pt.)
