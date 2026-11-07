@@ -38,13 +38,13 @@ export const fetchMonitoring = async (scopeName, ownerId) => {
 export default function useMonitoring(scopeName, { autoLoad = true } = {}) {
   const [data, setData] = useState(EMPTY_MONITORING);
   const [loaded, setLoaded] = useState(false);
-  const requestId = useRef(0);
+  const requestIdRef = useRef(0);
 
   const load = useCallback(
     async (ownerId) => {
-      const id = ++requestId.current;
+      const id = ++requestIdRef.current;
       const result = await fetchMonitoring(scopeName, ownerId);
-      if (id === requestId.current) {
+      if (id === requestIdRef.current) {
         setData(result.data);
         setLoaded(true);
       }
@@ -58,7 +58,7 @@ export default function useMonitoring(scopeName, { autoLoad = true } = {}) {
       load();
     }
     return () => {
-      requestId.current += 1;
+      requestIdRef.current += 1;
     };
   }, [autoLoad, load]);
 

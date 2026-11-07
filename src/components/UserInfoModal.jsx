@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Col, Modal, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
@@ -7,11 +7,11 @@ import { useTranslation } from 'react-i18next';
 function UserInfoModal({ user: currentUser, onHide }) {
   const { t } = useTranslation();
   // Keep showing the last user while the modal fades out.
-  const lastUser = useRef(null);
-  if (currentUser) {
-    lastUser.current = currentUser;
+  const [lastUser, setLastUser] = useState(currentUser);
+  if (currentUser && currentUser !== lastUser) {
+    setLastUser(currentUser);
   }
-  const user = currentUser ?? lastUser.current;
+  const user = currentUser ?? lastUser;
 
   return (
     <Modal show={Boolean(currentUser)} onHide={onHide} size="lg" aria-labelledby="user-info-modal-title" centered>

@@ -1,5 +1,13 @@
 import { daasClient } from './client';
-import { DaasRequestError, startBaseImage, startEnvironment, withFallback } from './phases';
+import {
+  DaasRequestError,
+  applistParam,
+  startBaseImage,
+  startEnvironment,
+  targetParam,
+  tasklistParam,
+  withFallback,
+} from './phases';
 
 vi.mock('./client', () => ({
   daasClient: { post: vi.fn() },
@@ -44,5 +52,15 @@ describe('withFallback', () => {
     const fallback = vi.fn();
     await expect(withFallback(() => startEnvironment('obj', 'env'), fallback)).rejects.toThrow('Network Error');
     expect(fallback).not.toHaveBeenCalled();
+  });
+});
+
+describe('cfg parameters', () => {
+  it('are JSON with the expected shape and escape user input', () => {
+    expect(tasklistParam({ type: 'exec_cmd', cmd: 'ls', args: '-l' })).toBe(
+      '[{"type":"exec_cmd","cmd":"ls","args":"-l"}]',
+    );
+    expect(applistParam({ name: 'a', cmd: 'run', args: '' })).toBe('[{"name":"a","cmd":"run","args":""}]');
+    expect(JSON.parse(targetParam({ name: 'say "hi"', cmd: 'c', args: '' })).name).toBe('say "hi"');
   });
 });

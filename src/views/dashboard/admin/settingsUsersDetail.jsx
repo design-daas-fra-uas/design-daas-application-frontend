@@ -24,11 +24,11 @@ function SettingsUsersDetail() {
   const { id } = useParams();
   const { t } = useTranslation();
   const [isToggling, setIsToggling] = useState(false);
-  const mounted = useRef(true);
+  const mountedRef = useRef(true);
   useEffect(() => {
-    mounted.current = true;
+    mountedRef.current = true;
     return () => {
-      mounted.current = false;
+      mountedRef.current = false;
     };
   }, []);
   const [actionError, setActionError] = useState('');
@@ -69,7 +69,7 @@ function SettingsUsersDetail() {
     try {
       await runAction(() => action(user.id));
     } finally {
-      if (mounted.current) {
+      if (mountedRef.current) {
         setIsToggling(false);
       }
     }

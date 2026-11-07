@@ -41,7 +41,7 @@ export default function useViewerSession(start) {
       clearTimeout(redirectTimer);
     };
     // `start` describes what to open when the page is entered; it is read once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start once on mount
   }, []);
 
   return { ...session, requestAlert };

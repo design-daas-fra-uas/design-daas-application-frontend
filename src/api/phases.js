@@ -55,3 +55,10 @@ export const withFallback = (first, fallback) =>
     }
     throw error;
   });
+
+// JSON parameters of the cfg_* endpoints (JSON.stringify escapes quotes in user input).
+export const tasklistParam = ({ type, cmd, args }) => JSON.stringify([{ type, cmd, args }]);
+
+export const applistParam = ({ name, cmd, args }) => JSON.stringify([{ name, cmd, args }]);
+
+export const targetParam = ({ name, cmd, args }) => JSON.stringify({ name, cmd, args });

@@ -33,6 +33,8 @@ function ViewerFrame({ request, id = 'viewer-desktop' }) {
     <iframe
       id={id}
       title="DESIGN - Desktop viewer"
+      // The viewer page (served by the DaaS backend) needs scripts and its own storage.
+      // eslint-disable-next-line @eslint-react/dom-no-unsafe-iframe-sandbox
       sandbox="allow-scripts allow-same-origin"
       name="sandbox"
       srcDoc={html}

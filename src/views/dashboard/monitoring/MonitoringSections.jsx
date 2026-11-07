@@ -64,6 +64,8 @@ function RecordList({ records, fields, idField }) {
   return (
     <Accordion>
       {records.map((record, index) => (
+        // Records come without an id now and then; the list is never reordered.
+        // eslint-disable-next-line @eslint-react/no-array-index-key
         <Accordion.Item key={record[idField] ?? index} eventKey={String(record[idField] ?? index)}>
           <Accordion.Header>{record[idField]}</Accordion.Header>
           <Accordion.Body>
@@ -105,6 +107,7 @@ function Limits({ limits }) {
         <NoData />
       ) : (
         limits.limits.map((limit, index) => (
+          // eslint-disable-next-line @eslint-react/no-array-index-key -- see RecordList
           <FieldGrid key={limit.id_owner ?? index} record={limit} fields={RECORD_FIELDS.limit} />
         ))
       )}
