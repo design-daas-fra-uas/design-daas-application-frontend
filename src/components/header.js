@@ -1,344 +1,96 @@
 import { useEffect, useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import axios from "axios";
-import { useMediaQuery } from "react-responsive";
-
-import { DEVELOPMENT, TEST, LIVE, URL_SYSTEM } from "../constants/constants";
+import { useMediaQuery } from 'react-responsive';
 
 import Logo from './../assets/images/png/DESIGNLogoColouredWhiteFont.png';
-import { ROUTES } from "../routes";
-import { changeLanguage } from "../i18n";
-import { logoutRequest } from "../api/auth";
+import { daasClient, isDaasSuccess } from '../api/client';
+import { getAccessToken, logout } from '../auth/tokenManager';
+import { changeLanguage } from '../i18n';
+import { ROUTES } from '../routes';
+import { createLogger } from '../utils/logger';
 
-function Header() {
-    const [sharedData, setSharedData] = useState([]);
-    const [ownApplication, setOwnApplication] = useState([]);
-    const [instanceStopData, setInstanceStopData] = useState([]);
-    const [connectionDataNew, setConnectionDataNew] = useState([]);
-    const [connectionDataNewer, setConnectionDataNewer] = useState([]);
-    const [ownFiles, setOwnFiles] = useState([]);
-    const [sharedFiles, setSharedFiles] = useState([]);
-    const [searchFilterData, setSearchFilterData] = useState([]);
-    const [dataList, setDataList] = useState([]);
-    const [dashboardInfo, setDashboardInfo] = useState({});
-    const {t} = useTranslation();
+const log = createLogger('Header');
 
-    let userToken = localStorage.getItem("userToken");
+const { Container, Nav, NavDropdown, Navbar } = ReactBootstrap;
 
-    const isSmall = useMediaQuery({
-        query: '(max-width: 767px)'
-    })
+// Top navigation: home, the user's open viewer connections, language and logout.
+// Pages that already load the connections pass them in; otherwise they are fetched here.
+function Header({ connections: providedConnections }) {
+  const { t } = useTranslation();
+  const [loadedConnections, setConnections] = useState([]);
+  const connections = providedConnections ?? loadedConnections;
+  const isLoggedIn = Boolean(getAccessToken());
+  const isSmall = useMediaQuery({ query: '(max-width: 767px)' });
 
-    const dashInfo = localStorage.getItem("dashboard-info")
-
-    useEffect(() => {
-        if (userToken !== "" || userToken !== undefined) {
-            axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-                headers: {
-                    Authorization: localStorage.getItem("userToken"),
-                    'Content-Type': 'multipart/form-data',
-                    'Access-Control-Allow-Origin': URL_SYSTEM,
-                    'Access-Control-Allow-Headers': URL_SYSTEM,
-                },
-                // withCredentials: true,
-            })
-                .then(response => {
-                    console.log(response);
-                    localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                    const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                    const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                    const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                    let newArrayApps = [];
-
-                    arrayApplications.map(data => {
-                        newArrayApps.push(data)
-                    })
-
-                    setSearchFilterData(newArrayApps)
-                    setDataList(newArrayApps)
-
-                    setConnectionDataNewer(arrayConnection)
-
-                    let newArrConnection = [];
-                    let newInstanceFilterData = [];
-
-                    for (let i = 0; i < arrayConnection.length; i++) {
-                        for (let j = 0; j < arrayInstances.length; j++) {
-                            if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                                newArrConnection.push(arrayInstances[j]);
-                            }
-                        }
-                    }
-
-                    arrayInstances.map(instanceObjectData => {
-                        newInstanceFilterData.push({
-                            "ID_Instance": instanceObjectData.id_instance,
-                            "ID_Object": instanceObjectData.id_object,
-                            "Env_Name": instanceObjectData.name_env
-                        })
-                    })
-
-                    setInstanceStopData(newInstanceFilterData)
-                    console.log(newInstanceFilterData)
-
-                    setConnectionDataNew(newArrConnection)
-
-                    if (response.status === 200 && response.data.response_code === 200) {
-                        setDashboardInfo(response.data.response_data.dashboardinfo)
-                        setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                        const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                            return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                        });
-
-                        setOwnApplication(filterOwnData)
-
-                        const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                            return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                        });
-
-                        setOwnApplication(filterOwnData)
-
-                        const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                            return userdata.id_owner == 0
-                        });
-
-                        setSharedFiles(filterSharedFile)
-                    }
-                })
-                .catch(e => {
-                    console.log(e)
-                });
-        }
-    }, []);
-
-    const changeLanguageGerman = () => changeLanguage('de');
-
-    const changeLanguageEnglish = () => changeLanguage('en');
-
-    const logoutValidation = () => {
-        const accessToken = localStorage.getItem("userToken");
-        const refreshToken = (localStorage.getItem("userRefreshToken") || '').replace(/^\S+\s+(?=\S)/, '');
-        localStorage.removeItem("role");
-        localStorage.removeItem("language");
-        localStorage.removeItem("userData");
-        localStorage.removeItem("userDataID");
-        localStorage.removeItem("objectSharedApp");
-        localStorage.removeItem("objectUserID");
-        localStorage.removeItem("application");
-        localStorage.removeItem("app-data");
-        localStorage.removeItem("app-data-option");
-        localStorage.removeItem("instance-object-id");
-        localStorage.removeItem("instance-env");
-        localStorage.removeItem("env-object-id")
-        localStorage.removeItem("env-name")
-        localStorage.removeItem("connection-object-id")
-        localStorage.removeItem("connection-env")
-        localStorage.removeItem("connection-shared-object-id")
-        localStorage.removeItem("connection-shared-env")
-        localStorage.removeItem("object-id")
-        localStorage.removeItem("object-env-name")
-        localStorage.removeItem("object-state")
-        localStorage.removeItem("messageError");
-        localStorage.removeItem("userDataName");
-        localStorage.removeItem("userToken");
-        localStorage.removeItem("userTimeToken");
-        localStorage.removeItem("userRefreshToken");
-        localStorage.removeItem("user-group-id");
-        localStorage.removeItem("desktop-group-id");
-        localStorage.removeItem("selected-environment-id")
-        localStorage.removeItem("selected-environment-name")
-        localStorage.removeItem("selected-instance-id")
-        localStorage.removeItem("selected-instance-env-name")
-        localStorage.removeItem("selected-environment-envname")
-        localStorage.removeItem("selected-connection-index")
-        localStorage.removeItem("selected-object-id")
-        localStorage.removeItem("selected-object-env-name")
-        localStorage.removeItem("selected-object-state")
-        localStorage.removeItem("expert-mode-baseimage")
-        localStorage.removeItem("expert-mode-environment")
-        localStorage.removeItem("expert-mode-environment-id")
-        localStorage.removeItem("expert-mode-environment-env")
-        localStorage.removeItem("timeUser")
-        localStorage.removeItem("object-id-instance")
-        localStorage.removeItem("application-viewer-id")
-        localStorage.removeItem("environment-viewer-id")
-        localStorage.removeItem("object-viewer-id")
-        localStorage.removeItem("dashboard-info")
-        localStorage.removeItem("environment-type-mode")
-        localStorage.removeItem("object-id-instance");
-        logoutRequest({accessToken, refreshToken})
-            .catch(e => console.log(e))
-            .finally(() => {
-                window.location.href = ROUTES.login;
-            });
-    };
-
-    const connectStart = (data) => {
-        console.log(data)
-
-        localStorage.setItem("connection-object-id", JSON.parse(data).id_inst)
-        localStorage.setItem("connection-env", JSON.parse(data).viewer_url)
-
-        axios.post(DEVELOPMENT + '/monitoring/dashboard_info', {}, {
-            headers: {
-                Authorization: localStorage.getItem("userToken"),
-                'Content-Type': 'multipart/form-data',
-                'Access-Control-Allow-Origin': URL_SYSTEM,
-                'Access-Control-Allow-Headers': URL_SYSTEM,
-            },
-            // withCredentials: true,
-        })
-            .then(response => {
-                console.log(response);
-                localStorage.setItem("dashboard-info", JSON.stringify(response.data.response_data.dashboardinfo))
-                const arrayConnection = response.data.response_data.dashboardinfo.available_connections;
-                const arrayInstances = response.data.response_data.dashboardinfo.available_instances;
-                const arrayApplications = response.data.response_data.dashboardinfo.available_applications;
-
-                let newArrayApps = [];
-
-                arrayApplications.map(data => {
-                    newArrayApps.push(data)
-                })
-
-                setSearchFilterData(newArrayApps)
-                setDataList(newArrayApps)
-
-                setConnectionDataNewer(arrayConnection)
-
-                let newArrConnection = [];
-                let newInstanceFilterData = [];
-
-                for (let i = 0; i < arrayConnection.length; i++) {
-                    for (let j = 0; j < arrayInstances.length; j++) {
-                        if (arrayConnection[i].id_inst == arrayInstances[j].id_instance) {
-                            newArrConnection.push(arrayInstances[j]);
-                        }
-                    }
-                }
-
-                arrayInstances.map(instanceObjectData => {
-                    newInstanceFilterData.push({
-                        "ID_Instance": instanceObjectData.id_instance,
-                        "ID_Object": instanceObjectData.id_object,
-                        "Env_Name": instanceObjectData.name_env
-                    })
-                })
-
-                setInstanceStopData(newInstanceFilterData)
-                console.log(newInstanceFilterData)
-
-                setConnectionDataNew(newArrConnection)
-
-                if (response.status === 200 && response.data.response_code === 200) {
-                    setDashboardInfo(response.data.response_data.dashboardinfo)
-                    setSharedData(response.data.response_data.dashboardinfo.available_applications)
-
-                    const filterOwnData = response.data.response_data.dashboardinfo.available_applications.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterOwnFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == Number(localStorage.getItem('userDataID'))
-                    });
-
-                    setOwnApplication(filterOwnData)
-
-                    const filterSharedFile = response.data.response_data.dashboardinfo.available_files.filter(function (userdata) {
-                        return userdata.id_owner == 0
-                    });
-
-                    setSharedFiles(filterSharedFile)
-                }
-            })
-            .catch(e => {
-                console.log(e)
-            });
-
-        setTimeout(() => {
-            window.location.href = ROUTES.user.connectionRun;
-        }, 2000)
+  useEffect(() => {
+    if (!isLoggedIn || providedConnections) {
+      return undefined;
     }
+    let active = true;
+    daasClient
+      .post('/monitoring/dashboard_info', {})
+      .then((response) => {
+        if (active && isDaasSuccess(response)) {
+          setConnections(response.data.response_data.dashboardinfo.available_connections || []);
+        }
+      })
+      .catch((error) => log.error('Loading open connections failed', error));
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn, providedConnections]);
 
-    return (
-        <>
-            <ReactBootstrap.Navbar expand="lg" fixed="top" variant="dark">
-                <ReactBootstrap.Container fluid={true} className={isSmall ? 'header-small' : ''}>
-                    <ReactBootstrap.Navbar.Brand>
-                        <img src={Logo} alt="Logo"/>
-                    </ReactBootstrap.Navbar.Brand>
-                    <ReactBootstrap.Navbar.Toggle aria-controls="basic-navbar-nav"/>
-                    <ReactBootstrap.Navbar.Collapse id="basic-navbar-nav">
-                        <ReactBootstrap.Nav className="justify-content-end" style={{width: "100%"}}>
-                            {
-                                userToken ? (
-                                    <>
-                                        <ReactBootstrap.Nav.Link href={ROUTES.dashboard}>
-                                            {t('home')}
-                                        </ReactBootstrap.Nav.Link>
-                                        <ReactBootstrap.NavDropdown title={t('available_connections')}
-                                                                    id="basic-nav-dropdown">
-                                            {
-                                                connectionDataNewer.length > 0 ? (
-                                                    <>
-                                                        {
-                                                            connectionDataNewer.map((appConnect, index) => {
-                                                                return (
-                                                                    <>
-                                                                        <ReactBootstrap.NavDropdown.Item href="#"
-                                                                                                         onClick={() => connectStart(JSON.stringify(appConnect))}>
-                                                                            {/*<div>
-                                                                {t('id-text') + appConnect.id_inst}
-                                                            </div>*/}
-                                                                            <div>
-                                                                                {t('url-text') + appConnect.viewer_url}
-                                                                            </div>
-                                                                        </ReactBootstrap.NavDropdown.Item>
-                                                                    </>
-                                                                )
-                                                            })
-                                                        }
-                                                    </>
-                                                ) : (
-                                                    <ReactBootstrap.NavDropdown.Item href="#">
-                                                        {t('no-data-available')}
-                                                    </ReactBootstrap.NavDropdown.Item>
-                                                )
-                                            }
-                                        </ReactBootstrap.NavDropdown>
-                                    </>
-                                ) : (
-                                    <></>
-                                )
-                            }
-                            <ReactBootstrap.NavDropdown title={t('language')} id="basic-nav-dropdown-additional">
-                                <ReactBootstrap.NavDropdown.Item href="#" onClick={changeLanguageEnglish}>
-                                    EN
-                                </ReactBootstrap.NavDropdown.Item>
-                                <ReactBootstrap.NavDropdown.Item href="#" onClick={changeLanguageGerman}>
-                                    DE
-                                </ReactBootstrap.NavDropdown.Item>
-                            </ReactBootstrap.NavDropdown>
-                            {
-                                userToken ? (
-                                    <ReactBootstrap.Nav.Link href="#" onClick={logoutValidation}>
-                                        {t('logout')}
-                                    </ReactBootstrap.Nav.Link>
-                                ) : (
-                                    <></>
-                                )
-                            }
-                        </ReactBootstrap.Nav>
-                    </ReactBootstrap.Navbar.Collapse>
-                </ReactBootstrap.Container>
-            </ReactBootstrap.Navbar>
-        </>
-    )
+  const openConnection = (connection) => {
+    localStorage.setItem('connection-object-id', connection.id_inst);
+    localStorage.setItem('connection-env', connection.viewer_url);
+    // A full page load, so the viewer restarts even when this page is already open.
+    window.location.assign(ROUTES.user.connectionRun);
+  };
+
+  return (
+    <Navbar expand="lg" fixed="top" variant="dark">
+      <Container fluid className={isSmall ? 'header-small' : ''}>
+        <Navbar.Brand>
+          <img src={Logo} alt="Logo" />
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="justify-content-end" style={{ width: '100%' }}>
+            {isLoggedIn && (
+              <>
+                <Nav.Link href={ROUTES.dashboard}>{t('home')}</Nav.Link>
+                <NavDropdown title={t('available_connections')} id="basic-nav-dropdown">
+                  {connections.length > 0 ? (
+                    connections.map((connection) => (
+                      <NavDropdown.Item key={connection.id_inst} as="button" onClick={() => openConnection(connection)}>
+                        {t('url-text') + connection.viewer_url}
+                      </NavDropdown.Item>
+                    ))
+                  ) : (
+                    <NavDropdown.Item as="span">{t('no-data-available')}</NavDropdown.Item>
+                  )}
+                </NavDropdown>
+              </>
+            )}
+            <NavDropdown title={t('language')} id="basic-nav-dropdown-additional">
+              <NavDropdown.Item as="button" onClick={() => changeLanguage('en')}>
+                EN
+              </NavDropdown.Item>
+              <NavDropdown.Item as="button" onClick={() => changeLanguage('de')}>
+                DE
+              </NavDropdown.Item>
+            </NavDropdown>
+            {isLoggedIn && (
+              <Nav.Link as="button" onClick={() => logout(ROUTES.login)}>
+                {t('logout')}
+              </Nav.Link>
+            )}
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
 }
 
 export default Header;

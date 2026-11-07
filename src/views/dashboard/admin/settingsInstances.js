@@ -1,78 +1,69 @@
 import { useState } from 'react';
 import * as ReactBootstrap from 'react-bootstrap';
+import BackLink from '../../../components/BackLink';
 import { useTranslation } from 'react-i18next';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 
-import {DEVELOPMENT, TEST, LIVE, USERNAME, PASSWORD, DEVELOPMENT_INTERN, TEST_INTERN, LIVE_INTERN, URL_SYSTEM} from "../../../constants/constants";
+import Header from '../../../components/header';
 
-import Header from "../../../components/header";
+import { daasClient } from '../../../api/client';
+import { createLogger } from '../../../utils/logger';
+import RequestAlert from '../../../components/RequestAlert';
+import useRequestAlert from '../../../hooks/useRequestAlert';
+import { ROUTES } from '../../../routes';
+import { SUBMIT_HANDLED_BY_FORM } from '../../../utils/formik';
+const log = createLogger('SettingsInstances');
 
 function SettingsInstances() {
-    const params = useParams(); // Example: {params.id}
-    const [vmIDApp, setVMIDApp] = useState("");
-    const [vmENVApp, setVMENVApp] = useState("");
-    const [vmCMDApp, setVMCMDApp] = useState("");
-    const [vmARGSApp, setVMARGSApp] = useState("");
-    const [vmIDCommand, setVMIDCommand] = useState("");
-    const [vmENVCommand, setVMENVCommand] = useState("");
-    const [vmCMDCommand, setVMCMDCommand] = useState("");
-    const [vmARGSCommand, setVMARGSCommand] = useState("");
-    const [vmIDSSH, setVMIDSSH] = useState("");
-    const [vmENVSSH, setVMENVSSH] = useState("");
-    const [vmCMDSSH, setVMCMDSSH] = useState("");
-    const [vmARGSSSH, setVMARGSSSH] = useState("");
-    const [vmIDAction, setVMIDAction] = useState("");
-    const [vmENVAction, setVMENVAction] = useState("");
-    const [vmCMDAction, setVMCMDAction] = useState("");
-    const [vmARGSAction, setVMARGSAction] = useState("");
-    const [vmIDResize, setVMIDResize] = useState("");
-    const [vmENVResize, setVMENVResize] = useState("");
-    const [vmCMDResize, setVMCMDResize] = useState("");
-    const [vmARGSResize, setVMARGSResize] = useState("");
-    const [vmIDOSPackage, setVMIDOSPackage] = useState("");
-    const [vmENVOSPackage, setVMENVOSPackage] = useState("");
-    const [vmCMDOSPackage, setVMCMDOSPackage] = useState("");
-    const [vmARGSOSPackage, setVMARGSOSPackage] = useState("");
-    const [vmIDUpload, setVMIDUpload] = useState("");
-    const [vmENVUpload, setVMENVUpload] = useState("");
-    const [vmFileUpload, setVMFileUpload] = useState({});
-    const [vmExecuteUpload, setVMExecuteUpload] = useState("");
-    const [isCheckedExecuteUpload, setIsCheckedExecuteUpload] = useState(false)
-    const [vmIDMount, setVMIDMount] = useState("");
-    const [vmENVMount, setVMENVMount] = useState("");
-    const [vmCommandMount, setVMCommandMount] = useState("mount");
-    const [vmCephPublic, setVMCephPublic] = useState("");
-    const [vmCephShared, setVMCephShared] = useState("");
-    const [vmCephUser, setVMCephUser] = useState("");
-    const [vmCephPublicChecked, setVMCephPublicChecked] = useState(false);
-    const [vmCephSharedChecked, setVMCephSharedChecked] = useState(false);
-    const [vmCephUserChecked, setVMCephUserChecked] = useState(false);
-    const [vmIDConnectionICMP, setVMIDConnectionICMP] = useState("");
-    const [vmENVConnectionICMP, setVMENVConnectionICMP] = useState("");
-    const [vmIDConnectionSSH, setVMIDConnectionSSH] = useState("");
-    const [vmENVConnectionSSH, setVMENVConnectionSSH] = useState("");
-    const [vmInstanceList, setVMInstanceList] = useState([]);
-    const [vmInstanceListSubmit, setVMInstanceListSubmit] = useState(false);
-    const [vmIDInstall, setVMIDInstall] = useState("");
-    const [vmCMDInstall, setVMCMDInstall] = useState("");
-    const [vmARGSInstall, setVMARGSInstall] = useState("");
-    const [vmIDUninstall, setVMIDUninstall] = useState("");
-    const [vmCMDUninstall, setVMCMDUninstall] = useState("");
-    const [vmARGSUninstall, setVMARGSUninstall] = useState("");
-    const [vmIDRoundtrip, setVMIDRoundtrip] = useState("");
-    const [vmENVRoundtrip, setVMENVRoundtrip] = useState("");
-    const [vmIterationRoundtrip, setVMIterationRoundtrip] = useState("");
-    const [vmNameRoundtrip, setVMNameRoundtrip] = useState("");
-    const [vmCMDRoundtrip, setVMCMDRoundtrip] = useState("");
-    const [vmARGSRoundtrip, setVMARGSRoundtrip] = useState("");
-    const [requestAlert, setRequestAlert] = useState(false);
-    const [requestAlertMessage, setRequestAlertMessage] = useState(false);
-    const { t, i18n } = useTranslation();
-
-    const isNotDesktop = useMediaQuery({
-        query: '(max-width: 1200px)'
-    })
+  const [vmIDApp, setVMIDApp] = useState('');
+  const [vmENVApp, setVMENVApp] = useState('');
+  const [vmCMDApp, setVMCMDApp] = useState('');
+  const [vmARGSApp, setVMARGSApp] = useState('');
+  const [vmIDCommand, setVMIDCommand] = useState('');
+  const [vmENVCommand, setVMENVCommand] = useState('');
+  const [vmCMDCommand, setVMCMDCommand] = useState('');
+  const [vmARGSCommand, setVMARGSCommand] = useState('');
+  const [vmIDSSH, setVMIDSSH] = useState('');
+  const [vmENVSSH, setVMENVSSH] = useState('');
+  const [vmCMDSSH, setVMCMDSSH] = useState('');
+  const [vmARGSSSH, setVMARGSSSH] = useState('');
+  const [vmIDAction, setVMIDAction] = useState('');
+  const [vmENVAction, setVMENVAction] = useState('');
+  const [vmCMDAction, setVMCMDAction] = useState('');
+  const [vmARGSAction, setVMARGSAction] = useState('');
+  const [vmIDResize, setVMIDResize] = useState('');
+  const [vmENVResize, setVMENVResize] = useState('');
+  const [vmCMDResize, setVMCMDResize] = useState('');
+  const [vmARGSResize, setVMARGSResize] = useState('');
+  const [vmIDOSPackage, setVMIDOSPackage] = useState('');
+  const [vmENVOSPackage, setVMENVOSPackage] = useState('');
+  const [vmCMDOSPackage, setVMCMDOSPackage] = useState('');
+  const [vmARGSOSPackage, setVMARGSOSPackage] = useState('');
+  const [vmIDUpload, setVMIDUpload] = useState('');
+  const [vmENVUpload, setVMENVUpload] = useState('');
+  const [vmFileUpload, setVMFileUpload] = useState({});
+  const [isCheckedExecuteUpload, setIsCheckedExecuteUpload] = useState(false);
+  const [vmIDMount, setVMIDMount] = useState('');
+  const [vmENVMount, setVMENVMount] = useState('');
+  const [vmCommandMount, setVMCommandMount] = useState('mount');
+  const [vmCephPublicChecked, setVMCephPublicChecked] = useState(false);
+  const [vmCephSharedChecked, setVMCephSharedChecked] = useState(false);
+  const [vmCephUserChecked, setVMCephUserChecked] = useState(false);
+  const [vmIDConnectionICMP, setVMIDConnectionICMP] = useState('');
+  const [vmENVConnectionICMP, setVMENVConnectionICMP] = useState('');
+  const [vmIDConnectionSSH, setVMIDConnectionSSH] = useState('');
+  const [vmENVConnectionSSH, setVMENVConnectionSSH] = useState('');
+  const [vmInstanceList, setVMInstanceList] = useState([]);
+  const [vmInstanceListSubmit, setVMInstanceListSubmit] = useState(false);
+  const [vmIDRoundtrip, setVMIDRoundtrip] = useState('');
+  const [vmENVRoundtrip, setVMENVRoundtrip] = useState('');
+  const [vmIterationRoundtrip, setVMIterationRoundtrip] = useState('');
+  const [vmNameRoundtrip, setVMNameRoundtrip] = useState('');
+  const [vmCMDRoundtrip, setVMCMDRoundtrip] = useState('');
+  const [vmARGSRoundtrip, setVMARGSRoundtrip] = useState('');
+  const { requestAlert, showRequestAlert } = useRequestAlert();
+  const { t } = useTranslation();
 
     const appInstanceVirtualEnvironment = (event) => {
         event.preventDefault();
