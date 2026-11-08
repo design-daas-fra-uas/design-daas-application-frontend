@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { describeError } from '../../../../api/errors';
 import useRequestAlert from '../../../../hooks/useRequestAlert';
 import { ROUTES } from '../../../../routes';
 import { createLogger } from '../../../../utils/logger';
@@ -31,7 +32,7 @@ export default function useViewerSession(start) {
       .catch((error) => {
         if (!active) return;
         log.error('Starting the viewer failed', error);
-        showRequestAlert(false);
+        showRequestAlert(false, `Starting the viewer: ${describeError(error)}`);
         setSession({ status: 'failed', viewerRequest: null });
         redirectTimer = setTimeout(() => navigate(ROUTES.dashboard), REDIRECT_AFTER_FAILURE_MS);
       });

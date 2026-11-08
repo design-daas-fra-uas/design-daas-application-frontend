@@ -48,11 +48,13 @@ publicClient.interceptors.response.use(unwrapData);
 // Python DaaS backend (VMs, containers, viewer, monitoring). It expects
 // multipart form bodies and wraps results in `{ response_code, response_data }`,
 // so the full axios response is returned; use `isDaasSuccess` to check it.
+// Errors come back as JSON (with the reason in `sys_log`) only when the
+// request asks for exactly `application/json`, otherwise as an HTML page.
 export const daasClient = authorize(
   withRequestId(
     axios.create({
       baseURL: DAAS_API_URL,
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': 'multipart/form-data', Accept: 'application/json' },
     }),
   ),
 );

@@ -37,6 +37,8 @@ it('shows a spinner, then loads the viewer page into the frame', async () => {
 
 it('shows an error when starting fails', async () => {
   renderPage(() => Promise.reject(new Error('backend down')));
-  expect(await screen.findByRole('alert')).toBeInTheDocument();
+  // The page's failure message plus the request alert with the reason.
+  expect(await screen.findAllByRole('alert')).toHaveLength(2);
+  expect(screen.getByText('Starting the viewer: backend down')).toBeInTheDocument();
   expect(daasClient.get).not.toHaveBeenCalled();
 });

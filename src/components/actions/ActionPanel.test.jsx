@@ -45,7 +45,7 @@ it('posts the form, reports success and shows the returned data', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
   expect(daasClient.post).toHaveBeenCalledWith('/vm/status', { onlyuser: 'on', id: '101', connect: 'on' });
-  expect(showRequestAlert).toHaveBeenCalledWith(true);
+  expect(showRequestAlert).toHaveBeenCalledWith(true, '/vm/status');
   expect(await screen.findByText('running')).toBeInTheDocument();
 });
 
@@ -57,7 +57,7 @@ it('reports a rejected request and shows no result', async () => {
   await userEvent.type(screen.getByLabelText('ID'), '101');
   await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-  expect(showRequestAlert).toHaveBeenCalledWith(false);
+  expect(showRequestAlert).toHaveBeenCalledWith(false, '/vm/status: Error 500');
   expect(onSuccess).not.toHaveBeenCalled();
 });
 

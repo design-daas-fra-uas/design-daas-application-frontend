@@ -10,8 +10,9 @@ vi.mock('./dashboardApi', () => ({ startObject: vi.fn(), stopObject: vi.fn(), de
 vi.mock('./navigation', () => ({ navigateLater: vi.fn() }));
 
 const objects = [
-  { id_object: 'o1', id_user: 'first', object_state: 'baseimage-final' },
-  { id_object: 'o2', id_user: 'second', object_state: 'baseimage-final' },
+  { id_object: 'o1', id_user: 'first', id_owner: 3, object_state: 'baseimage-final' },
+  { id_object: 'o2', id_user: 'second', id_owner: 3, object_state: 'baseimage-final' },
+  { id_object: 'sys', id_user: 'x11container', id_owner: 0, object_state: 'baseimage-final' },
 ];
 const instances = [{ id_object: 'o2', id_instance: 'i2' }];
 // `run` as used by the dashboard: resolves to the request's result.
@@ -62,4 +63,17 @@ it('remembers the viewer URL of a started object', async () => {
 
   expect(localStorage.getItem('connection-env')).toBe('http://viewer/1');
   expect(screen.getByRole('button', { name: 'Stop' })).toBeEnabled();
+});
+
+it('does not offer to delete a system object', async () => {
+  renderControls();
+  const remove = screen.getByRole('button', { name: 'Delete' });
+
+  await userEvent.selectOptions(screen.getByRole('combobox'), 'o1');
+  expect(remove).toBeEnabled();
+  expect(screen.queryByText(/system object/)).not.toBeInTheDocument();
+
+  await userEvent.selectOptions(screen.getByRole('combobox'), 'sys');
+  expect(remove).toBeDisabled();
+  expect(screen.getByText(/system object shared by all users/)).toBeInTheDocument();
 });

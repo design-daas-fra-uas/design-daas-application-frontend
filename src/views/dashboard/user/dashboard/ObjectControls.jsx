@@ -15,6 +15,8 @@ function ObjectControls({ objects, instances, run, reload }) {
   // Instance of the selected object, if it is running.
   const [instanceId, setInstanceId] = useState('');
   const selected = objects.find((object) => String(object.id_object) === selectedId);
+  // System objects (owner 0) are shared by everyone; only admins may delete them.
+  const isSystemObject = selected?.id_owner === 0;
 
   const select = (event) => {
     const id = event.target.value;
@@ -80,10 +82,11 @@ function ObjectControls({ objects, instances, run, reload }) {
         <Button variant="outline-primary" disabled={!selected} onClick={editInExpertMode}>
           {t('edit-headline')} ({t('expert-mode')})
         </Button>
-        <Button variant="outline-danger" disabled={!selected} onClick={remove}>
+        <Button variant="outline-danger" disabled={!selected || isSystemObject} onClick={remove}>
           {t('delete-mode')}
         </Button>
       </div>
+      {isSystemObject && <p className="control-hint">{t('system-object-hint')}</p>}
     </>
   );
 }

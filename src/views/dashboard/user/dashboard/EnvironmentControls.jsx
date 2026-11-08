@@ -24,6 +24,8 @@ function EnvironmentControls({ environments, run, reload }) {
   const navigate = useNavigate();
   const [selectedKey, setSelectedKey] = useState('');
   const selected = environments.find((environment) => keyOf(environment) === selectedKey);
+  // Environments of a system object (owner 0) can only be deleted by admins.
+  const isSystemEnvironment = selected?.id_owner === 0;
 
   const open = (mode) => {
     storeEnvironment(selected, mode);
@@ -86,10 +88,11 @@ function EnvironmentControls({ environments, run, reload }) {
         <Button variant="outline-primary" disabled={!selected} onClick={edit}>
           {t('edit-headline')}
         </Button>
-        <Button variant="outline-danger" disabled={!selected} onClick={remove}>
+        <Button variant="outline-danger" disabled={!selected || isSystemEnvironment} onClick={remove}>
           {t('delete-headline')}
         </Button>
       </div>
+      {isSystemEnvironment && <p className="control-hint">{t('system-environment-hint')}</p>}
     </>
   );
 }

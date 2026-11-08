@@ -21,6 +21,11 @@ Versioning](https://semver.org/).
 - Admin settings, monitoring, viewer and setup pages are generated from configuration instead of copy-pasted code;
   each form keeps its own values and results show all returned fields.
 - Unknown URLs show "Not found", navigation no longer reloads the page, and banners hide after 2 s everywhere.
+- The request alert is centered and says what was done and, on failure, why (the backend's reason and status code,
+  e.g. "Only admins may change system objects (403)"); failures stay 6 s. DaaS requests ask for JSON so its errors
+  carry that reason.
+- On the user dashboard, Delete is disabled with a hint for system objects (owner 0) and their environments, which
+  only admins may delete.
 - Added CI (lint, tests, build, audit, secret and image scans, push to GHCR), a manual deploy workflow, Dependabot and
   Prettier; the Dockerfile uses `npm ci` and pinned Node and nginx images.
 - Fixed: the session (refresh token stored as `Bearer …`, logout on network errors).

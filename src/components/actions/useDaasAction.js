@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { daasClient, isDaasSuccess } from '../../api/client';
+import { describeError, describeResponse } from '../../api/errors';
 import { createLogger } from '../../utils/logger';
 import { toParams } from './fields';
 
@@ -32,18 +33,19 @@ export default function useDaasAction(action, showRequestAlert) {
       try {
         const response = await daasClient.post(action.endpoint, body);
         const success = (action.isSuccess || isDaasSuccess)(response);
-        showRequestAlert(success);
         if (!success) {
           log.warn(`${action.endpoint} was rejected`, response.data);
+          showRequestAlert(false, `${action.endpoint}: ${describeResponse(response)}`);
           return;
         }
+        showRequestAlert(true, action.endpoint);
         if (action.result) {
           setResult({ data: RESULT[action.result](response), values });
         }
         await action.onSuccess?.({ values, response });
       } catch (error) {
         log.error(`${action.endpoint} failed`, error);
-        showRequestAlert(false);
+        showRequestAlert(false, `${action.endpoint}: ${describeError(error)}`);
       }
     },
     [action, showRequestAlert],
