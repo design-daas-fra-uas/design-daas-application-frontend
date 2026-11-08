@@ -39,6 +39,7 @@ const SettingsApps = lazy(() => import('./views/dashboard/admin/settingsApps'));
 const SettingsFiles = lazy(() => import('./views/dashboard/admin/settingsFiles'));
 const SettingsTasks = lazy(() => import('./views/dashboard/admin/settingsTasks'));
 const Limitation = lazy(() => import('./views/dashboard/admin/limitation'));
+const SystemStatusPage = lazy(() => import('./views/dashboard/status/SystemStatusPage'));
 
 /* User */
 const ApplicationRunning = lazy(() => import('./views/dashboard/user/applicationRunning'));
@@ -52,6 +53,7 @@ const ObjectEnvironmentSetup = lazy(() => import('./views/dashboard/user/objectE
 const ObjectEnvironmentSetupEdit = lazy(() => import('./views/dashboard/user/objectEnvironmentSetupEdit'));
 const ObjectStartSetup = lazy(() => import('./views/dashboard/user/objectStartSetup'));
 const MonitoringUser = lazy(() => import('./views/dashboard/user/monitoringUser'));
+const QuotaPage = lazy(() => import('./views/dashboard/status/QuotaPage'));
 
 /* Expert */
 const StartEnvironment = lazy(() => import('./views/dashboard/expert/startEnvironment'));
@@ -68,6 +70,7 @@ const RUN_ROUTES = [
   [ROUTES.user.expertEnvironment, ObjectEnvironmentSetup],
   [ROUTES.user.expertEnvironmentEdit, ObjectEnvironmentSetupEdit],
   [ROUTES.user.expertStartSystem, ObjectStartSetup],
+  [ROUTES.user.quota, QuotaPage],
 ];
 
 const USER_ROUTES = [[ROUTES.user.monitoring, MonitoringUser]];
@@ -77,6 +80,7 @@ const EXPERT_ROUTES = [[ROUTES.expert.startEnvironment, StartEnvironment]];
 const ADMIN_ROUTES = [
   [ROUTES.admin.root, MainAdmin],
   [ROUTES.admin.monitoring, Monitoring],
+  [ROUTES.admin.status, SystemStatusPage],
   [ROUTES.admin.limitation, Limitation],
   [ROUTES.admin.tasks, SettingsTasks],
   [ROUTES.admin.settings, SettingsOverview],

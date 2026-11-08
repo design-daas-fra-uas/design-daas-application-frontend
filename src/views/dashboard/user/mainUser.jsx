@@ -59,6 +59,12 @@ function MainUser() {
       label: 'monitoring',
       onClick: () => navigate(ROUTES.user.monitoring),
     },
+    {
+      name: 'quota',
+      icon: 'fa-gauge',
+      label: 'quota-title',
+      onClick: () => navigate(ROUTES.user.quota),
+    },
     { name: 'refresh', icon: 'fa-arrows-rotate', label: 'refresh', onClick: reload },
     {
       name: 'info',

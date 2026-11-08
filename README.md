@@ -36,7 +36,8 @@ npm run preview       # serve ./build locally
 - `src/auth` – session and token handling
 - `src/components` – shared UI; `components/actions` renders the config-driven DaaS admin forms
 - `src/hooks` – shared hooks
-- `src/views` – pages (admin pages are lists of actions, see `components/actions/ActionPage.jsx`)
+- `src/views` – pages (admin pages are lists of actions, see `components/actions/ActionPage.jsx`);
+  `views/dashboard/status` has the users' "My resources" page and the admins' "System status" page
 
 ## Docker
 
