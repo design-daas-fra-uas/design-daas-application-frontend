@@ -2,6 +2,7 @@ import axios from 'axios';
 
 import { AUTH_API_URL, DAAS_API_URL } from '../constants/constants';
 import { clearSession, getAccessToken, isSessionInvalid, refreshSession } from '../auth/tokenManager';
+import { withRequestId } from './requestId';
 
 const unwrapData = (response) => response.data;
 
@@ -38,20 +39,22 @@ const authorize = (client, { unwrap = false } = {}) => {
 };
 
 // Java backend (users, groups, desktops). Responses resolve to `response.data`.
-const apiClient = authorize(axios.create({ baseURL: AUTH_API_URL }), { unwrap: true });
+const apiClient = authorize(withRequestId(axios.create({ baseURL: AUTH_API_URL })), { unwrap: true });
 
 // Java backend without auth headers or the refresh flow (e.g. email validation).
-export const publicClient = axios.create({ baseURL: AUTH_API_URL });
+export const publicClient = withRequestId(axios.create({ baseURL: AUTH_API_URL }));
 publicClient.interceptors.response.use(unwrapData);
 
 // Python DaaS backend (VMs, containers, viewer, monitoring). It expects
 // multipart form bodies and wraps results in `{ response_code, response_data }`,
 // so the full axios response is returned; use `isDaasSuccess` to check it.
 export const daasClient = authorize(
-  axios.create({
-    baseURL: DAAS_API_URL,
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
+  withRequestId(
+    axios.create({
+      baseURL: DAAS_API_URL,
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  ),
 );
 
 export const isDaasSuccess = (response) => response?.status === 200 && response?.data?.response_code === 200;

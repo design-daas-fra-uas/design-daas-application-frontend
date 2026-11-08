@@ -15,6 +15,8 @@ const describe = (value) => {
   const { config = {}, response } = value;
   return {
     message: value.message,
+    // Same id as in the DaaS backend and auth service logs
+    requestId: config.headers?.['X-Request-ID'],
     request: `${(config.method || 'get').toUpperCase()} ${config.baseURL || ''}${config.url || ''}`,
     status: response?.status,
     data: response?.data,

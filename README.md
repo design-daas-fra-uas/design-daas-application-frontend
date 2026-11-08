@@ -31,7 +31,8 @@ npm run preview       # serve ./build locally
 
 ## Project layout
 
-- `src/api` – HTTP clients (`client.js`) and backend calls
+- `src/api` – HTTP clients (`client.js`) and backend calls; every request carries an `X-Request-ID`
+  (`requestId.js`) that the DaaS backend and the auth service write into their logs
 - `src/auth` – session and token handling
 - `src/components` – shared UI; `components/actions` renders the config-driven DaaS admin forms
 - `src/hooks` – shared hooks

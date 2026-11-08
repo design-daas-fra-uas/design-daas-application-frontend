@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { AUTH_API_URL, OAUTH_CLIENT_ID } from '../constants/constants';
+import './requestId';
 
 // Unauthenticated calls used before a session exists (login/token refresh).
 // These intentionally bypass the shared `client.js` instance.
