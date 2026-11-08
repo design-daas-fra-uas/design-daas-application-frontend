@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+
+import { createLogger } from '../utils/logger';
+const log = createLogger('useResource');
 
 const LOADING = { data: null, status: 'loading' };
 
@@ -11,33 +14,33 @@ const LOADING = { data: null, status: 'loading' };
 // `reload` never throws; it resolves to true on success and false otherwise.
 export default function useResource(loader, deps = []) {
   const [state, setState] = useState(LOADING);
-  const requestId = useRef(0);
-  const controller = useRef(null);
+  const requestIdRef = useRef(0);
+  const controllerRef = useRef(null);
   // The loader is usually an inline closure over `deps`; keeping the latest one
   // in a ref lets `reload` stay stable while always calling the current loader.
   const loaderRef = useRef(loader);
-  loaderRef.current = loader;
+  useLayoutEffect(() => {
+    loaderRef.current = loader;
+  });
 
-  const reload = useCallback(async (options) => {
-    const id = ++requestId.current;
-    controller.current?.abort();
-    const { signal } = (controller.current = new AbortController());
-    if (!options?.silent) {
-      setState((previous) => (previous.status === 'loading' ? previous : { ...previous, status: 'loading' }));
-    }
+  // Fetches without touching the status first; stale results are dropped.
+  const load = useCallback(async () => {
+    const id = ++requestIdRef.current;
+    controllerRef.current?.abort();
+    const { signal } = (controllerRef.current = new AbortController());
 
     try {
       const data = await loaderRef.current({ signal });
-      if (id !== requestId.current) {
+      if (id !== requestIdRef.current) {
         return false;
       }
       setState({ data, status: data == null ? 'not-found' : 'loaded' });
       return data != null;
     } catch (error) {
-      if (id !== requestId.current) {
+      if (id !== requestIdRef.current) {
         return false;
       }
-      console.error(error);
+      log.error('reload', error);
       const notFound = error?.response?.status === 404;
       setState((previous) => ({
         data: notFound ? null : previous.data,
@@ -47,16 +50,31 @@ export default function useResource(loader, deps = []) {
     }
   }, []);
 
+  const reload = useCallback(
+    ({ silent = false } = {}) => {
+      if (!silent) {
+        setState((previous) => (previous.status === 'loading' ? previous : { ...previous, status: 'loading' }));
+      }
+      return load();
+    },
+    [load],
+  );
+
+  // New deps: drop the old data right away (during render, not in the effect).
+  const [loadedDeps, setLoadedDeps] = useState(deps);
+  if (deps.length !== loadedDeps.length || deps.some((dep, index) => !Object.is(dep, loadedDeps[index]))) {
+    setLoadedDeps(deps);
+    setState(LOADING);
+  }
+
   useEffect(() => {
-    // No-op on mount (state is already loading); resets stale data when deps change.
-    setState((previous) => (previous.status === 'loading' && previous.data === null ? previous : LOADING));
-    reload();
+    load();
     return () => {
-      requestId.current += 1;
-      controller.current?.abort();
+      requestIdRef.current += 1;
+      controllerRef.current?.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reload, ...deps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `deps` are the caller's loader inputs
+  }, [load, ...deps]);
 
   return { data: state.data, status: state.status, reload };
 }

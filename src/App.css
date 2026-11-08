@@ -1,1316 +1,774 @@
+/* ==========================================================================
+   DESIGN frontend styles
+   1. Design tokens (also mapped onto Bootstrap's variables)
+   2. Base elements
+   3. Layout: navbar, pages, panels
+   4. Components: links/tiles, forms, tabs, lists, results, alerts
+   5. User dashboard
+   6. Viewer pages
+   ========================================================================== */
+
+/* 1. Design tokens -------------------------------------------------------- */
+
 :root {
-    --color-text: #000;
-    --color-background: #fff;
-    --color-success: #008000;
-    --color-danger: #800000;
-    --color-accent: #800080;
+  --color-brand: #0e1451;
+  --color-primary: #2f55d4;
+  --color-primary-hover: #2445b3;
+  --color-primary-soft: #e8edfc;
+  --color-text: #1b2033;
+  --color-muted: #5d6479;
+  --color-background: #ffffff;
+  --color-page: #f3f5fa;
+  --color-border: #dce1ec;
+  --color-success: #1d7a3a;
+  --color-danger: #b42318;
+  --color-accent: #6b3fc9;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 2px rgb(16 24 64 / 6%), 0 4px 14px rgb(16 24 64 / 6%);
+  --shadow-raised: 0 2px 4px rgb(16 24 64 / 8%), 0 10px 24px rgb(16 24 64 / 10%);
+  --space: 16px;
+  --nav-height: 72px;
+  --toolbar-height: 64px;
+
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: 47, 85, 212;
+  --bs-body-color: var(--color-text);
+  --bs-body-bg: var(--color-page);
+  --bs-border-color: var(--color-border);
+  --bs-border-radius: var(--radius-sm);
+  --bs-link-color: var(--color-primary);
+  --bs-link-color-rgb: 47, 85, 212;
+  --bs-link-hover-color: var(--color-primary-hover);
+  --bs-link-hover-color-rgb: 36, 69, 179;
 }
 
-/* Custom */
-
-iframe {
-    width: 96vw;
-    height: calc(100vh);
+.btn-primary {
+  --bs-btn-bg: var(--color-primary);
+  --bs-btn-border-color: var(--color-primary);
+  --bs-btn-hover-bg: var(--color-primary-hover);
+  --bs-btn-hover-border-color: var(--color-primary-hover);
+  --bs-btn-active-bg: var(--color-primary-hover);
+  --bs-btn-active-border-color: var(--color-primary-hover);
+  --bs-btn-disabled-bg: var(--color-primary);
+  --bs-btn-disabled-border-color: var(--color-primary);
 }
 
-#applicationRunning iframe,
-#connectionRunning iframe,
-#environmentRunning iframe,
-#instanceRunning iframe,
-#objectStartSetup iframe {
-    width: calc(100vw);
-    height: calc(89.75vh);
-    position: fixed;
+.btn-outline-primary {
+  --bs-btn-color: var(--color-primary);
+  --bs-btn-border-color: var(--color-primary);
+  --bs-btn-hover-bg: var(--color-primary);
+  --bs-btn-hover-border-color: var(--color-primary);
+  --bs-btn-active-bg: var(--color-primary-hover);
+  --bs-btn-disabled-color: var(--color-primary);
+  --bs-btn-disabled-border-color: var(--color-primary);
 }
 
-select,
-option {
-    width: 100%;
-    padding: 5px;
-    border-radius: 10px;
+/* 2. Base elements -------------------------------------------------------- */
+
+body {
+  background-color: var(--color-page);
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
-input[type="checkbox"],
-input[type="radio"] {
-    transform: scale(1.5);
-    padding: 10px;
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  color: var(--color-text);
 }
 
-nav {
-    background-image: url('./assets/images/png/BackgroundNavigationBar.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    /*background-size: cover;*/
-    background-color: #0E1451;
-    padding: 15px;
+h3 {
+  font-size: 1.25rem;
 }
 
-#dashboardUser > div:nth-child(2) {
-    margin-bottom: 20px;
-    margin-top: 20px;
+h4 {
+  font-size: 1.05rem;
 }
 
-a,
-.link-daas-design,
-.all-data,
-#dashboardAdmin ul > li > span > svg,
-#environmentImage div > svg,
-#dashboardUser > div:nth-child(3) > div > div,
-#applicationStart > div:nth-child(2) > div > div,
-#environmentStart > div:nth-child(2) > div > div,
-#dashboardExpert > div:nth-child(2) > div > div,
-#demoOverview > div:nth-child(2) > div > div,
-#demoOverviewLinux > div:nth-child(2) > div > div,
-#demoOverviewWindows > div:nth-child(2) > div > div,
-#demoOverviewDocker > div:nth-child(2) > div > div,
-#applicationRunning > div:nth-child(2) > div > div,
-#connectionRunning > div:nth-child(2) > div > div,
-#environmentRunning > div:nth-child(2) > div > div,
-#instanceRunning > div:nth-child(2) > div > div,
-#objectBaseImageSetup > div:nth-child(2) > div > div,
-#objectEnvironmentSetup > div:nth-child(2) > div > div,
-#objectStartSetup > div:nth-child(2) > div > div {
-    cursor: pointer;
+label {
+  font-weight: 600;
 }
 
-#error {
-    max-width: 400px;
-    margin: 150px auto;
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
 }
 
-#dashboardUser,
-#dashboardExpert,
-#applicationStart,
-#environmentStart,
-#demoOverview,
-#demoOverviewLinux,
-#demoOverviewWindows,
-#demoOverviewDocker,
-#dashboardAdmin,
-#dashboardAdminSettingsAdmin,
-#dashboardAdminSettingsUser,
-#monitoring,
-#desktop,
-#desktop-details,
-#environmentImage,
-#snapshotsOverview,
-#settingsOverview,
-#settingsOverviewVirtualEnvironment,
-#settingsOverviewConfigurationVirtualEnvironment,
-#settingsOverviewDocker,
-#settingsOverviewPhases,
-#settingsOverviewConnectionViewer,
-#settingsOverviewAuthentification,
-#settingsOverviewInstanceVirtualEnvironment,
-#settingsOverviewAdmins,
-#settingsOverviewUsers,
-#settingsOverviewAdminAssign,
-#settingsOverviewApps,
-#settingsOverviewFiles,
-#applicationRunning,
-#connectionRunning,
-#environmentRunning,
-#instanceRunning,
-#objectBaseImageSetup,
-#objectEnvironmentSetup,
-#objectStartSetup {
-    margin: 95px auto 0px auto;
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
 }
 
-#applicationRunning,
-#connectionRunning,
-#environmentRunning,
-#instanceRunning,
-#objectBaseImageSetup,
-#objectEnvironmentSetup,
-#objectStartSetup {
-    padding: 0px !important;
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.45;
 }
 
-/*#applicationRunning,
-#connectionRunning,
-#environmentRunning,
-#instanceRunning,
-#objectStartSetup {
-    margin: 0px auto 0px auto !important;
-}*/
-
-#createBaseImage,
-#createDeployment,
-#createEnvironment,
-#runningApplicationSystem {
-    margin: 96px auto 0px auto;
-    padding: 0px;
-    min-height: calc(80vh);
-    overflow-x: hidden;
+/* Inputs that are not Bootstrap .form-control yet look the same. */
+input[type='text'],
+input[type='password'],
+input[type='search'],
+select {
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 12px;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
-.right-position {
-    text-align: right;
-    padding-right: 7.5px;
-    background-color: var(--color-success);
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='search']:focus,
+select:focus {
+  border-color: var(--color-primary);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgb(47 85 212 / 20%);
 }
 
-.right-position-bottom {
-    text-align: right;
-    padding-right: 7.5px;
-    background-color: var(--color-danger);
+input[type='text']:disabled {
+  background-color: var(--color-page);
+  color: var(--color-muted);
 }
 
-#dashboardUser > div:nth-child(3) > div,
-#dashboardExpert > div:nth-child(2) > div,
-#applicationStart > div:nth-child(2) > div,
-#environmentStart > div:nth-child(2) > div,
-#demoOverview > div:nth-child(2) > div,
-#demoOverviewLinux > div:nth-child(2) > div,
-#demoOverviewWindows > div:nth-child(2) > div,
-#demoOverviewDocker > div:nth-child(2) > div,
-#dashboardAdmin > div:nth-child(2) > div,
-#dashboardAdminSettingsAdmin > div:nth-child(2) > div,
-#dashboardAdminSettingsUser > div:nth-child(2) > div,
-#applicationRunning > div:nth-child(2) > div,
-#connectionRunning > div:nth-child(2) > div,
-#environmentRunning > div:nth-child(2) > div,
-#instanceRunning > div:nth-child(2) > div,
-#objectBaseImageSetup > div:nth-child(2) > div,
-#objectEnvironmentSetup > div:nth-child(2) > div,
-#objectStartSetup > div:nth-child(2) > div {
-    margin: 0px auto 15px auto;
+input[type='checkbox'],
+input[type='radio'] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--color-primary);
 }
 
-#dashboardUser > div:nth-child(3) > div > div,
-#dashboardExpert > div:nth-child(2) > div > div,
-#applicationStart > div:nth-child(2) > div > div,
-#environmentStart > div:nth-child(2) > div > div,
-#demoOverview > div:nth-child(2) > div > div,
-#demoOverviewLinux > div:nth-child(2) > div > div,
-#demoOverviewWindows > div:nth-child(2) > div > div,
-#demoOverviewDocker > div:nth-child(2) > div > div,
-#dashboardAdmin > div:nth-child(2) > div > div,
-#dashboardAdminSettingsAdmin > div:nth-child(2) > div > div,
-#dashboardAdminSettingsUser > div:nth-child(2) > div > div,
-#applicationRunning > div:nth-child(2) > div > div,
-#connectionRunning > div:nth-child(2) > div > div,
-#environmentRunning > div:nth-child(2) > div > div,
-#instanceRunning > div:nth-child(2) > div > div,
-#objectBaseImageSetup > div:nth-child(2) > div > div,
-#objectEnvironmentSetup > div:nth-child(2) > div > div,
-#objectStartSetup > div:nth-child(2) > div > div {
-    padding: 100px 50px;
-    border: 2px solid var(--color-text);
+/* 3. Layout --------------------------------------------------------------- */
+
+nav.navbar {
+  min-height: var(--nav-height);
+  padding: 8px 0;
+  background-color: var(--color-brand);
+  background-image: url('./assets/images/png/BackgroundNavigationBar.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
 }
 
-#dashboardUser .link-daas-design > div,
-#dashboardExpert .link-daas-design > div,
-#applicationStart .link-daas-design > div,
-#environmentStart .link-daas-design > div,
-#demoOverview .link-daas-design > div,
-#demoOverviewLinux .link-daas-design > div,
-#demoOverviewWindows .link-daas-design > div,
-#demoOverviewDocker .link-daas-design > div,
-#applicationRunning .link-daas-design > div,
-#connectionRunning .link-daas-design > div,
-#environmentRunning .link-daas-design > div,
-#instanceRunning .link-daas-design > div,
-#objectBaseImageSetup .link-daas-design > div,
-#objectEnvironmentSetup .link-daas-design > div,
-#objectStartSetup .link-daas-design > div {
-    margin-top: 25px;
-}
-#demoOverview .link-daas-design > div {
-    margin-top: -2px;
+nav.navbar > .container-fluid {
+  padding: 0 clamp(16px, 4vw, 60px);
 }
 
-#dashboardUser .link-daas-design svg,
-#dashboardExpert .link-daas-design svg,
-#applicationStart .link-daas-design svg,
-#environmentStart .link-daas-design svg,
-#demoOverview .link-daas-design svg,
-#demoOverviewLinux .link-daas-design svg,
-#demoOverviewWindows .link-daas-design svg,
-#demoOverviewDocker .link-daas-design svg,
-#applicationRunning .link-daas-design svg,
-#connectionRunning .link-daas-design svg,
-#environmentRunning .link-daas-design svg,
-#instanceRunning .link-daas-design svg,
-#objectBaseImageSetup .link-daas-design svg,
-#objectEnvironmentSetup .link-daas-design svg,
-#objectStartSetup .link-daas-design svg {
-    padding-left: 10px;
-    font-size: 18px !important;
+.navbar-brand img {
+  height: 48px;
+  width: auto;
 }
 
-#objectBaseImageSetup .row > div,
-#objectEnvironmentSetup .row > div,
-#objectStartSetup .row > div {
-    margin-bottom: 10px;
+.navbar .dropdown-menu {
+  max-width: min(600px, 92vw);
 }
 
-#demoOverviewLinux > div > div > div,
-#demoOverviewWindows > div > div > div,
-#demoOverviewDocker > div > div > div {
-    margin: 10px 0px;
+.navbar .dropdown-item {
+  white-space: normal;
+  word-break: break-all;
 }
 
-#demoOverviewLinux > div > div > select,
-#demoOverviewWindows > div > div > select,
-#demoOverviewDocker > div > div > select {
-    margin-top: 10px;
-    padding: 8px;
+/* Every page sits below the fixed navbar. */
+.page {
+  padding-top: calc(var(--nav-height) + 24px);
+  padding-bottom: 32px;
 }
 
-#demoOverviewLinux iframe,
-#demoOverviewWindows iframe,
-#demoOverviewDocker iframe {
-    width: calc(99vw) !important;
+.page-title {
+  margin: 0 0 24px;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  text-align: center;
 }
 
-#dashboard_info_details > div {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+.page-narrow {
+  max-width: 440px;
+}
+
+.page-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.page-footer {
+  padding-bottom: 32px;
+}
+
+.page > .row,
+.page-footer > .row {
+  row-gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panel {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(16px, 3vw, 24px);
+  margin-bottom: 20px;
+}
+
+.panel-title {
+  margin: 0 0 14px;
+  font-size: 1.15rem;
+}
+
+.empty-state {
+  margin: 8px 0;
+  color: var(--color-muted);
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Legacy helper: keeps black text inside coloured sections. */
+.text-normal {
+  color: var(--color-text) !important;
 }
 
 .info-text-space {
-    margin-left: 10px;
+  margin-left: 12px;
 }
 
-.bottom-footer-fix {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    z-index: 1000;
+.text-path-break,
+.text-detail-path {
+  word-break: break-all;
 }
 
-.bottom-footer-fix svg,
-.bottom-footer-fix-info svg,
-.bottom-footer-fix-refresh svg,
-.bottom-footer-fix-contact svg,
-.bottom-footer-fix-file svg,
-.bottom-footer-fix-monitoring svg {
-    font-size: 50px !important;
-    background-color: var(--color-background);
-    border-radius: 50px;
+.loading-spinner {
+  display: block;
+  width: 120px;
+  margin: 24px auto;
 }
 
-.bottom-footer-fix-monitoring {
-    position: fixed;
-    bottom: 10px;
-    right: 310px;
-    z-index: 1000;
-}
+/* 4. Components ----------------------------------------------------------- */
 
-.bottom-footer-fix-info {
-    position: fixed;
-    bottom: 10px;
-    right: 190px;
-    z-index: 1000;
-}
-
-.bottom-footer-fix-refresh {
-    position: fixed;
-    bottom: 10px;
-    right: 250px;
-    z-index: 1000;
-}
-
-.bottom-footer-fix-contact {
-    position: fixed;
-    bottom: 10px;
-    right: 70px;
-    z-index: 1000;
-}
-
-.bottom-footer-fix-file {
-    position: fixed;
-    bottom: 10px;
-    right: 130px;
-    z-index: 1000;
-}
-
-#dashboardUser button {
-    width: 100%;
-}
-
-.loading-spinner,
-.loading-spinner-main {
-    width: 150px;
-    margin: 0px auto;
-}
-
-.accordion .accordion-item:first-child,
-.accordion .accordion-item:last-child {
-    padding: 0 !important;
-    border-width: 1px !important;
-}
-
-.accordion .accordion-item:not(:first-child) {
-    padding: 0 !important;
-    border-bottom-width: 1px !important;
-    border-top-width: 0px !important;
-    border-left-width: 1px !important;
-    border-right-width: 1px !important;
-}
-
-/*.accordion .accordion-item:not(:last-child) {
-    padding: 0 !important;
-    border-bottom-width: 0px !important;
-    border-top-width: 1px !important;
-    border-left-width: 1px !important;
-    border-right-width: 1px !important;
-}*/
-
+/* Tiles: page links (PageLink) and actions (ActionLink). */
 .link-daas-design {
-    padding: 0px !important;
-    border: none !important;
-    color: var(--color-text) !important;
-    text-decoration: none !important;
-    width: 100%;
-    min-height: 70px;
-    margin-bottom: 10px;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
 }
 
 .link-daas-design > div {
-    text-decoration: none !important;
-    color: var(--color-text) !important;
-    padding: 20px !important;
-    border: 2px solid var(--color-text) !important;
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-.text-normal {
-    color: #000000 !important;
-}
-
-#dashboardUser svg,
-#dashboardExpert svg,
-#applicationStart svg,
-#environmentStart svg,
-#demoOverview svg,
-#demoOverviewLinux svg,
-#demoOverviewWindows svg,
-#demoOverviewDocker svg,
-#dashboardAdmin svg,
-#dashboardAdminSettingsAdmin svg,
-#dashboardAdminSettingsUser svg,
-#applicationRunning svg,
-#connectionRunning svg,
-#environmentRunning svg,
-#instanceRunning svg,
-#objectBaseImageSetup svg {
-    font-size: 80px;
-}
-
-#desktop ul,
-#desktop-details ul {
-    list-style-type: none;
-    padding-left: 0px;
-}
-
-#desktop ul > li,
-#desktop-details ul > li {
-    margin: 15px auto;
-}
-
-#dashboardAdmin ul,
-#dashboardAdminSettingsAdmin ul,
-#dashboardAdminSettingsUser ul {
-    list-style-type: none;
-    padding-left: 0px;
-}
-
-#dashboardAdmin ul > li,
-#dashboardAdminSettingsAdmin ul > li,
-#dashboardAdminSettingsUser ul > li {
-    margin: 15px auto;
-}
-
-#dashboardAdmin ul > li > span:nth-child(1),
-#dashboardAdminSettingsAdmin ul > li > span:nth-child(1),
-#dashboardAdminSettingsUser ul > li > span:nth-child(1) {
-    width: 90%;
-}
-
-#dashboardAdmin ul > li > span:nth-child(2),
-#dashboardAdmin ul > li > span:nth-child(3),
-#dashboardAdmin ul > li > span:nth-child(4),
-#dashboardAdminSettingsAdmin ul > li > span:nth-child(2),
-#dashboardAdminSettingsAdmin ul > li > span:nth-child(3),
-#dashboardAdminSettingsAdmin ul > li > span:nth-child(4),
-#dashboardAdminSettingsUser ul > li > span:nth-child(2),
-#dashboardAdminSettingsUser ul > li > span:nth-child(3),
-#dashboardAdminSettingsUser ul > li > span:nth-child(4) {
-    width: 5%;
-    text-align: center;
-}
-
-#settingsOverview ul > li > span:nth-child(1),
-#settingsOverviewVirtualEnvironment ul > li > span:nth-child(1),
-#settingsOverviewConfigurationVirtualEnvironment ul > li > span:nth-child(1),
-#settingsOverviewDocker ul > li > span:nth-child(1),
-#settingsOverviewPhases ul > li > span:nth-child(1),
-#settingsOverviewAdmins ul > li > span:nth-child(1),
-#settingsOverviewConnectionViewer ul > li > span:nth-child(1),
-#settingsOverviewAuthentification ul > li > span:nth-child(1),
-#settingsOverviewInstanceVirtualEnvironment ul > li > span:nth-child(1),
-#settingsOverviewAdmins ul > li > span:nth-child(1),
-#settingsOverviewUsers ul > li > span:nth-child(1),
-#settingsOverviewAdminAssign ul > li > span:nth-child(1),
-#settingsOverviewApps ul > li > span:nth-child(1),
-#settingsOverviewFiles ul > li > span:nth-child(1) {
-    width: 85%;
-}
-
-#settingsOverview ul > li > span:nth-child(2),
-#settingsOverviewVirtualEnvironment ul > li > span:nth-child(2),
-#settingsOverviewConfigurationVirtualEnvironment ul > li > span:nth-child(2),
-#settingsOverviewDocker ul > li > span:nth-child(2),
-#settingsOverviewPhases ul > li > span:nth-child(2),
-#settingsOverviewAdmins ul > li > span:nth-child(2),
-#settingsOverviewConnectionViewer ul > li > span:nth-child(2),
-#settingsOverviewAuthentification ul > li > span:nth-child(2),
-#settingsOverviewInstanceVirtualEnvironment ul > li > span:nth-child(2),
-#settingsOverviewAdmins ul > li > span:nth-child(2),
-#settingsOverviewUsers ul > li > span:nth-child(2),
-#settingsOverviewAdminAssign ul > li > span:nth-child(2),
-#settingsOverviewApps ul > li > span:nth-child(2),
-#settingsOverviewFiles ul > li > span:nth-child(2) {
-    width: 15%;
-    text-align: center;
-}
-
-#dashboardAdmin ul > li,
-#dashboardAdminSettingsUser ul > li,
-#dashboardAdminSettingsAdmin ul > li,
-#settingsOverview ul > li,
-#settingsOverviewAdmins ul > li,
-#settingsOverviewUsers ul > li {
-    width: 100%;
-    display: flex;
-    margin-bottom: 10px;
-}
-
-#settingsOverviewVirtualEnvironment ul > li,
-#settingsOverviewConfigurationVirtualEnvironment ul > li,
-#settingsOverviewDocker ul > li,
-#settingsOverviewPhases ul > li,
-#settingsOverviewAdmins ul > li,
-#settingsOverviewConnectionViewer ul > li,
-#settingsOverviewAuthentification ul > li,
-#settingsOverviewInstanceVirtualEnvironment ul > li,
-#settingsOverviewAdminAssign ul > li,
-#settingsOverviewApps ul > li,
-#settingsOverviewFiles ul > li {
-    display: flex;
-    /*margin-bottom: 10px;*/
-}
-
-#settingsOverviewConfigurationVirtualEnvironment ul > li > button,
-#settingsOverviewDocker ul > li > button,
-#settingsOverviewPhases ul > li > button,
-#settingsOverviewAdmins ul > li > button,
-#settingsOverviewConnectionViewer ul > li > button,
-#settingsOverviewAuthentification ul > li > button,
-#settingsOverviewInstanceVirtualEnvironment ul > li > button,
-#settingsOverviewVirtualEnvironment ul > li > button,
-#settingsOverviewAdminAssign ul > li > button,
-#settingsOverviewApps ul > li > button,
-#settingsOverviewFiles ul > li > button {
-    padding: 6px !important;
-    font-size: 14px !important;
-}
-
-.is-bigger {
-    flex: 97.5% !important;
-}
-
-.is-close {
-    flex: 2.5% !important;
-}
-
-.design-main-container {
-    width: 100%;
-    display: flex;
-}
-
-.design-main-container-baseimage {
-    font-size: 12px !important;
-}
-
-.design-main-container-baseimage-details {
-    background-color: var(--color-success);
-    height: calc(55vh);
-}
-
-.design-main-container-baseimage-system {
-    background-color: var(--color-accent);
-    min-height: calc(22.1vh);
-}
-
-.more-height {
-    background-color: var(--color-accent);
-    min-height: calc(27.15vh) !important;
-}
-
-.design-main-container-baseimage-details-table,
-.design-main-container-baseimage-system-table {
-    padding: 5px;
-    width: 100%;
-}
-
-.design-main-container-baseimage-details-table > div,
-.design-main-container-baseimage-system-table > div {
-    padding: 1px 5px;
-    text-align: center;
-}
-
-.design-main-container-baseimage-details-table > div {
-    background-color: #CCFFCC;
-}
-
-.design-main-container-baseimage-system-table > div {
-    background-color: #CC99FF;
-}
-
-.design-main-container-baseimage-details-table-headline,
-.design-main-container-baseimage-system-table-headline {
-    border: 2px solid var(--color-text);
-    font-weight: bold;
-}
-
-.design-main-container-baseimage-details-table-subheadline,
-.design-main-container-baseimage-system-table-subheadline {
-    border: 1px solid var(--color-text);
-}
-
-.design-main-container-baseimage-details-table-element-title,
-.design-main-container-baseimage-details-table-element-value,
-.design-main-container-baseimage-system-table-element-title,
-.design-main-container-baseimage-system-table-element-value {
-    border: 1px solid var(--color-text);
-    text-align: center;
-    width: 50%;
-    display: inline-block;
-}
-
-.design-second-container {
-    width: 100%;
-    background-color: var(--color-danger);
-    height: calc(9.5vh);
-    border: 1px solid var(--color-text);
-}
-
-.is-bigger-main {
-    height: calc(85vh) !important;
-}
-
-.is-close-main {
-    height: calc(4.25vh);
-}
-
-.is-close-main-button,
-.is-close-sidebar {
-    display: none !important;
-}
-
-.design-second-container > .design-buttons-baseImage {
-    width: 100%;
-    display: flex;
-}
-
-.design-buttons-baseImage-element > div,
-#createDeployment .design-buttons-baseImage-element > div,
-#createEnvironment .design-buttons-baseImage-element > div,
-#runningApplicationSystem .design-buttons-baseImage-element > div {
-    margin: auto;
-    border: 1px solid var(--color-background);
-    border-radius: 10px;
-    background-color: #f00;
-    padding: 10px;
-}
-
-
-.design-buttons-baseImage-element > div{
-    max-width: 200px;
-}
-
-#createDeployment .design-buttons-baseImage-element > div,
-#createEnvironment .design-buttons-baseImage-element > div,
-#runningApplicationSystem .design-buttons-baseImage-element > div {
-    max-width: 250px !important;
-}
-
-#runningApplicationSystem .design-second-container > .design-buttons-baseImage > div {
-    width: 50% !important;
-}
-
-#runningApplicationSystem #design-main-container-image > div:first-child {
-    height: 90%;
-}
-
-#runningApplicationSystem #design-main-container-image > div:last-child {
-    height: 10%;
-}
-
-#runningApplicationSystem #design-main-container-image > div:last-child {
-    width: 100% !important;
-}
-
-.design-main-container-controls {
-    width: 100%;
-    display: flex;
-}
-
-.design-main-container-controls > .design-buttons-baseImage-element {
-    width: 25%;
-    display: flex;
-}
-
-.design-main-container-controls > .design-buttons-baseImage-element > div {
-    background-color: #00ccff !important;
-    min-width: 100px !important;
-    text-align: center;
-}
-
-.design-main-container-controls {
-    background-color: #333399;
-    padding: 15px;
-}
-
-.design-main-container-baseimage-system-start-stop {
-    width: 100%;
-}
-
-.design-buttons-baseImage-element-custom {
-    width: 50%;
-    display: inline-block;
-}
-
-.design-buttons-baseImage-element-custom > div {
-    width: 75px;
-    margin: 10px auto;
-    border: 1px solid var(--color-background);
-    border-radius: 10px;
-    background-color: #cc99ff;
-    padding: 10px;
-    text-align: center;
-}
-
-.base-image-linux,
-.base-image-windows {
-    border: 1px solid var(--color-text);
-    padding: 10px;
-    text-align: center;
-    width: 100px;
-    margin: auto;
-}
-
-.base-image-configurate-button {
-    text-align: center;
-    width: 150px;
-    margin: auto;
-}
-
-.design-second-container > .design-buttons-baseImage > div {
-    width: 33.33%;
-    display: flex;
-}
-
-.design-main-container > div:first-child {
-    flex: 75%;
-    border: 1px solid var(--color-text);
-    height: calc(80vh);
-}
-
-#design-main-container-image > div {
-    width: 200px;
-    margin: auto;
-}
-
-.design-main-container > div:last-child {
-    flex: 25%;
-    border: 1px solid var(--color-text);
-}
-
-#dashboardAdmin ul > li > span > svg,
-#dashboardAdminSettingsUser ul > li > span > svg,
-#dashboardAdminSettingsAdmin ul > li > span > svg {
-    font-size: 20px !important;
-}
-
-#dashboardAdmin > div:nth-child(2) > div > div,
-#dashboardAdminSettingsUser > div:nth-child(2) > div > div,
-#dashboardAdminSettingsAdmin > div:nth-child(2) > div > div {
-    padding: 0px !important;
-    border: none !important;
-}
-
-#monitoring > div > div > div,
-#desktop > div > div > div,
-#desktop-details > div > div > div,
-#settingsOverview > div > div > div,
-#settingsOverviewVirtualEnvironment > div > div > div,
-#settingsOverviewConfigurationVirtualEnvironment > div > div > div,
-#settingsOverviewDocker > div > div > div,
-#settingsOverviewPhases > div > div > div,
-#settingsOverviewAdmins > div > div > div,
-#settingsOverviewConnectionViewer > div > div > div,
-#settingsOverviewAuthentification > div > div > div,
-#settingsOverviewInstanceVirtualEnvironment > div > div > div,
-#settingsOverviewAdmins > div > div > div,
-#settingsOverviewUsers > div > div > div,
-#settingsOverviewAdminAssign > div > div > div,
-#settingsOverviewApps > div > div > div,
-#settingsOverviewFiles > div > div > div {
-    margin: 15px auto;
-}
-
-#monitoring a,
-#desktop a,
-#desktop-details a,
-#settingsOverview a,
-#settingsOverviewVirtualEnvironment a,
-#settingsOverviewConfigurationVirtualEnvironment a,
-#settingsOverviewDocker a,
-#settingsOverviewPhases a,
-#settingsOverviewAdmins a,
-#settingsOverviewConnectionViewer a,
-#settingsOverviewAuthentification a,
-#settingsOverviewInstanceVirtualEnvironment a,
-#settingsOverviewAdmins a,
-#settingsOverviewUsers a,
-#settingsOverviewAdminAssign a,
-#settingsOverviewApps a,
-#settingsOverviewFiles a {
-    text-decoration: none;
-    color: var(--color-text);
-}
-
-#monitoring a > span,
-#desktop a > span,
-#desktop-details a > span,
-#settingsOverview a > span,
-#settingsOverviewVirtualEnvironment a > span,
-#settingsOverviewConfigurationVirtualEnvironment a > span,
-#settingsOverviewDocker a > span,
-#settingsOverviewPhases a > span,
-#settingsOverviewAdmins a > span,
-#settingsOverviewConnectionViewer a > span,
-#settingsOverviewAuthentification a > span,
-#settingsOverviewInstanceVirtualEnvironment a > span,
-#settingsOverviewAdmins a > span,
-#settingsOverviewUsers a > span,
-#settingsOverviewAdminAssign a > span,
-#settingsOverviewApps a > span,
-#settingsOverviewFiles a > span {
-    padding-left: 10px;
-}
-
-.header-small {
-    margin: 0 !important;
-}
-
-#monitoring .row:nth-child(3) > div,
-#desktop .row:nth-child(3) > div,
-#desktop-details .row:nth-child(3) > div,
-#settingsOverview .row:nth-child(3) > div,
-#settingsOverviewVirtualEnvironment .row:nth-child(3) > div,
-#settingsOverviewConfigurationVirtualEnvironment .row:nth-child(3) > div,
-#settingsOverviewDocker .row:nth-child(3) > div,
-#settingsOverviewPhases .row:nth-child(3) > div,
-#settingsOverviewAdmins .row:nth-child(3) > div,
-#settingsOverviewConnectionViewer .row:nth-child(3) > div,
-#settingsOverviewAuthentification .row:nth-child(3) > div,
-#settingsOverviewInstanceVirtualEnvironment .row:nth-child(3) > div,
-#settingsOverviewAdmins .row:nth-child(3) > div,
-#settingsOverviewUsers .row:nth-child(3) > div {
-    color: var(--color-background);
-}
-
-#desktop .row:nth-child(3) > div,
-#desktop .row:nth-child(3) > div > div > ul > li > span {
-    color: var(--color-text) !important;
-}
-
-#environmentImage > .row:first-child,
-#snapshotsOverview > .row:first-child {
-    margin-bottom: 40px;
-}
-
-#environmentImage > .row:last-child,
-#snapshotsOverview > .row:last-child {
-    margin-top: 40px;
-}
-
-#snapshotsOverview > .row:nth-child(2) > div:first-child {
-    padding-top: 8px;
-}
-
-.hide-alert {
-    display: none;
-}
-
-.show-alert {
-    display: block;
-}
-
-.request-success-alert {
-    color: var(--color-background);
-    background-color: var(--color-success);
-    padding: 10px;
-    text-align: center;
-    border-radius: 10px;
-}
-
-.request-fail-alert {
-    color: var(--color-background);
-    background-color: var(--color-danger);
-    padding: 10px;
-    text-align: center;
-    border-radius: 10px;
-}
-
-#login,
-#registration {
-    max-width: 400px;
-    margin: 200px auto;
-}
-
-#login form > div > div,
-#registration form > div > div {
-    margin: 10px auto;
-}
-
-#login > ul > li > button,
-#registration > ul > li > button {
-    width: 187px; /* 125px*/
-}
-
-input[type=text],
-input[type=password] {
-    width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+.link-daas-design:hover > div,
+.link-daas-design:focus-visible > div {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-1px);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.icon-button {
+  padding: 4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.icon-button:hover,
+.icon-button:focus-visible {
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
 }
 
 #submit,
 .submit-full-width {
-    width: 100%;
+  width: 100%;
 }
 
-label {
-    font-weight: bold;
+/* Tabs: one scrollable line instead of wrapped multi-line labels. */
+.nav-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-bottom: 20px;
+  scrollbar-width: thin;
 }
 
-/*.fixed-top {
-    padding: 0px 0px 1px 0px !important;
-}*/
-
-.disable-button {
-    pointer-events: none;
-    opacity: 0.6;
+.nav-tabs .nav-link {
+  white-space: nowrap;
+  color: var(--color-muted);
+  font-weight: 500;
 }
 
-.show-error {
-    color: #ff0000;
-    font-weight: bold;
+.nav-tabs .nav-link.active {
+  color: var(--color-primary);
 }
 
-.hide-error {
-    display: none;
+/* Config-driven action forms (components/actions). */
+.action-form {
+  display: grid;
+  gap: 14px;
+  max-width: 860px;
+}
+
+.form-field {
+  display: grid;
+  grid-template-columns: minmax(160px, 260px) minmax(0, 1fr);
+  gap: 6px 20px;
+  align-items: center;
+}
+
+.form-field > label {
+  margin: 0;
+}
+
+.form-field-checkbox .form-field-control {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.form-field-checkbox .form-check-input {
+  margin: 0;
+}
+
+.form-actions {
+  padding-top: 6px;
+}
+
+.form-actions .btn {
+  min-width: 160px;
 }
 
 .error-text {
-    color: #dc3545;
-    font-size: 0.875rem;
-    min-height: 1.25rem;
+  margin-top: 4px;
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+.error-text:empty {
+  display: none;
 }
 
 .form-control.is-invalid,
 .select-field.is-invalid {
-    border-color: #dc3545;
-}
-
-#login > div:nth-child(1) > div > h2,
-#registration > div:nth-child(1) > div > h2 {
-    text-align: center;
-}
-
-#login > form > div > div,
-#registration > form > div > div {
-    margin: 10px 0px;
-}
-
-.navbar > div {
-    margin: 0px 60px;
-}
-
-.modal-body .row > div {
-    margin: 10px 0px;
-}
-
-.modal-body button {
-    width: 100%;
-    text-align: center;
-}
-
-.button-demo {
-    width: 100%;
-}
-
-.demo-os-view,
-.user-app-env-view {
-    margin: 20px 0px;
-}
-
-.demo-os-view > div,
-.user-app-env-view > div {
-    padding: 10px 0px;
+  border-color: var(--color-danger);
 }
 
 .select-field {
-    width: 100%;
-    padding: 5px;
+  width: 100%;
 }
 
-#updating-user-data {
-    margin-bottom: 10px;
+.action-result {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.action-result iframe {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.result-url {
+  word-break: break-all;
+  color: var(--color-muted);
+}
+
+/* Backend responses: "key  value" rows. */
+.result-record {
+  margin: 0 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.result-entry {
+  display: grid;
+  grid-template-columns: minmax(120px, 30%) minmax(0, 1fr);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.result-entry:last-child {
+  border-bottom: none;
+}
+
+.result-entry > dt,
+.result-entry > dd {
+  margin: 0;
+  padding: 8px 12px;
+  word-break: break-word;
+}
+
+.result-entry > dt {
+  font-weight: 600;
+  background-color: var(--color-page);
+}
+
+.result-entry .result-record {
+  margin: 4px 0;
+}
+
+.result-text {
+  padding: 12px;
+  font-size: 0.875rem;
+  background-color: var(--color-page);
+  border-radius: var(--radius-sm);
+}
+
+/* Admin entity lists (EntityList): name + icon buttons per row. */
+.entity-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entity-list > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.entity-list > li > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Plain lists on the desktop and user detail pages. */
+#desktop ul,
+#desktop-details ul,
+#settingsOverviewUsers ul,
+#settingsOverviewAdmins ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#desktop ul > li,
+#desktop-details ul > li,
+#settingsOverviewUsers ul > li,
+#settingsOverviewAdmins ul > li {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
 }
 
 #updating-user-data ul {
-    list-style-type: none;
-    padding-left: 0;
+  padding-left: 0;
+  list-style: none;
 }
 
 #updating-user-data label,
 #updating-user-data input {
-    margin-bottom: 10px;
-    color: var(--color-text);
-    width: 100%;
+  width: 100%;
+  margin-bottom: 10px;
 }
 
-#form-create-vm > .row > div,
-#form-delete-vm > .row > div,
-#form-start-vm > .row > div,
-#form-stop-vm > .row > div,
-#list-vm > div,
-#form-status-vm div,
-#form-config-vm div,
-#form-config-pre-vm > .row > div,
-#form-config-post-vm > .row > div,
-#form-snapshot-list-vm > .row > div,
-#form-snapshot-create-vm > .row > div,
-#form-snapshot-rollback-vm > .row > div,
-#form-clone-vm > .row > div,
-#form-convert-vm > .row > div,
-#form-node-dhcp > .row > div,
-#form-node-iptables > .row > div,
-#form-instance-app > .row > div,
-#form-instance-upload > .row > div,
-#form-instance-mount > .row > div,
-#form-instance-connection-icmp > .row > div,
-#form-instance-connection-ssh > .row > div,
-#form-instance-roundtrip > .row > div,
-#form-instance-command > .row > div,
-#form-instance-ssh > .row > div,
-#form-instance-action > .row > div,
-#form-instance-resize > .row > div,
-#form-instance-list > .row > div,
-#form-docker-daemon-info > .row > div,
-#form-docker-image-inspect > .row > div,
-#form-docker-image-list > .row > div,
-#form-docker-image-create > .row > div,
-#form-docker-image-create-root > .row > div,
-#form-docker-image-clone > .row > div,
-#form-docker-image-delete > .row > div,
-#form-docker-image-build > .row > div,
-#form-docker-container-start > .row > div,
-#form-docker-container-stop > .row > div,
-#form-docker-container-list > .row > div,
-#form-docker-container-logs > .row > div,
-#form-phases-environment-general-data > .row > div,
-#form-phases-object-status > .row > div,
-#form-phases-object-list > .row > div,
-#form-phases-environment-create > .row > div,
-#form-phases-environment-finalize > .row > div,
-#form-phases-environment-delete > .row > div,
-#form-phases-environment-get > .row > div,
-#form-phases-environments-get > .row > div,
-#form-phases-environment-start > .row > div,
-#form-phases-environment-stop > .row > div,
-#form-phases-environment-run > .row > div,
-#form-phases-cfg-from-app > .row > div,
-#form-phases-cfg-tasklist > .row > div,
-#form-phases-cfg-applist > .row > div,
-#form-phases-cfg-target > .row > div,
-#form-phases-baseimage-create > .row > div,
-#form-phases-baseimage-clone > .row > div,
-#form-phases-baseimage-create-from-app > .row > div,
-#form-phases-baseimage-clone-from-app > .row > div,
-#form-phases-baseimage-finalize > .row > div,
-#form-phases-baseimage-delete > .row > div,
-#form-phases-baseimage-start > .row > div,
-#form-phases-baseimage-stop > .row > div,
-#form-task-start > .row > div,
-#form-task-stop > .row > div,
-#form-task-list > .row > div,
-#form-task-status > .row > div,
-#form-task-get > .row > div,
-#form-main-user-request > .row > div,
-#expert-mode-object-finalize > .row > div,
-#expert-mode-environment-finalize > .row > div,
-#form-viewer-connection > .row > div,
-#form-viewer-disconnection > .row > div,
-#form-viewer-settings > .row > div,
-#form-auth-token > .row > div,
-#form-auth-user > .row > div,
-#form-admin-tools > .row > div,
-#form-apps-tools > .row > div,
-#form-apps-tasklist > .row > div,
-#form-apps-taskstop > .row > div,
-#form-limit-put > .row > div,
-#form-limit-get > .row > div,
-#form-limit-remove > .row > div,
-#form-limit-all > .row > div,
-.form-monitoring-data > .row > div {
-    margin: 10px 0px;
+/* Request feedback ("successful" / "failed" plus details) in the middle of the screen. */
+.request-success-alert,
+.request-fail-alert {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1100;
+  width: max-content;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 20px 28px;
+  color: var(--color-background);
+  font-weight: 500;
+  text-align: center;
+  overflow-wrap: anywhere;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-raised);
 }
 
-#form-create-vm label,
-#form-delete-vm label,
-#form-stop-vm label,
-#form-start-vm label,
-#list-vm div,
-#list-status-vm div,
-#list-config-vm div,
-#form-config-pre-vm div,
-#form-config-post-vm div,
-#form-snapshot-list-vm div,
-#form-snapshot-create-vm div,
-#form-snapshot-rollback-vm div,
-#form-clone-vm div,
-#form-convert-vm div,
-#form-node-dhcp div,
-#form-node-iptables div,
-#form-instance-app div,
-#form-instance-upload div,
-#form-instance-mount div,
-#form-instance-connection-icmp div,
-#form-instance-connection-ssh div,
-#form-instance-roundtrip div,
-#form-instance-command div,
-#form-instance-ssh div,
-#form-instance-action div,
-#form-instance-resize div,
-#form-instance-list div,
-#form-docker-daemon-info div,
-#form-docker-image-inspect div,
-#form-docker-image-list div,
-#form-docker-image-create div,
-#form-docker-image-create-root div,
-#form-docker-image-clone div,
-#form-docker-image-delete div,
-#form-docker-image-build div,
-#form-docker-container-start div,
-#form-docker-container-stop div,
-#form-docker-container-list div,
-#form-docker-container-logs div,
-#form-phases-object-status div,
-#form-phases-object-list div,
-#form-phases-environment-create div,
-#form-phases-environment-finalize div,
-#form-phases-environment-delete div,
-#form-phases-environment-get div,
-#form-phases-environments-get div,
-#form-phases-environment-start div,
-#form-phases-environment-stop div,
-#form-phases-environment-run div,
-#form-phases-cfg-from-app div,
-#form-phases-cfg-tasklist div,
-#form-phases-cfg-applist div,
-#form-phases-cfg-target div,
-#form-phases-baseimage-create div,
-#form-phases-baseimage-clone div,
-#form-phases-baseimage-create-from-app div,
-#form-phases-baseimage-clone-from-app div,
-#form-phases-baseimage-finalize div,
-#form-phases-baseimage-delete div,
-#form-phases-baseimage-start div,
-#form-phases-baseimage-stop div,
-#form-task-start div,
-#form-task-stop div,
-#form-task-list div,
-#form-task-status div,
-#form-task-get div,
-#form-main-user-request div,
-#expert-mode-object-finalize div,
-#expert-mode-environment-finalize div,
-#form-viewer-disconnection div,
-#form-viewer-connection div,
-#form-viewer-settings div,
-#form-auth-token div,
-#form-auth-user div,
-#form-admin-tools div,
-#form-apps-tools div,
-#form-apps-tasklist div,
-#form-apps-taskstop div,
-#form-limit-put div,
-#form-limit-get div,
-#form-limit-remove div,
-#form-limit-all div,
-.form-monitoring-data div {
-    color: var(--color-text) !important;
+.request-alert-message {
+  margin-top: 6px;
+  font-weight: 400;
 }
 
-.scrollbar-menu-apps-main {
-    overflow: auto;
-    white-space: nowrap;
+.request-success-alert {
+  background-color: var(--color-success);
 }
 
-.scrollbar-menu-apps-main > div {
-    display: inline-block;
-    width: 200px;
-    padding: 10px;
+.request-fail-alert {
+  background-color: var(--color-danger);
 }
 
-#basic-navbar-nav > div > div:nth-child(2) > div {
-    left: -200px !important;
-    width: 600px;
+/* Modals. */
+.modal-content {
+  border: none;
+  border-radius: var(--radius);
 }
 
-.scrollbar-menu-apps-main > div button {
-    margin: 10px 0px;
+.modal-body .row {
+  row-gap: 12px;
 }
 
-.icon-brands {
-    font-size: 1.5rem !important;
+.modal-body .btn {
+  width: 100%;
 }
 
-.icon-main {
-    padding: 10px 0px;
+/* Accordions in the expert setup and monitoring pages. */
+.accordion {
+  --bs-accordion-active-bg: var(--color-primary-soft);
+  --bs-accordion-active-color: var(--color-primary);
+  margin-bottom: 20px;
 }
 
-.icon-main span {
-    padding: 10px 20px;
+/* 5. User dashboard ------------------------------------------------------- */
+
+.page-with-toolbar {
+  padding-bottom: calc(var(--toolbar-height) + 40px);
 }
 
-.disable-edit {
-    pointer-events: none;
+.usage-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.nav.nav-tabs {
-    overflow-x: auto;
-    overflow-y: hidden;
-    flex-wrap: nowrap;
-    width: 100%;
+.usage-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
-.button-dashboard-update button {
-    margin-bottom: 10px;
+.usage-stat-label {
+  font-size: 0.875rem;
+  color: var(--color-muted);
 }
 
-#monitoring > .nav.nav-tabs > li {
-    width: 33.33%;
+.usage-stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-#monitoring > .nav.nav-tabs > li > button {
-    width: 100%;
+.control-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
 
-#monitoring > .tab-content > div:nth-child(3) {
-    margin-top: 10px;
+.control-hint {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
 }
 
-.image-list-object {
-    width: 100%;
-    word-break: break-word;
+.search-input {
+  max-width: 420px;
+  margin-bottom: 16px;
 }
 
-.text-path-break {
-    word-break: break-all;
+/* Application cards wrap into as many columns as fit; long names wrap too. */
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
 }
 
-#user-app-complete > div > div.modal-body > div > div,
-#request-app-complete > div > div.modal-body > div > div,
-#all-files-view > div > div.modal-body > div > div,
-#all-files-details-view > div > div.modal-body > div > div {
-    margin: 15px;
+.app-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
-.text-detail-path {
-    max-width: 400px !important;
-    word-wrap: break-word;
+.app-card-name {
+  display: -webkit-box;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  min-height: 2.7em;
 }
 
-.border_apps_bottom {
-    padding-bottom: 20px;
-    border-bottom: 1px solid #DEE2E6;
+.app-card-icons {
+  display: flex;
+  gap: 14px;
+  color: var(--color-muted);
 }
 
-@media screen and (max-width: 500px) {
-    #dashboardAdmin .row ul > li > span:not(:first-child),
-    #dashboardAdminSettingsUser .row ul > li > span:not(:first-child),
-    #dashboardAdminSettingsAdmin .row ul > li > span:not(:first-child) {
-        margin: 0px 10px;
-    }
-}
-
-/* Default */
-
-.App {
+.app-icon {
+  font-size: 1.35rem;
+  width: 1.5rem;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.app-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: auto;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.dashboard-toolbar {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
   display: flex;
-  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-raised);
+}
+
+.toolbar-button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  font-size: 1.3rem;
+  color: var(--color-brand);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
-.App-link {
-  color: #61dafb;
+.toolbar-button:hover,
+.toolbar-button:focus-visible {
+  color: var(--color-background);
+  background-color: var(--color-primary);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* On phones the toolbar becomes a full-width bar along the bottom. */
+@media (max-width: 575.98px) {
+  .dashboard-toolbar {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    justify-content: space-around;
+    border-radius: 0;
+    border-width: 1px 0 0;
   }
-  to {
-    transform: rotate(360deg);
+
+  .toolbar-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .app-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-.icon-button {
-    background: none;
-    border: none;
-    padding: 0;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
+/* 6. Viewer pages --------------------------------------------------------- */
+
+.page-viewer {
+  padding: var(--nav-height) 0 0;
 }
 
-.icon-button svg {
-    font-size: 40px !important;
-    background-color: var(--color-background);
-    border-radius: 40px;
+.page-viewer iframe {
+  display: block;
+  width: 100%;
+  height: calc(100vh - var(--nav-height));
+  border: none;
 }
 
-button.link-daas-design {
-    background: none;
-    font: inherit;
-    cursor: pointer;
+#error h2 {
+  text-align: center;
+}
+
+/* Small screens --------------------------------------------------------- */
+
+@media (max-width: 767.98px) {
+  :root {
+    --nav-height: 64px;
+  }
+
+  .navbar-brand img {
+    height: 40px;
+  }
+
+  .form-field {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  .result-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .result-entry > dt {
+    padding-bottom: 2px;
+  }
 }

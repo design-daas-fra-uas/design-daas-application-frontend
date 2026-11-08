@@ -5,19 +5,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // the timer is cleaned up on unmount.
 export default function useNotice(autoHideMs = 4000) {
   const [notice, setNotice] = useState(null);
-  const timer = useRef(null);
+  const timerRef = useRef(null);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const showNotice = useCallback(
     (nextNotice, { autoHide = false } = {}) => {
-      clearTimeout(timer.current);
+      clearTimeout(timerRef.current);
       setNotice(nextNotice);
       if (autoHide) {
-        timer.current = setTimeout(() => setNotice(null), autoHideMs);
+        timerRef.current = setTimeout(() => setNotice(null), autoHideMs);
       }
     },
-    [autoHideMs]
+    [autoHideMs],
   );
 
   return [notice, showNotice];

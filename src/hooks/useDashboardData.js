@@ -35,7 +35,7 @@ export default function useDashboardData() {
 
   const reload = useCallback(
     () => Promise.all([reloadAdmins(), reloadUsers(), reloadGroups()]),
-    [reloadAdmins, reloadUsers, reloadGroups]
+    [reloadAdmins, reloadUsers, reloadGroups],
   );
 
   const silentRefresh = (reloadSection) => async () => {

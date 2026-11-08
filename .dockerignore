@@ -1,7 +1,10 @@
 node_modules
-
-.dockerignore
-
+build
+coverage
+.git
+.github
+.idea
+*.log
+.env*
 Dockerfile
-
-# build
+.dockerignore
