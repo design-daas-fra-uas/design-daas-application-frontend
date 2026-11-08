@@ -32,8 +32,8 @@ function SettingsUsers() {
 
   const { userSchema } = useAccountSchemas(t);
 
-  const submitCreateUser = ({ username, email, password, group }) =>
-    createUser({ name: username.trim(), email: email.trim(), password, groups: [Number(group)] });
+  const submitCreateUser = ({ name, email, password, group }) =>
+    createUser({ name: name.trim(), email: email.trim(), password, groups: [Number(group)] });
 
   return (
     <PageLayout id="dashboardAdminSettingsUser" title={t('user-management')} wrapTitle>
