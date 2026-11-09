@@ -13,6 +13,9 @@ export const formatBytes = (bytes) => {
 
 export const formatAmount = (value, unit) => (unit === 'bytes' ? formatBytes(value) : String(value));
 
+// The backend uses -1 (or no entry at all) for "no limit": any demand is accepted.
+export const isUnlimited = (limit) => limit == null || Number(limit) < 0;
+
 // Share of the limit in percent (0..100); 0 without a limit.
 export const usagePercent = (used, limit) => (limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0);
 

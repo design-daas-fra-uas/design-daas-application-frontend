@@ -40,6 +40,7 @@ export const ROUTES = {
     desktops: `${ADMIN_SETTINGS}/desktops`,
     desktopDetail: detail(`${ADMIN_SETTINGS}/desktops`),
     desktopGroups: `${ADMIN_SETTINGS}/desktop-groups`,
+    permissions: `${ADMIN_SETTINGS}/permissions`,
     vmEnvironment: `${ADMIN_SETTINGS}/vm-environment`,
     nodeConfiguration: `${ADMIN_SETTINGS}/node-configuration`,
     connections: `${ADMIN_SETTINGS}/connections`,
@@ -52,23 +53,54 @@ export const ROUTES = {
   },
 };
 
-// Quick-link tiles of the admin dashboard (translation keys joined with ' / ').
-export const ADMIN_QUICK_LINKS = [
-  { to: ROUTES.admin.desktops, labelKeys: ['desktops'] },
-  { to: ROUTES.admin.desktopGroups, labelKeys: ['desktop-groups'] },
-  { to: ROUTES.admin.monitoring, labelKeys: ['monitoring'] },
-  { to: ROUTES.admin.status, labelKeys: ['status-title'] },
-  { to: ROUTES.user.quota, labelKeys: ['quota-title'] },
-  { to: ROUTES.admin.limitation, labelKeys: ['limitation'] },
-  { to: ROUTES.admin.tasks, labelKeys: ['tasks'] },
-  { to: ROUTES.admin.vmEnvironment, labelKeys: ['vm-setup'] },
-  { to: ROUTES.admin.nodeConfiguration, labelKeys: ['vm-node-dhcp', 'vm-node-iptables'] },
-  { to: ROUTES.admin.connections, labelKeys: ['viewer-check'] },
-  { to: ROUTES.admin.instances, labelKeys: ['vm-instance'] },
-  { to: ROUTES.admin.docker, labelKeys: ['vm-docker'] },
-  { to: ROUTES.admin.phases, labelKeys: ['vm-phases'] },
-  { to: ROUTES.admin.adminAssign, labelKeys: ['admin-assign-object-app'] },
-  { to: ROUTES.admin.apps, labelKeys: ['app-configuration'] },
-  { to: ROUTES.admin.files, labelKeys: ['file-configuration'] },
-  { to: ROUTES.dashboard, labelKeys: ['dashboard-back'] },
+// Link groups of the admin dashboard: a title and an icon per group and per link
+// (Font Awesome names, translation keys joined with ' / ').
+export const ADMIN_SECTIONS = [
+  {
+    titleKey: 'admin-section-access',
+    icon: 'fa-user-shield',
+    links: [
+      { to: ROUTES.admin.permissions, labelKeys: ['permissions'], icon: 'fa-key' },
+      { to: ROUTES.admin.limitation, labelKeys: ['limitation'], icon: 'fa-gauge-high' },
+    ],
+  },
+  {
+    titleKey: 'admin-section-desktops',
+    icon: 'fa-desktop',
+    links: [
+      { to: ROUTES.admin.desktops, labelKeys: ['desktops'], icon: 'fa-display' },
+      { to: ROUTES.admin.desktopGroups, labelKeys: ['desktop-groups'], icon: 'fa-object-group' },
+    ],
+  },
+  {
+    titleKey: 'admin-section-monitoring',
+    icon: 'fa-chart-line',
+    links: [
+      { to: ROUTES.admin.monitoring, labelKeys: ['monitoring'], icon: 'fa-chart-area' },
+      { to: ROUTES.admin.status, labelKeys: ['status-title'], icon: 'fa-heart-pulse' },
+      { to: ROUTES.user.quota, labelKeys: ['quota-title'], icon: 'fa-chart-pie' },
+      { to: ROUTES.admin.tasks, labelKeys: ['tasks'], icon: 'fa-list-check' },
+    ],
+  },
+  {
+    titleKey: 'admin-section-infrastructure',
+    icon: 'fa-server',
+    links: [
+      { to: ROUTES.admin.vmEnvironment, labelKeys: ['vm-setup'], icon: 'fa-computer' },
+      { to: ROUTES.admin.nodeConfiguration, labelKeys: ['vm-node-dhcp', 'vm-node-iptables'], icon: 'fa-network-wired' },
+      { to: ROUTES.admin.connections, labelKeys: ['viewer-check'], icon: 'fa-plug' },
+      { to: ROUTES.admin.instances, labelKeys: ['vm-instance'], icon: 'fa-play' },
+      { to: ROUTES.admin.docker, labelKeys: ['vm-docker'], icon: 'fa-cubes' },
+      { to: ROUTES.admin.phases, labelKeys: ['vm-phases'], icon: 'fa-diagram-project' },
+    ],
+  },
+  {
+    titleKey: 'admin-section-content',
+    icon: 'fa-box-open',
+    links: [
+      { to: ROUTES.admin.adminAssign, labelKeys: ['admin-assign-object-app'], icon: 'fa-user-tag' },
+      { to: ROUTES.admin.apps, labelKeys: ['app-configuration'], icon: 'fa-window-restore' },
+      { to: ROUTES.admin.files, labelKeys: ['file-configuration'], icon: 'fa-folder-open' },
+    ],
+  },
 ];

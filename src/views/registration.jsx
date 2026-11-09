@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
-import BackLink from '../components/BackLink';
 import FormField from '../components/FormField';
 import Header from '../components/header';
+import PageHeader from '../components/PageHeader';
 import { ROUTES } from '../routes';
 import { emailSchema } from '../utils/validation';
 
-import { validateEmail } from '../api/users';
+import { resendRegistrationCode, validateEmail } from '../api/users';
 
 import { createLogger } from '../utils/logger';
 const log = createLogger('Registration');
@@ -23,6 +23,8 @@ function Registration() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState({ visible: false, success: false });
+  // 'idle' | 'sending' | 'sent' | 'failed'
+  const [resendStatus, setResendStatus] = useState('idle');
 
   // Send the user back to the login page shortly after a successful validation.
   useEffect(() => {
@@ -58,20 +60,28 @@ function Registration() {
     }
   };
 
+  // The backend answers the same for every address, so "sent" only means "accepted".
+  const resendCode = async (email) => {
+    setResendStatus('sending');
+    try {
+      await resendRegistrationCode(email.trim());
+      setResendStatus('sent');
+    } catch (error) {
+      log.error('resendCode', error);
+      setResendStatus('failed');
+    }
+  };
+
   return (
     <>
       <Header />
       <Container id="registration" className="page page-narrow">
-        <Row>
-          <Col xs={12}>
-            <h2 className="page-title">{t('validate-registration')}</h2>
-          </Col>
-        </Row>
+        <PageHeader title={t('validate-registration')} backTo={ROUTES.login} />
 
         <Row>
           <Col xs={12}>
             <Formik initialValues={INITIAL_VALUES} validationSchema={registrationSchema} onSubmit={registerUser}>
-              {({ isValid, dirty, isSubmitting }) => (
+              {({ values, errors, isValid, dirty, isSubmitting }) => (
                 <Form noValidate>
                   <Row>
                     <FormField name="email" label={t('email')} type="email" />
@@ -90,6 +100,20 @@ function Registration() {
                       </Button>
                     </Col>
                   </Row>
+
+                  <Row>
+                    <Col xs={12}>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="p-0"
+                        disabled={!values.email || Boolean(errors.email) || resendStatus === 'sending'}
+                        onClick={() => resendCode(values.email)}
+                      >
+                        {t('resend-code', 'Send a new code')}
+                      </Button>
+                    </Col>
+                  </Row>
                 </Form>
               )}
             </Formik>
@@ -97,11 +121,17 @@ function Registration() {
         </Row>
 
         <Row>
-          <BackLink to={ROUTES.login} />
-        </Row>
-
-        <Row>
           <Col xs={12}>
+            {resendStatus === 'sent' && (
+              <Alert variant="info" role="status">
+                {t('resend-code-sent')}
+              </Alert>
+            )}
+            {resendStatus === 'failed' && (
+              <Alert variant="danger" role="alert">
+                {t('request-failed')}
+              </Alert>
+            )}
             {feedback.visible && (
               <Alert variant={feedback.success ? 'success' : 'danger'} role="alert">
                 {feedback.success ? t('request-successful') : t('request-failed')}

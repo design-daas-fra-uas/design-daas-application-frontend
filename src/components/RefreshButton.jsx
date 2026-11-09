@@ -1,8 +1,19 @@
+import { Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-// Floating "reload data" button in the bottom-right corner.
-function RefreshButton({ onClick }) {
+// "Reload data" button: a labelled button for a page header (`inline`), or the
+// floating icon in the bottom-right corner.
+function RefreshButton({ onClick, inline = false }) {
   const { t } = useTranslation();
+
+  if (inline) {
+    return (
+      <Button type="button" variant="outline-primary" size="sm" onClick={onClick}>
+        <i className="fa-solid fa-arrows-rotate me-2" aria-hidden="true" />
+        {t('refresh')}
+      </Button>
+    );
+  }
 
   return (
     <button

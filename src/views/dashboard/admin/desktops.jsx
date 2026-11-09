@@ -6,7 +6,6 @@ import * as Yup from 'yup';
 
 import ActionLink from '../../../components/ActionLink';
 import AsyncContent from '../../../components/AsyncContent';
-import BackLink from '../../../components/BackLink';
 import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
 import PageLayout from '../../../components/PageLayout';
@@ -33,7 +32,7 @@ function Desktops() {
   );
 
   return (
-    <PageLayout id="desktop" title={t('desktops')} wrapTitle>
+    <PageLayout backTo={ROUTES.admin.root} id="desktop" title={t('desktops')}>
       <Row>
         <Col xs={12}>
           <AsyncContent status={status} onRetry={reload} isEmpty={desktops.length === 0}>
@@ -67,7 +66,6 @@ function Desktops() {
         </Col>
       </Row>
       <Row>
-        <BackLink to={ROUTES.admin.root} />
         <Col xs={12} md={6} lg={4}>
           <ActionLink onClick={() => setCreateModalOpen(true)}>{t('desktop-create')}</ActionLink>
         </Col>

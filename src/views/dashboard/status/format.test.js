@@ -1,4 +1,4 @@
-import { formatAmount, formatBytes, usagePercent, usageVariant } from './format';
+import { formatAmount, formatBytes, isUnlimited, usagePercent, usageVariant } from './format';
 
 describe('format', () => {
   it('formats bytes with binary units', () => {
@@ -12,6 +12,14 @@ describe('format', () => {
   it('formats counts as they are', () => {
     expect(formatAmount(3, 'count')).toBe('3');
     expect(formatAmount(1024, 'bytes')).toBe('1.0 KiB');
+  });
+
+  it('treats -1 and a missing limit as unlimited', () => {
+    expect(isUnlimited(-1)).toBe(true);
+    expect(isUnlimited(null)).toBe(true);
+    expect(isUnlimited(undefined)).toBe(true);
+    expect(isUnlimited(0)).toBe(false);
+    expect(isUnlimited(12)).toBe(false);
   });
 
   it('computes the share of the limit, capped at 100', () => {

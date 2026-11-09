@@ -12,22 +12,19 @@ import {
   viewerFields,
 } from '../../../components/actions/fields';
 
+import ContainerTable from './docker/ContainerTable';
+import DaemonOverview from './docker/DaemonOverview';
+import ImageTable from './docker/ImageTable';
+
 const id = () => required(text('id', 'vm-id'));
 
-const ACTIONS = [
-  { key: 'docker-daemon-info', title: 'vm-docker-daemon-info', endpoint: '/container/daemon_info', result: 'log' },
+// Operations that change something, grouped into two tabs.
+const IMAGE_ACTIONS = [
   {
     key: 'docker-image-inspect',
     title: 'vm-docker-image-inspect',
     endpoint: '/container/image_inspect',
     fields: [id()],
-    result: 'data',
-  },
-  {
-    key: 'docker-image-list',
-    title: 'vm-docker-image-list',
-    endpoint: '/container/image_list',
-    params: { onlyuser: 'on' },
     result: 'data',
   },
   {
@@ -62,6 +59,9 @@ const ACTIONS = [
   },
   { key: 'docker-image-delete', title: 'vm-docker-image-delete', endpoint: '/container/image_delete', fields: [id()] },
   { key: 'docker-image-build', title: 'vm-docker-image-build', endpoint: '/container/image_build', fields: [id()] },
+];
+
+const CONTAINER_ACTIONS = [
   {
     key: 'docker-container-start',
     title: 'vm-docker-container-start',
@@ -77,25 +77,21 @@ const ACTIONS = [
     fields: [required(text('id_instance', 'vm-id-instance')), checkbox('kill', 'vm-kill')],
   },
   {
-    key: 'docker-container-list',
-    title: 'vm-docker-container-list',
-    endpoint: '/container/container_list',
-    fields: [
-      checkbox('onlyuser', 'object-list-user'),
-      checkbox('onlydaas', 'object-list-daas'),
-      checkbox('detailed', 'object-list-detailed'),
-    ],
-    result: 'data',
-    // This endpoint reports success with response_code 0.
-    isSuccess: (response) => response.status === 200 && response.data.response_code === 0,
-  },
-  {
     key: 'docker-container-log',
     title: 'vm-docker-container-log',
     endpoint: '/container/container_logs',
     fields: [id()],
     result: 'log',
   },
+];
+
+// Read-only views first (loaded when their tab opens), then the operations.
+const ACTIONS = [
+  { key: 'docker-overview', title: 'docker-overview', content: <DaemonOverview /> },
+  { key: 'docker-images', title: 'docker-images-tab', content: <ImageTable /> },
+  { key: 'docker-containers', title: 'docker-containers-tab', content: <ContainerTable /> },
+  { key: 'docker-manage-images', title: 'docker-manage-images', actions: IMAGE_ACTIONS },
+  { key: 'docker-manage-containers', title: 'docker-manage-containers', actions: CONTAINER_ACTIONS },
 ];
 
 function SettingsDocker() {

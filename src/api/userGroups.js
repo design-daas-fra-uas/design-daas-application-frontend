@@ -5,3 +5,5 @@ export const getUserGroups = ({ signal } = {}) => apiClient.get('/user_groups', 
 export const createUserGroup = (payload) => apiClient.post('/user_group', payload);
 
 export const updateUserGroup = (id, payload) => apiClient.patch(`/user_group/${id}`, payload);
+
+export const deleteUserGroup = (id) => apiClient.delete(`/user_group/${id}`);

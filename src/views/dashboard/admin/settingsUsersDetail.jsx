@@ -1,29 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, Button, Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
 import AsyncContent from '../../../components/AsyncContent';
-import BackLink from '../../../components/BackLink';
+import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal';
 import FormField from '../../../components/FormField';
 import PageLayout from '../../../components/PageLayout';
 import useResource from '../../../hooks/useResource';
 import { ROUTES } from '../../../routes';
 import { emailSchema } from '../../../utils/validation';
 
-import { getUsers, updateUser, disableUser, enableUser } from '../../../api/users';
+import { deleteUserData } from '../../../api/daasAdmin';
+import { getUser, updateUser, disableUser, enableUser, deleteUser } from '../../../api/users';
 
 import { createLogger } from '../../../utils/logger';
 const log = createLogger('SettingsUsersDetail');
 
-const findUserById = async (id) => (await getUsers()).find((user) => String(user.id) === String(id)) ?? null;
-
 function SettingsUsersDetail() {
   const { id } = useParams();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isToggling, setIsToggling] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -32,7 +33,7 @@ function SettingsUsersDetail() {
     };
   }, []);
   const [actionError, setActionError] = useState('');
-  const { data: user, status, reload } = useResource(() => findUserById(id), [id]);
+  const { data: user, status, reload } = useResource(({ signal }) => getUser(id, { signal }), [id]);
 
   const updateUserSchema = useMemo(
     () =>
@@ -76,7 +77,7 @@ function SettingsUsersDetail() {
   };
 
   return (
-    <PageLayout id="settingsOverviewUsers" title={t('user-management')} wrapTitle>
+    <PageLayout backTo={ROUTES.admin.users} id="settingsOverviewUsers" title={t('user-management')}>
       <AsyncContent status={status} onRetry={reload} notFoundText={t('user-not-found', 'User not found.')}>
         {() => (
           <>
@@ -118,6 +119,13 @@ function SettingsUsersDetail() {
                         </Button>
                       </span>
                     </li>
+                    <li>
+                      <span>
+                        <Button type="button" variant="danger" onClick={() => setDeleteOpen(true)}>
+                          {t('delete')}
+                        </Button>
+                      </span>
+                    </li>
                   </ul>
                 </div>
               </Col>
@@ -154,12 +162,21 @@ function SettingsUsersDetail() {
                 </Formik>
               </Col>
             </Row>
+            <ConfirmDeleteModal
+              show={deleteOpen}
+              onHide={() => setDeleteOpen(false)}
+              title={t('delete-user', 'Delete user')}
+              message={t('delete-user-confirm', { name: user.name })}
+              onConfirm={async () => {
+                // Remove the user's VMs, containers and files first; keep the account if that fails.
+                await deleteUserData(user.id);
+                await deleteUser(user.id);
+              }}
+              onDeleted={() => navigate(ROUTES.admin.users)}
+            />
           </>
         )}
       </AsyncContent>
-      <Row>
-        <BackLink to={ROUTES.admin.users} />
-      </Row>
     </PageLayout>
   );
 }

@@ -2,8 +2,8 @@ import { Accordion, Col, Container, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import ActionPanel from '../../../../components/actions/ActionPanel';
-import BackLink from '../../../../components/BackLink';
 import Header from '../../../../components/header';
+import PageHeader from '../../../../components/PageHeader';
 import RequestAlert from '../../../../components/RequestAlert';
 
 // Accordion with one form per configuration step (see configSteps).
@@ -51,12 +51,14 @@ export function SetupSection({ title, info, action, showRequestAlert, disabled }
   );
 }
 
-// Page frame of the expert-mode setup pages.
+// Page frame of the expert-mode setup pages. The pages render their own title, so the
+// header here only holds the Back button.
 export function SetupLayout({ id, requestAlert, backTo, children }) {
   return (
     <>
       <Header />
       <Container id={id} className="page">
+        <PageHeader backTo={backTo} />
         {children}
       </Container>
       <Container className="page-footer">
@@ -64,9 +66,6 @@ export function SetupLayout({ id, requestAlert, backTo, children }) {
           <Col xs={12}>
             <RequestAlert alert={requestAlert} />
           </Col>
-        </Row>
-        <Row>
-          <BackLink to={backTo} />
         </Row>
       </Container>
     </>

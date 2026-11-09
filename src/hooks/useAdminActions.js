@@ -2,12 +2,12 @@ import { useState } from 'react';
 
 import { createAdmin } from '../api/admins';
 import { createUser } from '../api/users';
-import { createUserGroup, updateUserGroup } from '../api/userGroups';
+import { createUserGroup, deleteUserGroup, updateUserGroup } from '../api/userGroups';
 
 import { createLogger } from '../utils/logger';
 const log = createLogger('useAdminActions');
 
-// Create/update handlers of the admin dashboard. Saving and refreshing are
+// Create/update/delete handlers of the admin dashboard. Saving and refreshing are
 // reported separately: a failed save is shown inside the open modal (`saveError`),
 // a failed refresh as a notice after the modal closed.
 export default function useAdminActions({
@@ -65,6 +65,18 @@ export default function useAdminActions({
     });
   };
 
+  const deleteGroup = (group) => {
+    if (!group) {
+      return undefined;
+    }
+
+    return saveThenRefresh({
+      save: () => deleteUserGroup(group.id),
+      refresh: refreshGroups,
+      closeModal: closeGroupModal,
+    });
+  };
+
   const createUserAccount = ({ name, email, password, group }, { resetForm }) =>
     saveThenRefresh({
       save: () => createUser({ name: name.trim(), email: email.trim(), password, groups: [Number(group)] }),
@@ -86,6 +98,7 @@ export default function useAdminActions({
     clearSaveError: () => setSaveError(false),
     createGroup,
     updateGroup,
+    deleteGroup,
     createUserAccount,
     createAdminAccount,
   };

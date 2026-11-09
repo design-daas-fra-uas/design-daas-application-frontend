@@ -1,21 +1,15 @@
-import { Col, Container, Row } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 
 import Header from './header';
+import PageHeader from './PageHeader';
 
-// Header + container + centered page title shared by the admin views.
-// `wrapTitle` keeps the extra <div> some pages need for their CSS margins.
-function PageLayout({ id, title, wrapTitle = false, children }) {
-  const heading = <h2 className="page-title">{title}</h2>;
-
+// Navbar + container + page header (Back button, title, actions) shared by the admin views.
+function PageLayout({ id, title, backTo, actions, children }) {
   return (
     <>
       <Header />
       <Container id={id} className="page">
-        <Row>
-          <Col xs={12} className="text-center">
-            {wrapTitle ? <div>{heading}</div> : heading}
-          </Col>
-        </Row>
+        <PageHeader title={title} backTo={backTo} actions={actions} />
         {children}
       </Container>
     </>

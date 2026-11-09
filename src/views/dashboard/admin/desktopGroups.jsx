@@ -5,7 +5,7 @@ import * as Yup from 'yup';
 
 import ActionLink from '../../../components/ActionLink';
 import AsyncContent from '../../../components/AsyncContent';
-import BackLink from '../../../components/BackLink';
+import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal';
 import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
 import PageLayout from '../../../components/PageLayout';
@@ -13,7 +13,12 @@ import useNotice from '../../../hooks/useNotice';
 import useResource from '../../../hooks/useResource';
 import { ROUTES } from '../../../routes';
 
-import { getDesktopGroups, createDesktopGroup, addUserGroupToDesktopGroup } from '../../../api/desktopGroups';
+import {
+  getDesktopGroups,
+  createDesktopGroup,
+  addUserGroupToDesktopGroup,
+  deleteDesktopGroup,
+} from '../../../api/desktopGroups';
 import { getUserGroups } from '../../../api/userGroups';
 
 const CREATE_INITIAL_VALUES = { description: '' };
@@ -67,6 +72,7 @@ function AddUserGroupModal({ desktopGroupId, onHide, onSaved }) {
 function DesktopGroups() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedDesktopGroupId, setSelectedDesktopGroupId] = useState(null);
+  const [groupToDelete, setGroupToDelete] = useState(null);
   const { t } = useTranslation();
   const [notice, showNotice] = useNotice();
 
@@ -84,7 +90,7 @@ function DesktopGroups() {
   );
 
   return (
-    <PageLayout id="desktop" title={t('desktop-groups')} wrapTitle>
+    <PageLayout backTo={ROUTES.admin.root} id="desktop" title={t('desktop-groups')}>
       {notice && (
         <Row>
           <Col xs={12}>
@@ -122,6 +128,13 @@ function DesktopGroups() {
                           </Button>
                         </span>
                       </li>
+                      <li>
+                        <span>
+                          <Button type="button" variant="danger" onClick={() => setGroupToDelete(desktopGroup)}>
+                            {t('delete')}
+                          </Button>
+                        </span>
+                      </li>
                     </ul>
                   </div>
                 </Col>
@@ -131,7 +144,6 @@ function DesktopGroups() {
         </Col>
       </Row>
       <Row>
-        <BackLink to={ROUTES.admin.root} />
         <Col xs={12} md={6} lg={4}>
           <ActionLink onClick={() => setCreateModalOpen(true)}>{t('desktop-groups-create')}</ActionLink>
         </Col>
@@ -148,6 +160,14 @@ function DesktopGroups() {
       >
         <FormField name="description" label={t('desktop-groups-main-description')} />
       </FormModal>
+      <ConfirmDeleteModal
+        show={groupToDelete !== null}
+        onHide={() => setGroupToDelete(null)}
+        title={t('delete-desktop-group', 'Delete desktop group')}
+        message={t('delete-desktop-group-confirm', { name: groupToDelete?.description })}
+        onConfirm={() => deleteDesktopGroup(groupToDelete.id)}
+        onDeleted={() => reload({ silent: true })}
+      />
       {selectedDesktopGroupId !== null && (
         <AddUserGroupModal
           desktopGroupId={selectedDesktopGroupId}

@@ -34,6 +34,7 @@ const SettingsPhases = lazy(() => import('./views/dashboard/admin/settingsPhase'
 const Desktops = lazy(() => import('./views/dashboard/admin/desktops'));
 const DesktopDetail = lazy(() => import('./views/dashboard/admin/desktopDetail'));
 const DesktopGroups = lazy(() => import('./views/dashboard/admin/desktopGroups'));
+const Permissions = lazy(() => import('./views/dashboard/admin/permissions'));
 const SettingsAdminAssign = lazy(() => import('./views/dashboard/admin/settingsAdmin'));
 const SettingsApps = lazy(() => import('./views/dashboard/admin/settingsApps'));
 const SettingsFiles = lazy(() => import('./views/dashboard/admin/settingsFiles'));
@@ -97,6 +98,7 @@ const ADMIN_ROUTES = [
   [ROUTES.admin.desktops, Desktops],
   [`${ROUTES.admin.desktops}/:id`, DesktopDetail],
   [ROUTES.admin.desktopGroups, DesktopGroups],
+  [ROUTES.admin.permissions, Permissions],
   [ROUTES.admin.adminAssign, SettingsAdminAssign],
   [ROUTES.admin.apps, SettingsApps],
   [ROUTES.admin.files, SettingsFiles],

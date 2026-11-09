@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Button, Col, Modal, Row, Tab, Tabs } from 'react-bootstrap';
 import { Form, Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
@@ -46,7 +46,44 @@ function CreateGroupForm({ onSubmit }) {
 
 const NO_GROUP = '0';
 
-function UpdateGroupForm({ groups, onSubmit }) {
+// Inline "are you sure?" so no second modal opens on top of this one.
+function DeleteGroupButton({ group, onDelete }) {
+  const { t } = useTranslation();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  if (!confirming) {
+    return (
+      <Button type="button" variant="outline-danger" className="mt-2" onClick={() => setConfirming(true)}>
+        {t('delete-group', 'Delete group')}
+      </Button>
+    );
+  }
+
+  const confirm = async () => {
+    setBusy(true);
+    try {
+      await onDelete(group);
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="mt-2" role="group" aria-label={t('delete-group', 'Delete group')}>
+      <p>{t('delete-group-confirm', { name: group.description })}</p>
+      <Button type="button" variant="secondary" className="me-2" disabled={busy} onClick={() => setConfirming(false)}>
+        {t('no')}
+      </Button>
+      <Button type="button" variant="danger" disabled={busy} onClick={confirm}>
+        {t('delete')}
+      </Button>
+    </div>
+  );
+}
+
+function UpdateGroupForm({ groups, onSubmit, onDelete }) {
   const { t } = useTranslation();
   const schema = useMemo(
     () =>
@@ -93,6 +130,9 @@ function UpdateGroupForm({ groups, onSubmit }) {
               )}
             </Row>
             <SubmitRow disabled={values.groupId === NO_GROUP || !isValid || isSubmitting} />
+            {values.groupId !== NO_GROUP && (
+              <DeleteGroupButton key={values.groupId} group={findGroup(values.groupId)} onDelete={onDelete} />
+            )}
           </Form>
         );
       }}
@@ -100,8 +140,8 @@ function UpdateGroupForm({ groups, onSubmit }) {
   );
 }
 
-// Modal with a "create group" and an "update group" tab.
-function GroupModal({ show, onHide, error, groups, onCreate, onUpdate }) {
+// Modal with a "create group" and an "update group" tab; the update tab can also delete.
+function GroupModal({ show, onHide, error, groups, onCreate, onUpdate, onDelete }) {
   const { t } = useTranslation();
 
   return (
@@ -120,7 +160,7 @@ function GroupModal({ show, onHide, error, groups, onCreate, onUpdate }) {
             <CreateGroupForm onSubmit={onCreate} />
           </Tab>
           <Tab eventKey="update-group" title={t('update-group')}>
-            <UpdateGroupForm groups={groups} onSubmit={onUpdate} />
+            <UpdateGroupForm groups={groups} onSubmit={onUpdate} onDelete={onDelete} />
           </Tab>
         </Tabs>
       </Modal.Body>
