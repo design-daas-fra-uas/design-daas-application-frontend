@@ -11,7 +11,7 @@ const log = createLogger('DaasAction');
 const RESULT = {
   data: (response) => response.data.response_data,
   log: (response) => response.data.sys_log,
-  viewer: (response) => ({ url: response.data.response_url }),
+  viewer: (response) => ({ url: response.data.response_url, idInstance: response.data.id_instance }),
 };
 
 // Sends the form of a config-driven action (see ActionPage) to the DaaS backend.

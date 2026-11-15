@@ -13,7 +13,7 @@ const memoryText = ({ memUsed, memLimit }) =>
 
 function ContainerTable() {
   const { t } = useTranslation();
-  // Asking Docker for usage takes about a second per container, so it is opt-in.
+  // Asking Docker for usage takes about two seconds (all containers at once), so it is opt-in.
   const [withStats, setWithStats] = useState(false);
   const { data, status, reload } = useResource((options) => getContainers({ ...options, withStats }), [withStats]);
   const rows = useMemo(() => toContainerRows(data), [data]);
