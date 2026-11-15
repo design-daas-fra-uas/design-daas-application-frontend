@@ -1,5 +1,5 @@
 # ---- development: Vite dev server with hot reload ----
-FROM node:26.13.0-alpine AS development
+FROM node:26.13.1-alpine AS development
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . .
 CMD ["npm", "start"]
 
 # ---- production build ----
-FROM node:26.13.0-alpine AS production
+FROM node:26.13.1-alpine AS production
 
 WORKDIR /app
 
