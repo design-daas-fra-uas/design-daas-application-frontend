@@ -12,10 +12,10 @@ export const RULE_KINDS = [
 
 export const ruleKindOf = (kind) => RULE_KINDS.find((entry) => entry.kind === kind);
 
+// Endpoints are not created here: design-daas sends its route list to the backend at startup.
 export const getEndpoints = ({ signal } = {}) => apiClient.get('/endpoints', { signal });
 
-export const createEndpoint = (payload) => apiClient.post('/endpoint', payload);
-
+// Only obsolete endpoints (no longer in design-daas) can be deleted.
 export const deleteEndpoint = (id) => apiClient.delete(`/endpoint/${id}`);
 
 export const getEndpointGroups = ({ signal } = {}) => apiClient.get('/endpoint_groups', { signal });

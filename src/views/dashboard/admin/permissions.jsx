@@ -17,7 +17,6 @@ import { getUserGroups } from '../../../api/userGroups';
 import { getUsers } from '../../../api/users';
 import {
   RULE_KINDS,
-  createEndpoint,
   createEndpointGroup,
   createPermissionRule,
   deleteEndpoint,
@@ -29,7 +28,6 @@ import {
   ruleKindOf,
 } from '../../../api/permissions';
 
-const ENDPOINT_INITIAL_VALUES = { functionName: '', description: '' };
 const ENDPOINT_GROUP_INITIAL_VALUES = { name: '', description: '', endpointIds: [] };
 const RULE_INITIAL_VALUES = { kind: RULE_KINDS[0].kind, subjectId: '', targetId: '', allow: 'true' };
 
@@ -52,9 +50,12 @@ const subjectOptions = (data, subject) =>
     ? data.users.map((u) => ({ id: u.id, label: `${u.name} (${u.email})` }))
     : data.userGroups.map((g) => ({ id: g.id, label: g.description || g.name }));
 
+// Obsolete endpoints (no longer in design-daas) are not offered for new rules or groups.
+const activeEndpoints = (data) => data.endpoints.filter((e) => !e.obsolete);
+
 const targetOptions = (data, target) =>
   target === 'endpoint'
-    ? data.endpoints.map((e) => ({ id: e.id, label: e.functionName }))
+    ? activeEndpoints(data).map((e) => ({ id: e.id, label: e.functionName }))
     : data.endpointGroups.map((g) => ({ id: g.id, label: g.name }));
 
 // Subject and target selects follow the selected kind; changing the kind clears them.
@@ -105,19 +106,9 @@ function RuleFields({ data }) {
 function Permissions() {
   const { t } = useTranslation();
   const { data, status, reload } = useResource(loadPermissionData);
-  const [openModal, setOpenModal] = useState(null); // 'endpoint' | 'endpointGroup' | 'rule' | null
+  const [openModal, setOpenModal] = useState(null); // 'endpointGroup' | 'rule' | null
   const [pendingDelete, setPendingDelete] = useState(null); // { title, message, action }
 
-  const endpointSchema = useMemo(
-    () =>
-      Yup.object().shape({
-        functionName: Yup.string()
-          .trim()
-          .required(t('error-function-name', 'Function name is required.'))
-          .matches(/^[\w.-]+$/, t('error-function-name-format')),
-      }),
-    [t],
-  );
   const endpointGroupSchema = useMemo(
     () => Yup.object().shape({ name: Yup.string().trim().required(t('error-required', 'This field is required.')) }),
     [t],
@@ -161,25 +152,30 @@ function Permissions() {
             <Row>
               <Col xs={12}>
                 <h2 className="panel-title">{t('endpoints', 'Endpoints')}</h2>
+                <p>{t('endpoints-hint')}</p>
                 <ul className="entity-list">
                   {data.endpoints.map((endpoint) => (
                     <li key={endpoint.id}>
                       <span>
                         {endpoint.functionName}
+                        {endpoint.obsolete ? ` (${t('endpoint-obsolete')})` : ''}
                         {endpoint.description ? ` — ${endpoint.description}` : ''}
                       </span>
-                      <span>
-                        <button
-                          type="button"
-                          className="icon-button"
-                          aria-label={`${t('delete')} ${endpoint.functionName}`}
-                          onClick={() =>
-                            askDelete(t('delete-endpoint'), endpoint.functionName, () => deleteEndpoint(endpoint.id))
-                          }
-                        >
-                          <i className="fa-solid fa-trash" aria-hidden="true" />
-                        </button>
-                      </span>
+                      {/* design-daas would add a deleted endpoint again, so only obsolete ones can be deleted */}
+                      {endpoint.obsolete && (
+                        <span>
+                          <button
+                            type="button"
+                            className="icon-button"
+                            aria-label={`${t('delete')} ${endpoint.functionName}`}
+                            onClick={() =>
+                              askDelete(t('delete-endpoint'), endpoint.functionName, () => deleteEndpoint(endpoint.id))
+                            }
+                          >
+                            <i className="fa-solid fa-trash" aria-hidden="true" />
+                          </button>
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -295,7 +291,7 @@ function Permissions() {
                 htmlFor="endpoint-group-description"
               />
               <FormField name="endpointIds" label={t('endpoints')} as="select" multiple className="form-select">
-                {data.endpoints.map((endpoint) => (
+                {activeEndpoints(data).map((endpoint) => (
                   <option key={endpoint.id} value={endpoint.id}>
                     {endpoint.functionName}
                   </option>
@@ -308,29 +304,12 @@ function Permissions() {
 
       <Row>
         <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={() => setOpenModal('endpoint')}>{t('create-endpoint')}</ActionLink>
-        </Col>
-        <Col xs={12} md={6} lg={4}>
           <ActionLink onClick={() => setOpenModal('endpointGroup')}>{t('create-endpoint-group')}</ActionLink>
         </Col>
         <Col xs={12} md={6} lg={4}>
           <ActionLink onClick={() => setOpenModal('rule')}>{t('create-rule')}</ActionLink>
         </Col>
       </Row>
-
-      <FormModal
-        show={openModal === 'endpoint'}
-        onHide={closeModal}
-        title={t('create-endpoint')}
-        titleId="create-endpoint-modal-title"
-        initialValues={ENDPOINT_INITIAL_VALUES}
-        validationSchema={endpointSchema}
-        onSubmit={({ functionName, description }) => createEndpoint({ functionName: functionName.trim(), description })}
-        onSaved={reloadSilently}
-      >
-        <FormField name="functionName" label={t('function-name', 'Function name')} />
-        <FormField name="description" label={t('description', 'Description')} htmlFor="endpoint-description" />
-      </FormModal>
 
       <ConfirmDeleteModal
         show={pendingDelete !== null}
