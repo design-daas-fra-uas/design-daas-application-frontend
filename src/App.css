@@ -630,6 +630,241 @@ nav.navbar > .container-fluid {
   min-width: 160px;
 }
 
+/* Searchable select (components/SearchSelect), built on the Combobox styles. */
+.search-select .combobox-option-icon {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+
+.search-select-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.search-select-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.search-select-actions button {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.search-select-actions button:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+}
+
+.search-select-actions button:disabled {
+  color: var(--color-muted);
+  opacity: 0.6;
+}
+
+.search-select-box {
+  flex: none;
+  color: var(--color-primary);
+  font-size: 1.05rem;
+}
+
+/* Chosen values of a multiple SearchSelect; scrolls instead of pushing the form away. */
+.select-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 132px;
+  margin: 0 0 8px;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.select-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 10px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-family: var(--bs-font-monospace);
+  font-size: 0.8rem;
+}
+
+.select-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 0.7rem;
+}
+
+.select-chip button:hover {
+  background: rgb(47 85 212 / 15%);
+}
+
+/* Permissions page. */
+.nav-tabs .count-badge {
+  font-size: 0.72rem;
+}
+
+.step-pill {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.cell-icon {
+  width: 1.1em;
+  margin-right: 8px;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.decision-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.decision-pill.is-allow {
+  background: #e7f4ec;
+  color: var(--color-success);
+}
+
+.decision-pill.is-deny {
+  background: #fdeceb;
+  color: var(--color-danger);
+}
+
+.pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-list .tag-pill {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.75rem;
+}
+
+.pill-more {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pill-more:hover {
+  background: var(--color-primary-soft);
+}
+
+.group-name-cell {
+  min-width: 180px;
+}
+
+.endpoint-name {
+  color: var(--color-text) !important;
+  font-size: 0.85rem;
+}
+
+/* A long table that scrolls inside the panel, with its header kept in view. */
+.table-scroll {
+  max-height: min(62vh, 640px);
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.table-scroll thead th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  background: var(--color-background);
+}
+
+/* Two-option radio group shown as one control (rule decision). */
+/* Looks like the other field labels. */
+.segmented-legend {
+  margin-bottom: 0.5rem;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.segmented-option {
+  position: relative;
+  margin: 0;
+}
+
+.segmented-option input {
+  position: absolute;
+  opacity: 0;
+}
+
+.segmented-option span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-muted);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segmented-option input:focus-visible + span {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 1px;
+}
+
+.segmented-option.is-allow input:checked + span {
+  border-color: var(--color-success);
+  background: #e7f4ec;
+  color: var(--color-success);
+}
+
+.segmented-option.is-deny input:checked + span {
+  border-color: var(--color-danger);
+  background: #fdeceb;
+  color: var(--color-danger);
+}
+
 /* Searchable object picker (components/actions/Combobox). */
 .combobox {
   position: relative;

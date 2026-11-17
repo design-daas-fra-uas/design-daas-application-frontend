@@ -3,7 +3,7 @@ import { useField } from 'formik';
 import { useTranslation } from 'react-i18next';
 
 // Splits `text` around the first case-insensitive match of `query`, so the match can be marked.
-function Highlight({ text, query }) {
+export function Highlight({ text, query }) {
   const index = query ? text.toLowerCase().indexOf(query.toLowerCase()) : -1;
   if (index < 0) {
     return text;

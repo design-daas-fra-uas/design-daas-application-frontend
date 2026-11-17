@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Alert, Col, Row, Table } from 'react-bootstrap';
+import { Alert, Button, Form, Tab, Table, Tabs } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import { useFormikContext } from 'formik';
+import { Field, useFormikContext } from 'formik';
 import * as Yup from 'yup';
 
-import ActionLink from '../../../components/ActionLink';
 import AsyncContent from '../../../components/AsyncContent';
 import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal';
 import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
 import PageLayout from '../../../components/PageLayout';
+import { SearchSelectField } from '../../../components/SearchSelect';
 import useResource from '../../../hooks/useResource';
 import { ROUTES } from '../../../routes';
 
@@ -19,17 +19,20 @@ import {
   RULE_KINDS,
   createEndpointGroup,
   createPermissionRule,
-  deleteEndpoint,
   deleteEndpointGroup,
   deletePermissionRule,
   getEndpointGroups,
   getEndpoints,
   getPermissionRules,
   ruleKindOf,
+  updateEndpointGroup,
 } from '../../../api/permissions';
 
-const ENDPOINT_GROUP_INITIAL_VALUES = { name: '', description: '', endpointIds: [] };
 const RULE_INITIAL_VALUES = { kind: RULE_KINDS[0].kind, subjectId: '', targetId: '', allow: 'true' };
+// Endpoints of a group shown in the table before "+N more".
+const GROUP_PREVIEW = 4;
+
+const ICONS = { user: 'fa-user', userGroup: 'fa-users', endpoint: 'fa-plug', endpointGroup: 'fa-layer-group' };
 
 // Everything the page shows, loaded together so names can be looked up.
 const loadPermissionData = async ({ signal }) => {
@@ -40,23 +43,292 @@ const loadPermissionData = async ({ signal }) => {
     getUsers({ signal }),
     getUserGroups({ signal }),
   ]);
-  // Only regular users: admins are always allowed, so a rule for them would never be used.
-  return { endpoints, endpointGroups, rules, users, userGroups };
+  const byName = (a, b) => a.functionName.localeCompare(b.functionName);
+  return { endpoints: [...endpoints].sort(byName), endpointGroups, rules, users, userGroups };
 };
 
-// Options of the subject and target selects for one rule kind.
+const includesQuery = (query, ...texts) => {
+  const needle = query.trim().toLowerCase();
+  return !needle || texts.some((text) => text?.toLowerCase().includes(needle));
+};
+
+// Options of the subject and target selects for one rule kind (SearchSelect values are strings).
 const subjectOptions = (data, subject) =>
   subject === 'user'
-    ? data.users.map((u) => ({ id: u.id, label: `${u.name} (${u.email})` }))
-    : data.userGroups.map((g) => ({ id: g.id, label: g.description || g.name }));
-
-// Obsolete endpoints (no longer in design-daas) are not offered for new rules or groups.
-const activeEndpoints = (data) => data.endpoints.filter((e) => !e.obsolete);
+    ? data.users.map((u) => ({ value: String(u.id), label: u.name, hint: u.email, icon: ICONS.user }))
+    : data.userGroups.map((g) => ({
+        value: String(g.id),
+        label: g.description || g.name,
+        hint: g.description ? g.name : undefined,
+        icon: ICONS.userGroup,
+      }));
 
 const targetOptions = (data, target) =>
   target === 'endpoint'
-    ? activeEndpoints(data).map((e) => ({ id: e.id, label: e.functionName }))
-    : data.endpointGroups.map((g) => ({ id: g.id, label: g.name }));
+    ? data.endpoints.map((e) => ({
+        value: String(e.id),
+        label: e.functionName,
+        hint: e.description,
+        icon: ICONS.endpoint,
+      }))
+    : data.endpointGroups.map((g) => ({
+        value: String(g.id),
+        label: g.name,
+        hint: g.description,
+        icon: ICONS.endpointGroup,
+      }));
+
+// Search box, "x of y" and the tab's main button.
+function Toolbar({ query, onQuery, placeholder, shown, total, action }) {
+  const { t } = useTranslation();
+  return (
+    <div className="section-toolbar">
+      <Form.Control
+        type="search"
+        placeholder={placeholder}
+        aria-label={placeholder}
+        value={query}
+        onChange={(event) => onQuery(event.target.value)}
+        className="search-input mb-0"
+      />
+      <span className="text-muted small">{t('permissions-count', { shown, total })}</span>
+      {action}
+    </div>
+  );
+}
+
+function IconButton({ icon, label, onClick }) {
+  return (
+    <button type="button" className="icon-button" aria-label={label} title={label} onClick={onClick}>
+      <i className={`fa-solid ${icon}`} aria-hidden="true" />
+    </button>
+  );
+}
+
+function CreateButton({ label, onClick }) {
+  return (
+    <Button onClick={onClick}>
+      <i className="fa-solid fa-plus me-2" aria-hidden="true" />
+      {label}
+    </Button>
+  );
+}
+
+function RulesTab({ data, subjectName, onCreate, askDelete }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const visible = data.rules.filter((rule) => includesQuery(query, subjectName(rule), rule.targetName));
+
+  return (
+    <>
+      <Toolbar
+        query={query}
+        onQuery={setQuery}
+        placeholder={t('search-rules')}
+        shown={visible.length}
+        total={data.rules.length}
+        action={<CreateButton label={t('create-rule')} onClick={onCreate} />}
+      />
+      {visible.length === 0 ? (
+        <p className="empty-state">{data.rules.length ? t('no-matches') : t('no-rules')}</p>
+      ) : (
+        <Table hover responsive className="data-table">
+          <thead>
+            <tr>
+              <th>{t('rule-kind')}</th>
+              <th>{t('rule-subject')}</th>
+              <th>{t('rule-target')}</th>
+              <th>{t('rule-decision')}</th>
+              <th aria-label={t('actions')} />
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((rule) => {
+              const { subject, target } = ruleKindOf(rule.kind);
+              return (
+                <tr key={`${rule.kind}-${rule.id}`}>
+                  <td className="text-nowrap">
+                    <span className="step-pill">{RULE_KINDS.findIndex((k) => k.kind === rule.kind) + 1}</span>
+                    <span className="text-muted small">{t(`rule-kind-short-${rule.kind}`)}</span>
+                  </td>
+                  <td>
+                    <i className={`fa-solid ${ICONS[subject]} cell-icon`} aria-hidden="true" />
+                    {subjectName(rule)}
+                  </td>
+                  <td>
+                    <i className={`fa-solid ${ICONS[target]} cell-icon`} aria-hidden="true" />
+                    {target === 'endpoint' ? <code>{rule.targetName}</code> : rule.targetName}
+                  </td>
+                  <td>
+                    <span className={`decision-pill ${rule.allow ? 'is-allow' : 'is-deny'}`}>
+                      <i className={`fa-solid ${rule.allow ? 'fa-check' : 'fa-ban'}`} aria-hidden="true" />
+                      {rule.allow ? t('allow') : t('deny')}
+                    </span>
+                  </td>
+                  <td className="text-end">
+                    <IconButton
+                      icon="fa-trash"
+                      label={`${t('delete')} ${t('rule')}`}
+                      onClick={() =>
+                        askDelete(t('delete-rule'), `${subjectName(rule)} → ${rule.targetName}`, () =>
+                          deletePermissionRule(rule.kind, rule.id),
+                        )
+                      }
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      )}
+    </>
+  );
+}
+
+function EndpointGroupsTab({ data, endpointName, onCreate, onEdit, askDelete }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const [expanded, setExpanded] = useState(null);
+  const visible = data.endpointGroups.filter((group) =>
+    includesQuery(query, group.name, group.description, ...group.endpointIds.map(endpointName)),
+  );
+
+  return (
+    <>
+      <Toolbar
+        query={query}
+        onQuery={setQuery}
+        placeholder={t('search-endpoint-groups')}
+        shown={visible.length}
+        total={data.endpointGroups.length}
+        action={<CreateButton label={t('create-endpoint-group')} onClick={onCreate} />}
+      />
+      {visible.length === 0 ? (
+        <p className="empty-state">{data.endpointGroups.length ? t('no-matches') : t('no-endpoint-groups')}</p>
+      ) : (
+        <Table hover responsive className="data-table">
+          <thead>
+            <tr>
+              <th>{t('name')}</th>
+              <th>{t('endpoints')}</th>
+              <th aria-label={t('actions')} />
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((group) => {
+              const names = group.endpointIds.map(endpointName).sort();
+              const isOpen = expanded === group.id;
+              const shown = isOpen ? names : names.slice(0, GROUP_PREVIEW);
+              return (
+                <tr key={group.id}>
+                  <td className="group-name-cell">
+                    <div className="fw-medium">{group.name}</div>
+                    {group.description && <div className="text-muted small">{group.description}</div>}
+                  </td>
+                  <td>
+                    <div className="pill-list">
+                      <span className="count-badge ms-0">{names.length}</span>
+                      {shown.map((name) => (
+                        <span key={name} className="tag-pill">
+                          {name}
+                        </span>
+                      ))}
+                      {names.length > GROUP_PREVIEW && (
+                        <button
+                          type="button"
+                          className="pill-more"
+                          aria-expanded={isOpen}
+                          onClick={() => setExpanded(isOpen ? null : group.id)}
+                        >
+                          {isOpen ? t('show-less') : t('show-more', { count: names.length - GROUP_PREVIEW })}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td className="text-end text-nowrap">
+                    <IconButton icon="fa-pen" label={`${t('edit')}: ${group.name}`} onClick={() => onEdit(group)} />
+                    <IconButton
+                      icon="fa-trash"
+                      label={`${t('delete')} ${group.name}`}
+                      onClick={() =>
+                        askDelete(t('delete-endpoint-group'), group.name, () => deleteEndpointGroup(group.id))
+                      }
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      )}
+    </>
+  );
+}
+
+function EndpointsTab({ data }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  // Endpoint id -> names of the groups it is in
+  const groupsOf = useMemo(() => {
+    const result = new Map();
+    data.endpointGroups.forEach((group) =>
+      group.endpointIds.forEach((id) => result.set(id, [...(result.get(id) ?? []), group.name])),
+    );
+    return result;
+  }, [data.endpointGroups]);
+  const visible = data.endpoints.filter((e) => includesQuery(query, e.functionName, e.description));
+
+  return (
+    <>
+      <p className="text-muted small mb-0">
+        <i className="fa-solid fa-rotate me-2" aria-hidden="true" />
+        {t('endpoints-hint')}
+      </p>
+      <Toolbar
+        query={query}
+        onQuery={setQuery}
+        placeholder={t('search-endpoints')}
+        shown={visible.length}
+        total={data.endpoints.length}
+      />
+      {visible.length === 0 ? (
+        <p className="empty-state">{data.endpoints.length ? t('no-matches') : t('no-endpoints')}</p>
+      ) : (
+        <div className="table-scroll">
+          <Table hover className="data-table">
+            <thead>
+              <tr>
+                <th>{t('name')}</th>
+                <th>{t('description')}</th>
+                <th>{t('endpoint-groups')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((endpoint) => (
+                <tr key={endpoint.id}>
+                  <td className="text-nowrap">
+                    <code className="endpoint-name">{endpoint.functionName}</code>
+                  </td>
+                  <td className="text-muted small">{endpoint.description}</td>
+                  <td>
+                    <div className="pill-list">
+                      {(groupsOf.get(endpoint.id) ?? []).map((name) => (
+                        <span key={name} className="tag-pill">
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      )}
+    </>
+  );
+}
 
 // Subject and target selects follow the selected kind; changing the kind clears them.
 function RuleFields({ data }) {
@@ -72,33 +344,42 @@ function RuleFields({ data }) {
 
   return (
     <>
-      <FormField name="kind" label={t('rule-kind')} as="select" onChange={selectKind}>
+      <FormField name="kind" label={t('rule-kind')} as="select" onChange={selectKind} hint={t('rule-kind-hint')}>
         {RULE_KINDS.map(({ kind }) => (
           <option key={kind} value={kind}>
             {t(`rule-kind-${kind}`)}
           </option>
         ))}
       </FormField>
-      <FormField name="subjectId" label={t(subject === 'user' ? 'user' : 'group')} as="select">
-        <option value="">{t('please-select', 'Please select')}</option>
-        {subjectOptions(data, subject).map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-      </FormField>
-      <FormField name="targetId" label={t(target === 'endpoint' ? 'endpoint' : 'endpoint-group')} as="select">
-        <option value="">{t('please-select', 'Please select')}</option>
-        {targetOptions(data, target).map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-      </FormField>
-      <FormField name="allow" label={t('rule-decision')} as="select">
-        <option value="true">{t('allow')}</option>
-        <option value="false">{t('deny')}</option>
-      </FormField>
+      <SearchSelectField
+        name="subjectId"
+        label={t(subject === 'user' ? 'account' : 'group')}
+        options={subjectOptions(data, subject)}
+      />
+      <SearchSelectField
+        name="targetId"
+        label={t(target === 'endpoint' ? 'endpoint' : 'endpoint-group')}
+        options={targetOptions(data, target)}
+      />
+      <fieldset className="form-group col-12">
+        <legend className="segmented-legend">{t('rule-decision')}</legend>
+        <div className="segmented">
+          <label className="segmented-option is-allow">
+            <Field type="radio" name="allow" value="true" />
+            <span>
+              <i className="fa-solid fa-check me-2" aria-hidden="true" />
+              {t('allow')}
+            </span>
+          </label>
+          <label className="segmented-option is-deny">
+            <Field type="radio" name="allow" value="false" />
+            <span>
+              <i className="fa-solid fa-ban me-2" aria-hidden="true" />
+              {t('deny')}
+            </span>
+          </label>
+        </div>
+      </fieldset>
     </>
   );
 }
@@ -106,20 +387,19 @@ function RuleFields({ data }) {
 function Permissions() {
   const { t } = useTranslation();
   const { data, status, reload } = useResource(loadPermissionData);
+  const [tab, setTab] = useState('rules');
   const [openModal, setOpenModal] = useState(null); // 'endpointGroup' | 'rule' | null
+  const [editGroup, setEditGroup] = useState(null); // endpoint group being edited, null when creating
   const [pendingDelete, setPendingDelete] = useState(null); // { title, message, action }
 
+  const required = t('error-required', 'This field is required.');
   const endpointGroupSchema = useMemo(
-    () => Yup.object().shape({ name: Yup.string().trim().required(t('error-required', 'This field is required.')) }),
-    [t],
+    () => Yup.object().shape({ name: Yup.string().trim().required(required) }),
+    [required],
   );
   const ruleSchema = useMemo(
-    () =>
-      Yup.object().shape({
-        subjectId: Yup.string().required(t('error-required', 'This field is required.')),
-        targetId: Yup.string().required(t('error-required', 'This field is required.')),
-      }),
-    [t],
+    () => Yup.object().shape({ subjectId: Yup.string().required(required), targetId: Yup.string().required(required) }),
+    [required],
   );
 
   const closeModal = () => setOpenModal(null);
@@ -127,129 +407,64 @@ function Permissions() {
 
   const subjectName = (rule) => {
     const { subject } = ruleKindOf(rule.kind);
-    const match = subjectOptions(data, subject).find((o) => o.id === rule.subjectId);
+    const match = subjectOptions(data, subject).find((o) => o.value === String(rule.subjectId));
     return match?.label ?? `#${rule.subjectId}`;
   };
-  const endpointNames = (group) =>
-    group.endpointIds
-      .map((id) => data.endpoints.find((e) => e.id === id)?.functionName)
-      .filter(Boolean)
-      .join(', ');
+  const endpointName = (id) => data.endpoints.find((e) => e.id === id)?.functionName ?? `#${id}`;
 
   const askDelete = (title, name, action) =>
     setPendingDelete({ title, message: t('delete-confirm', { name }), action });
 
+  const openGroupModal = (group) => {
+    setEditGroup(group);
+    setOpenModal('endpointGroup');
+  };
+  const groupInitialValues = editGroup
+    ? { name: editGroup.name, description: editGroup.description ?? '', endpointIds: editGroup.endpointIds.map(String) }
+    : { name: '', description: '', endpointIds: [] };
+  const saveGroup = ({ name, description, endpointIds }) => {
+    const payload = { name: name.trim(), description, endpointIds: endpointIds.map(Number) };
+    return editGroup ? updateEndpointGroup(editGroup.id, payload) : createEndpointGroup(payload);
+  };
+
+  const tabTitle = (key, count) => (
+    <>
+      {t(key)}
+      <span className="count-badge">{count}</span>
+    </>
+  );
+
   return (
     <PageLayout backTo={ROUTES.admin.root} id="permissions" title={t('permissions', 'Permissions')}>
-      <Row>
-        <Col xs={12}>
-          <Alert variant="info">{t('permissions-hint')}</Alert>
-        </Col>
-      </Row>
+      <Alert variant="info" className="d-flex gap-2">
+        <i className="fa-solid fa-circle-info mt-1" aria-hidden="true" />
+        <span>{t('permissions-hint')}</span>
+      </Alert>
       <AsyncContent status={status} onRetry={reload}>
         {() => (
-          <>
-            <Row>
-              <Col xs={12}>
-                <h2 className="panel-title">{t('endpoints', 'Endpoints')}</h2>
-                <p>{t('endpoints-hint')}</p>
-                <ul className="entity-list">
-                  {data.endpoints.map((endpoint) => (
-                    <li key={endpoint.id}>
-                      <span>
-                        {endpoint.functionName}
-                        {endpoint.obsolete ? ` (${t('endpoint-obsolete')})` : ''}
-                        {endpoint.description ? ` — ${endpoint.description}` : ''}
-                      </span>
-                      {/* design-daas would add a deleted endpoint again, so only obsolete ones can be deleted */}
-                      {endpoint.obsolete && (
-                        <span>
-                          <button
-                            type="button"
-                            className="icon-button"
-                            aria-label={`${t('delete')} ${endpoint.functionName}`}
-                            onClick={() =>
-                              askDelete(t('delete-endpoint'), endpoint.functionName, () => deleteEndpoint(endpoint.id))
-                            }
-                          >
-                            <i className="fa-solid fa-trash" aria-hidden="true" />
-                          </button>
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col xs={12}>
-                <h2 className="panel-title">{t('endpoint-groups', 'Endpoint groups')}</h2>
-                <ul className="entity-list">
-                  {data.endpointGroups.map((group) => (
-                    <li key={group.id}>
-                      <span>
-                        {group.name}
-                        {group.endpointIds.length > 0 ? ` (${endpointNames(group)})` : ''}
-                      </span>
-                      <span>
-                        <button
-                          type="button"
-                          className="icon-button"
-                          aria-label={`${t('delete')} ${group.name}`}
-                          onClick={() =>
-                            askDelete(t('delete-endpoint-group'), group.name, () => deleteEndpointGroup(group.id))
-                          }
-                        >
-                          <i className="fa-solid fa-trash" aria-hidden="true" />
-                        </button>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col xs={12}>
-                <h2 className="panel-title">{t('permission-rules', 'Rules')}</h2>
-                <Table responsive size="sm">
-                  <thead>
-                    <tr>
-                      <th>{t('rule-kind')}</th>
-                      <th>{t('rule-subject')}</th>
-                      <th>{t('rule-target')}</th>
-                      <th>{t('rule-decision')}</th>
-                      <th aria-label={t('delete')} />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.rules.map((rule) => (
-                      <tr key={`${rule.kind}-${rule.id}`}>
-                        <td>{t(`rule-kind-${rule.kind}`)}</td>
-                        <td>{subjectName(rule)}</td>
-                        <td>{rule.targetName}</td>
-                        <td>{rule.allow ? t('allow') : t('deny')}</td>
-                        <td className="text-end">
-                          <button
-                            type="button"
-                            className="icon-button"
-                            aria-label={`${t('delete')} ${t('rule')}`}
-                            onClick={() =>
-                              askDelete(t('delete-rule'), `${subjectName(rule)} → ${rule.targetName}`, () =>
-                                deletePermissionRule(rule.kind, rule.id),
-                              )
-                            }
-                          >
-                            <i className="fa-solid fa-trash" aria-hidden="true" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </Col>
-            </Row>
+          <div className="panel">
+            <Tabs id="permissions-tabs" activeKey={tab} onSelect={(key) => setTab(key)} className="mb-2">
+              <Tab eventKey="rules" title={tabTitle('permission-rules', data.rules.length)}>
+                <RulesTab
+                  data={data}
+                  subjectName={subjectName}
+                  onCreate={() => setOpenModal('rule')}
+                  askDelete={askDelete}
+                />
+              </Tab>
+              <Tab eventKey="groups" title={tabTitle('endpoint-groups', data.endpointGroups.length)}>
+                <EndpointGroupsTab
+                  data={data}
+                  endpointName={endpointName}
+                  onCreate={() => openGroupModal(null)}
+                  onEdit={openGroupModal}
+                  askDelete={askDelete}
+                />
+              </Tab>
+              <Tab eventKey="endpoints" title={tabTitle('endpoints', data.endpoints.length)}>
+                <EndpointsTab data={data} />
+              </Tab>
+            </Tabs>
 
             <FormModal
               show={openModal === 'rule'}
@@ -275,13 +490,11 @@ function Permissions() {
             <FormModal
               show={openModal === 'endpointGroup'}
               onHide={closeModal}
-              title={t('create-endpoint-group')}
-              titleId="create-endpoint-group-modal-title"
-              initialValues={ENDPOINT_GROUP_INITIAL_VALUES}
+              title={editGroup ? t('edit-endpoint-group') : t('create-endpoint-group')}
+              titleId="endpoint-group-modal-title"
+              initialValues={groupInitialValues}
               validationSchema={endpointGroupSchema}
-              onSubmit={({ name, description, endpointIds }) =>
-                createEndpointGroup({ name: name.trim(), description, endpointIds: endpointIds.map(Number) })
-              }
+              onSubmit={saveGroup}
               onSaved={reloadSilently}
             >
               <FormField name="name" label={t('name', 'Name')} htmlFor="endpoint-group-name" />
@@ -290,26 +503,16 @@ function Permissions() {
                 label={t('description', 'Description')}
                 htmlFor="endpoint-group-description"
               />
-              <FormField name="endpointIds" label={t('endpoints')} as="select" multiple className="form-select">
-                {activeEndpoints(data).map((endpoint) => (
-                  <option key={endpoint.id} value={endpoint.id}>
-                    {endpoint.functionName}
-                  </option>
-                ))}
-              </FormField>
+              <SearchSelectField
+                name="endpointIds"
+                label={t('endpoints')}
+                options={targetOptions(data, 'endpoint')}
+                multiple
+              />
             </FormModal>
-          </>
+          </div>
         )}
       </AsyncContent>
-
-      <Row>
-        <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={() => setOpenModal('endpointGroup')}>{t('create-endpoint-group')}</ActionLink>
-        </Col>
-        <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={() => setOpenModal('rule')}>{t('create-rule')}</ActionLink>
-        </Col>
-      </Row>
 
       <ConfirmDeleteModal
         show={pendingDelete !== null}
