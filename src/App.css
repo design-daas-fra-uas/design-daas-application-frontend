@@ -1147,15 +1147,48 @@ nav.navbar > .container-fluid {
   border-radius: var(--radius-sm);
 }
 
-.entity-list > li > span:first-child {
+.entity-list > li > span:first-child,
+.entity-main {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
+/* Rows with a name, a secondary line and buttons (desktops, desktop groups). */
+.entity-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.entity-name {
+  font-weight: 600;
+}
+
+.entity-meta {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.entity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 575.98px) {
+  .entity-list > li:has(.entity-actions) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .entity-actions {
+    justify-content: flex-start;
+  }
+}
+
 /* Plain lists on the desktop and user detail pages. */
-#desktop ul,
-#desktop-details ul,
 #settingsOverviewUsers ul,
 #settingsOverviewAdmins ul {
   margin: 0;
@@ -1163,8 +1196,6 @@ nav.navbar > .container-fluid {
   list-style: none;
 }
 
-#desktop ul > li,
-#desktop-details ul > li,
 #settingsOverviewUsers ul > li,
 #settingsOverviewAdmins ul > li {
   margin: 8px 0;
@@ -1364,7 +1395,7 @@ nav.navbar > .container-fluid {
 .detail-list {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: 6px 20px;
+  gap: 12px 24px;
   margin: 4px 0;
 }
 
