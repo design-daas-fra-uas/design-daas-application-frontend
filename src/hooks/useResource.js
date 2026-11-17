@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { isPermissionDenied } from '../api/denied';
 import { createLogger } from '../utils/logger';
 const log = createLogger('useResource');
 
 const LOADING = { data: null, status: 'loading' };
 
 // Loads a resource and tracks its status:
-// 'loading' | 'loaded' | 'error' | 'not-found'.
+// 'loading' | 'loaded' | 'error' | 'not-found' | 'denied' (no permission, the
+// request error is kept as `error`).
 // A loader result of null/undefined, or an HTTP 404, means 'not-found'.
 // Stale responses (older request, changed deps, unmount) are ignored and their
 // HTTP request is aborted: the loader receives `{ signal }`.
@@ -42,9 +44,11 @@ export default function useResource(loader, deps = []) {
       }
       log.error('reload', error);
       const notFound = error?.response?.status === 404;
+      const denied = isPermissionDenied(error);
       setState((previous) => ({
         data: notFound ? null : previous.data,
-        status: notFound ? 'not-found' : 'error',
+        status: notFound ? 'not-found' : denied ? 'denied' : 'error',
+        error: denied ? error : undefined,
       }));
       return false;
     }
@@ -76,5 +80,5 @@ export default function useResource(loader, deps = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `deps` are the caller's loader inputs
   }, [load, ...deps]);
 
-  return { data: state.data, status: state.status, reload };
+  return { data: state.data, status: state.status, error: state.error, reload };
 }

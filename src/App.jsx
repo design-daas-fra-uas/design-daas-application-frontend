@@ -10,6 +10,7 @@ import './i18n';
 import { getRole, scheduleTokenRefresh, subscribeToSession } from './auth/tokenManager';
 import { ROUTES } from './routes';
 import ErrorBoundary from './components/ErrorBoundary';
+import PermissionDeniedModal from './components/PermissionDeniedModal';
 
 import Login from './views/login';
 import NotFound from './views/error';
@@ -148,6 +149,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        <PermissionDeniedModal />
       </ErrorBoundary>
     </Router>
   );

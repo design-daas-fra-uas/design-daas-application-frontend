@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { getRole } from '../../../auth/tokenManager';
 import Header from '../../../components/header';
+import PermissionDenied from '../../../components/PermissionDenied';
 import RequestAlert from '../../../components/RequestAlert';
 import useRequestAlert from '../../../hooks/useRequestAlert';
 import { ROUTES } from '../../../routes';
@@ -121,6 +122,13 @@ function MainUser() {
               <ApplicationList apps={dashboard.ownApps} onOpen={openApplication} />
             </Panel>
           </div>
+        ) : !dashboard.loaded ? (
+          <p role="status" aria-busy="true">
+            <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+            {t('loading', 'Loading...')}
+          </p>
+        ) : dashboard.denied ? (
+          <PermissionDenied error={dashboard.denied} showHome={false} onRetry={reload} />
         ) : (
           <p className="empty-state">{t('no-data-available')}</p>
         )}

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { CATEGORIES, RECORD_FIELDS, USAGE_GROUPS } from './monitoringConfig';
 
-const { Accordion, Col, Row, Tab, Tabs } = ReactBootstrap;
+const { Accordion, Alert, Col, Row, Tab, Tabs } = ReactBootstrap;
 
 const isEmpty = (value) => !value || (Array.isArray(value) ? value.length === 0 : Object.keys(value).length === 0);
 
@@ -180,5 +180,23 @@ export function MonitoringTabs({ data, id }) {
         </Tab>
       ))}
     </Tabs>
+  );
+}
+
+// Names the monitoring categories the endpoint permissions deny (see
+// useMonitoring) when only some are denied; renders nothing when all are allowed.
+export function MonitoringDenied({ denied }) {
+  const { t } = useTranslation();
+  if (denied.length === 0) {
+    return null;
+  }
+  const names = CATEGORIES.filter(({ key }) => denied.includes(key))
+    .map(({ title }) => t(title))
+    .join(', ');
+  return (
+    <Alert variant="warning">
+      <i className="fa-solid fa-user-lock me-2" aria-hidden="true" />
+      {t('monitoring-partly-denied', { names })}
+    </Alert>
   );
 }

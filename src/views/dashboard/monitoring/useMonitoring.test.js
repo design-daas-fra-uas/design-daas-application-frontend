@@ -42,3 +42,15 @@ it('falls back to empty values for failing categories', async () => {
   expect(allOk).toBe(false);
   expect(data).toEqual(EMPTY_MONITORING);
 });
+
+it('lists the categories denied by the endpoint permission check', async () => {
+  daasClient.post.mockImplementation((path) => {
+    if (path.endsWith('_tasks')) return Promise.reject({ response: { status: 401 } });
+    if (path.endsWith('_files')) return Promise.reject({ response: { status: 403 } });
+    if (path.endsWith('_apps')) return Promise.reject({ response: { status: 500 } });
+    return Promise.resolve(ok({}));
+  });
+  const { ok: allOk, denied } = await fetchMonitoring('user');
+  expect(allOk).toBe(false);
+  expect(denied).toEqual(['tasks', 'files']);
+});

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { daasClient, isDaasSuccess } from '../../api/client';
+import { isPermissionDenied, reportPermissionDenied } from '../../api/denied';
 import { describeError, describeResponse } from '../../api/errors';
 import { createLogger } from '../../utils/logger';
 import { toParams } from './fields';
@@ -45,7 +46,11 @@ export default function useDaasAction(action, showRequestAlert) {
         await action.onSuccess?.({ values, response });
       } catch (error) {
         log.error(`${action.endpoint} failed`, error);
-        showRequestAlert(false, `${action.endpoint}: ${describeError(error)}`);
+        if (isPermissionDenied(error)) {
+          reportPermissionDenied(error);
+        } else {
+          showRequestAlert(false, `${action.endpoint}: ${describeError(error)}`);
+        }
       }
     },
     [action, showRequestAlert],

@@ -57,7 +57,7 @@ function QuotaCard({ item }) {
 // now, computed like the backend's check before an object or instance is started.
 function QuotaPage() {
   const { t } = useTranslation();
-  const { data, status, reload } = useResource(getQuota);
+  const { data, status, error, reload } = useResource(getQuota);
 
   return (
     <PageLayout
@@ -66,7 +66,7 @@ function QuotaPage() {
       backTo={ROUTES.dashboard}
       actions={<RefreshButton inline onClick={() => reload()} />}
     >
-      <AsyncContent status={status} onRetry={reload}>
+      <AsyncContent status={status} error={error} onRetry={reload}>
         {() => (
           <>
             <p className="page-intro">{t(`quota-source-${data.source}`)}</p>

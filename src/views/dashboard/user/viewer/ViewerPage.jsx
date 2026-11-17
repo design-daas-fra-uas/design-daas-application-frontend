@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import LoadingSpinner from '../../../../assets/animation/loadingspinner.svg';
 import Header from '../../../../components/header';
+import PermissionDenied from '../../../../components/PermissionDenied';
 import RequestAlert from '../../../../components/RequestAlert';
 import ViewerFrame from '../../../../components/ViewerFrame';
 import useViewerSession from './useViewerSession';
@@ -11,7 +12,7 @@ import useViewerSession from './useViewerSession';
 // session starts, an error message if it fails, then the viewer itself.
 function ViewerPage({ id, start }) {
   const { t } = useTranslation();
-  const { status, viewerRequest, requestAlert } = useViewerSession(start);
+  const { status, viewerRequest, error, requestAlert } = useViewerSession(start);
 
   return (
     <>
@@ -24,6 +25,7 @@ function ViewerPage({ id, start }) {
             </Col>
           </Row>
         )}
+        {status === 'denied' && <PermissionDenied error={error} />}
         {status === 'loading' && (
           <Row>
             <Col xs={12}>
