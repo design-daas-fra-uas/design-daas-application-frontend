@@ -151,13 +151,14 @@ export function MonitoringCounts({ data }) {
     ['count-apps', data.apps.length],
   ];
   return (
-    <Row>
+    <div className="usage-stats">
       {counts.map(([label, count]) => (
-        <Col key={label} xs={12} md={4} lg={3} className="text-center">
-          {`${t(label)} ${count}`}
-        </Col>
+        <div key={label} className="usage-stat">
+          <span className="usage-stat-label">{t(label)}</span>
+          <span className="usage-stat-value">{count}</span>
+        </div>
       ))}
-    </Row>
+    </div>
   );
 }
 
@@ -168,7 +169,7 @@ export function MonitoringTabs({ data, id }) {
     <Tabs defaultActiveKey="complete" id={id}>
       <Tab eventKey="complete" title={t('complete-monitoring')}>
         {CATEGORIES.map(({ key, title }) => (
-          <section key={key}>
+          <section key={key} className="monitoring-section">
             <Title>{t(title)}</Title>
             <CategoryContent category={key} data={data} />
           </section>

@@ -56,7 +56,7 @@ export function SetupLayout({ id, title, requestAlert, backTo, children }) {
   return (
     <>
       <Header />
-      <Container as="main" id={id} className="page">
+      <Container as="main" id={id} className="page setup-page">
         <PageHeader title={title} backTo={backTo} />
         {children}
       </Container>

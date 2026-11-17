@@ -14,7 +14,8 @@ const data = {
 
 it('shows the counts of tasks, files and apps', () => {
   render(<MonitoringCounts data={data} />);
-  expect(screen.getByText(/ 2$/)).toBeInTheDocument();
+  expect(screen.getByText('Count of tasks:')).toBeInTheDocument();
+  expect(screen.getAllByText('2').length).toBeGreaterThan(0);
 });
 
 it('renders task records with their fields', () => {

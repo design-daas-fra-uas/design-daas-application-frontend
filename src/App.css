@@ -20,6 +20,8 @@
   --color-background: #ffffff;
   --color-page: #f3f5fa;
   --color-border: #dce1ec;
+  /* Borders that identify a control need 3:1 against white (WCAG 1.4.11). */
+  --color-border-strong: #8a91a5;
   --color-success: #1d7a3a;
   --color-danger: #b42318;
   --color-accent: #6b3fc9;
@@ -210,6 +212,12 @@ pre {
 }
 
 .form-control,
+.form-select,
+.form-check-input {
+  border-color: var(--color-border-strong);
+}
+
+.form-control,
 .form-select {
   min-height: var(--control-height);
   /* Bootstrap uses --bs-body-bg (the grey page colour), which made enabled
@@ -263,7 +271,7 @@ select {
   padding: 8px 12px;
   color: var(--color-text);
   background-color: var(--color-background);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
 }
 
@@ -387,6 +395,30 @@ nav.navbar > .container-fluid {
 .page-narrow .page-header-back:empty,
 .page-narrow .page-header-actions:empty {
   display: none;
+}
+
+/* Monitoring: each category of the "complete" tab is its own block. */
+.monitoring-section {
+  margin-bottom: 32px;
+}
+
+.monitoring-section h3 {
+  margin-bottom: 12px;
+}
+
+/* Expert setup pages: every section (row) is a white panel like on the dashboard. */
+.setup-page > .row {
+  margin: 0 0 24px;
+  padding: clamp(18px, 3vw, 28px) clamp(6px, 2vw, 16px);
+  row-gap: 14px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.setup-page > .row .accordion {
+  margin-bottom: 0;
 }
 
 .page-narrow {
@@ -544,12 +576,12 @@ nav.navbar > .container-fluid {
 }
 
 /* Tabs: one scrollable line instead of wrapped multi-line labels. */
+/* Tabs wrap onto a second line instead of hiding behind a scrollbar, so every
+   tab stays visible. */
 .nav-tabs {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  flex-wrap: wrap;
+  row-gap: 4px;
   margin-bottom: 24px;
-  scrollbar-width: thin;
 }
 
 .nav-tabs .nav-link {
