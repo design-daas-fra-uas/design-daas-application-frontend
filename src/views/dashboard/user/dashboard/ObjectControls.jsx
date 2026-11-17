@@ -3,6 +3,7 @@ import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
+import ConfirmDeleteModal from '../../../../components/ConfirmDeleteModal';
 import { ROUTES } from '../../../../routes';
 import { deleteObject, startObject, stopObject } from './dashboardApi';
 import { navigateLater } from './navigation';
@@ -14,6 +15,7 @@ function ObjectControls({ objects, instances, run, reload }) {
   const [selectedId, setSelectedId] = useState('');
   // Instance of the selected object, if it is running.
   const [instanceId, setInstanceId] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const selected = objects.find((object) => String(object.id_object) === selectedId);
   // System objects (owner 0) are shared by everyone; only admins may delete them.
   const isSystemObject = selected?.id_owner === 0;
@@ -82,11 +84,22 @@ function ObjectControls({ objects, instances, run, reload }) {
         <Button variant="outline-primary" disabled={!selected} onClick={editInExpertMode}>
           {t('edit-headline')} ({t('expert-mode')})
         </Button>
-        <Button variant="outline-danger" disabled={!selected || isSystemObject} onClick={remove}>
+        <Button
+          variant="outline-danger"
+          disabled={!selected || isSystemObject}
+          onClick={() => setConfirmingDelete(true)}
+        >
           {t('delete-mode')}
         </Button>
       </div>
       {isSystemObject && <p className="control-hint">{t('system-object-hint')}</p>}
+      <ConfirmDeleteModal
+        show={confirmingDelete}
+        onHide={() => setConfirmingDelete(false)}
+        title={t('delete-object')}
+        message={t('delete-object-confirm', { name: selected ? t('name-text') + selected.id_user : '' })}
+        onConfirm={remove}
+      />
     </>
   );
 }

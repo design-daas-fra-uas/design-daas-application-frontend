@@ -22,7 +22,7 @@ function SettingsAdmins() {
     <PageLayout backTo={ROUTES.admin.root} id="dashboardAdminSettingsAdmin" title={t('user-management')}>
       <Row>
         <Col xs={12}>
-          <h4>{t('admins')}</h4>
+          <h2 className="panel-title">{t('admins')}</h2>
         </Col>
         <Col xs={12}>
           <AsyncContent status={status} onRetry={reload}>

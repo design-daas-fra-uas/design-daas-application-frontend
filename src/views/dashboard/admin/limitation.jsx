@@ -40,7 +40,7 @@ function LimitCard({ title, hint, limit }) {
   const { t } = useTranslation();
   return (
     <div className="panel">
-      <h3 className="panel-title">{title}</h3>
+      <h2 className="panel-title">{title}</h2>
       <p className="text-muted small">{hint}</p>
       <dl className="limit-summary">
         {LIMIT_FIELDS.map(({ key, label, unit }) => (
@@ -106,7 +106,7 @@ function Limitation() {
             </div>
 
             <div className="panel">
-              <h3 className="panel-title">{t('limit-users-title')}</h3>
+              <h2 className="panel-title">{t('limit-users-title')}</h2>
               {rows.length === 0 ? (
                 <p className="empty-state">{t('limit-users-empty')}</p>
               ) : (

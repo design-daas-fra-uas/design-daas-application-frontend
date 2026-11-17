@@ -179,6 +179,16 @@ const resources = {
       'error-function-name-format': "Only letters, digits, '_', '.' and '-' are allowed.",
       'error-required': 'This field is required.',
       loading: 'Loading...',
+      'skip-to-content': 'Skip to main content',
+      'language-en': 'English',
+      'language-de': 'Deutsch',
+      'main-navigation': 'Main navigation',
+      'app-name-suffix': 'DaaS - DESIGN',
+      'logo-alt': 'DESIGN – Desktop as a Service',
+      'delete-object': 'Delete object',
+      'delete-object-confirm': 'Delete the object "{{name}}"? This cannot be undone.',
+      'delete-environment': 'Delete environment',
+      'delete-environment-confirm': 'Delete the environment "{{name}}"? This cannot be undone.',
       'login-error-credentials': 'Incorrect username or password.',
       'login-error-generic': 'Login failed. Please try again later.',
       'no-entries': 'No entries found.',
@@ -831,6 +841,16 @@ const resources = {
       'error-function-name-format': "Nur Buchstaben, Ziffern, '_', '.' und '-' sind erlaubt.",
       'error-required': 'Dieses Feld ist erforderlich.',
       loading: 'Wird geladen...',
+      'skip-to-content': 'Zum Hauptinhalt springen',
+      'language-en': 'English',
+      'language-de': 'Deutsch',
+      'main-navigation': 'Hauptnavigation',
+      'app-name-suffix': 'DaaS - DESIGN',
+      'logo-alt': 'DESIGN – Desktop as a Service',
+      'delete-object': 'Objekt löschen',
+      'delete-object-confirm': 'Das Objekt „{{name}}“ löschen? Dies kann nicht rückgängig gemacht werden.',
+      'delete-environment': 'Umgebung löschen',
+      'delete-environment-confirm': 'Die Umgebung „{{name}}“ löschen? Dies kann nicht rückgängig gemacht werden.',
       'login-error-credentials': 'Benutzername oder Passwort ist falsch.',
       'login-error-generic': 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es später erneut.',
       'no-entries': 'Keine Einträge gefunden.',
@@ -1315,6 +1335,11 @@ i18n.use(initReactI18next).init({
     escapeValue: false,
   },
 });
+
+// Screen readers pick their pronunciation from <html lang>, so keep it in sync.
+const syncDocumentLanguage = (lng) => document.documentElement.setAttribute('lang', lng);
+syncDocumentLanguage(i18n.language);
+i18n.on('languageChanged', syncDocumentLanguage);
 
 export const changeLanguage = (lng) => {
   localStorage.setItem('language', lng);

@@ -10,11 +10,12 @@ function EntitySection({ title, allLink, items, onSettings, onInfo, limit = 3 })
   return (
     <>
       <div className="entity-section-head">
-        <h3 className="panel-title">
+        <h2 className="panel-title">
           {title} <span className="count-badge">{items.length}</span>
-        </h3>
+        </h2>
         <Link to={allLink} className="small fw-medium">
           {t('show-all')}
+          <span className="visually-hidden">: {title}</span>
           <i className="fa-solid fa-arrow-right ms-1" aria-hidden="true" />
         </Link>
       </div>

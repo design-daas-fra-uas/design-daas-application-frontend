@@ -38,7 +38,7 @@ function SettingsUsers() {
     <PageLayout backTo={ROUTES.admin.root} id="dashboardAdminSettingsUser" title={t('user-management')}>
       <Row>
         <Col xs={12}>
-          <h4>{t('users')}</h4>
+          <h2 className="panel-title">{t('users')}</h2>
         </Col>
         <Col xs={12}>
           <AsyncContent status={status} onRetry={reload}>

@@ -18,18 +18,19 @@ function ApplicationList({ apps, onOpen }) {
         type="search"
         placeholder={t('search-text-placeholder')}
         aria-label={t('search-text-placeholder')}
+        aria-controls="application-grid"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
       />
       {visible.length === 0 ? (
         <p className="empty-state">{t('no-data-available')}</p>
       ) : (
-        <div className="app-grid">
+        <div className="app-grid" id="application-grid">
           {visible.map((app) => (
             <article key={app.id_app} className="app-card">
-              <h4 className="app-card-name" title={app.name}>
+              <h3 id={`app-${app.id_app}-name`} className="app-card-name" title={app.name}>
                 {app.name}
-              </h4>
+              </h3>
               <div className="app-card-icons">
                 <AppIcons app={app} />
               </div>
@@ -39,10 +40,15 @@ function ApplicationList({ apps, onOpen }) {
                   variant="outline-primary"
                   onClick={() => onOpen(app.id_app, 'clone')}
                   disabled={!app.id_template}
+                  aria-describedby={`app-${app.id_app}-name`}
                 >
                   {t('clone-headline')}
                 </Button>
-                <Button variant="primary" onClick={() => onOpen(app.id_app, 'create')}>
+                <Button
+                  variant="primary"
+                  onClick={() => onOpen(app.id_app, 'create')}
+                  aria-describedby={`app-${app.id_app}-name`}
+                >
                   {t('create-headline')}
                 </Button>
               </div>

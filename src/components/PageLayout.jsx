@@ -8,7 +8,7 @@ function PageLayout({ id, title, backTo, actions, children }) {
   return (
     <>
       <Header />
-      <Container id={id} className="page">
+      <Container as="main" id={id} className="page">
         <PageHeader title={title} backTo={backTo} actions={actions} />
         {children}
       </Container>

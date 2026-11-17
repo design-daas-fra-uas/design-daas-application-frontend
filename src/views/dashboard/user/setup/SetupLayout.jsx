@@ -17,9 +17,8 @@ export function ConfigSteps({ title, steps, showRequestAlert, disabled }) {
       <Accordion>
         {steps.map((step, index) => (
           <Accordion.Item key={step.key} eventKey={String(index)}>
-            <Accordion.Header>{t(step.title)}</Accordion.Header>
+            <Accordion.Header as="h4">{t(step.title)}</Accordion.Header>
             <Accordion.Body>
-              <h4>{t(step.title)}</h4>
               <ActionPanel action={step} showRequestAlert={showRequestAlert} disabled={disabled} />
             </Accordion.Body>
           </Accordion.Item>
@@ -51,14 +50,14 @@ export function SetupSection({ title, info, action, showRequestAlert, disabled }
   );
 }
 
-// Page frame of the expert-mode setup pages. The pages render their own title, so the
-// header here only holds the Back button.
-export function SetupLayout({ id, requestAlert, backTo, children }) {
+// Page frame of the expert-mode setup pages: Back button and the page <h1>
+// (`title`); the pages render their section headings themselves.
+export function SetupLayout({ id, title, requestAlert, backTo, children }) {
   return (
     <>
       <Header />
-      <Container id={id} className="page">
-        <PageHeader backTo={backTo} />
+      <Container as="main" id={id} className="page">
+        <PageHeader title={title} backTo={backTo} />
         {children}
       </Container>
       <Container className="page-footer">

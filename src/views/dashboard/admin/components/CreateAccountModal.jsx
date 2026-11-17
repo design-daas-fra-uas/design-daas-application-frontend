@@ -42,9 +42,9 @@ function CreateAccountModal({ show, onHide, error, groups, onCreateUser, onCreat
   const { adminSchema, userSchema } = useAccountSchemas(t);
 
   return (
-    <Modal show={show} onHide={onHide} size="md" centered>
+    <Modal show={show} onHide={onHide} size="md" centered aria-labelledby="create-account-title">
       <Modal.Header closeButton>
-        <Modal.Title>{t('create-user')}</Modal.Title>
+        <Modal.Title id="create-account-title">{t('create-user')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && (

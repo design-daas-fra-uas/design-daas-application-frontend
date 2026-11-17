@@ -70,7 +70,12 @@ function EnvironmentSetup({ edit = false }) {
   const locked = !created || !env.trim();
 
   return (
-    <SetupLayout id="objectEnvironmentSetup" requestAlert={requestAlert} backTo={ROUTES.user.expertBaseImage}>
+    <SetupLayout
+      id="objectEnvironmentSetup"
+      title={t('expert-mode')}
+      requestAlert={requestAlert}
+      backTo={ROUTES.user.expertBaseImage}
+    >
       <Row>
         <Col xs={12} className="text-left">
           <h3>{t('title-environment-create')}</h3>

@@ -116,7 +116,12 @@ const renderRoutes = (routes) => routes.map(([path, Page]) => <Route key={path} 
 
 function PageFallback() {
   const { t } = useTranslation();
-  return <p role="status">{t('loading', 'Loading...')}</p>;
+  return (
+    <p role="status" className="page-loading">
+      <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+      {t('loading', 'Loading...')}
+    </p>
+  );
 }
 
 function App() {

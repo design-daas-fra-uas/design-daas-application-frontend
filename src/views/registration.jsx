@@ -75,16 +75,16 @@ function Registration() {
   return (
     <>
       <Header />
-      <Container id="registration" className="page page-narrow">
+      <Container as="main" id="registration" className="page page-narrow">
         <PageHeader title={t('validate-registration')} backTo={ROUTES.login} />
 
         <Row>
           <Col xs={12}>
             <Formik initialValues={INITIAL_VALUES} validationSchema={registrationSchema} onSubmit={registerUser}>
-              {({ values, errors, isValid, dirty, isSubmitting }) => (
+              {({ values, errors, isSubmitting }) => (
                 <Form noValidate>
                   <Row>
-                    <FormField name="email" label={t('email')} type="email" />
+                    <FormField name="email" label={t('email')} type="email" autoComplete="email" />
                     <FormField name="registrationCode" label={t('user-code')} />
                   </Row>
 
@@ -94,7 +94,8 @@ function Registration() {
                         type="submit"
                         variant="primary"
                         className="submit-full-width"
-                        disabled={!isValid || !dirty || isSubmitting}
+                        // Stays enabled while the form is invalid: submitting shows the field errors.
+                        disabled={isSubmitting}
                       >
                         {isSubmitting ? t('loading', 'Loading...') : t('submit')}
                       </Button>

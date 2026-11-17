@@ -67,7 +67,7 @@ function FormModal({
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ isValid, dirty, isSubmitting }) => (
+          {({ dirty, isSubmitting }) => (
             <Form>
               <Row>{children}</Row>
               <Row>
@@ -76,7 +76,8 @@ function FormModal({
                     type="submit"
                     variant="primary"
                     className={fullWidthSubmit ? 'submit-full-width' : undefined}
-                    disabled={!isValid || (requireDirty && !dirty) || isSubmitting}
+                    // Not disabled for invalid input: submitting shows the field errors.
+                    disabled={(requireDirty && !dirty) || isSubmitting}
                   >
                     {t('submit')}
                   </Button>

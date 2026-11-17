@@ -145,9 +145,9 @@ function GroupModal({ show, onHide, error, groups, onCreate, onUpdate, onDelete 
   const { t } = useTranslation();
 
   return (
-    <Modal show={show} onHide={onHide} size="md" centered>
+    <Modal show={show} onHide={onHide} size="md" centered aria-labelledby="group-modal-title">
       <Modal.Header closeButton>
-        <Modal.Title>{t('create-update-group')}</Modal.Title>
+        <Modal.Title id="group-modal-title">{t('create-update-group')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && (

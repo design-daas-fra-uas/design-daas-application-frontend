@@ -160,7 +160,7 @@ function Permissions() {
           <>
             <Row>
               <Col xs={12}>
-                <h4>{t('endpoints', 'Endpoints')}</h4>
+                <h2 className="panel-title">{t('endpoints', 'Endpoints')}</h2>
                 <ul className="entity-list">
                   {data.endpoints.map((endpoint) => (
                     <li key={endpoint.id}>
@@ -188,7 +188,7 @@ function Permissions() {
 
             <Row>
               <Col xs={12}>
-                <h4>{t('endpoint-groups', 'Endpoint groups')}</h4>
+                <h2 className="panel-title">{t('endpoint-groups', 'Endpoint groups')}</h2>
                 <ul className="entity-list">
                   {data.endpointGroups.map((group) => (
                     <li key={group.id}>
@@ -216,7 +216,7 @@ function Permissions() {
 
             <Row>
               <Col xs={12}>
-                <h4>{t('permission-rules', 'Rules')}</h4>
+                <h2 className="panel-title">{t('permission-rules', 'Rules')}</h2>
                 <Table responsive size="sm">
                   <thead>
                     <tr>

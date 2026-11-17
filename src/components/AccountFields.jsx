@@ -1,4 +1,3 @@
-import { Col } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import FormField from './FormField';
@@ -10,12 +9,17 @@ function AccountFields({ idSuffix = '' }) {
 
   return (
     <>
-      <FormField name="name" label={t('username')} htmlFor={`username${idSuffix}`} />
-      <FormField name="email" label={t('email')} htmlFor={`email${idSuffix}`} />
-      <FormField name="password" label={t('password')} htmlFor={`password${idSuffix}`} type="password" />
-      <Col xs={12}>
-        <div>{t('password-detail-info')}</div>
-      </Col>
+      {/* A new account: the browser must not fill in the admin's own login. */}
+      <FormField name="name" label={t('username')} htmlFor={`username${idSuffix}`} autoComplete="off" />
+      <FormField name="email" label={t('email')} htmlFor={`email${idSuffix}`} type="email" autoComplete="off" />
+      <FormField
+        name="password"
+        label={t('password')}
+        htmlFor={`password${idSuffix}`}
+        type="password"
+        autoComplete="new-password"
+        hint={t('password-detail-info')}
+      />
     </>
   );
 }

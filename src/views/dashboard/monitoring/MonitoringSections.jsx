@@ -67,7 +67,7 @@ function RecordList({ records, fields, idField }) {
         // Records come without an id now and then; the list is never reordered.
         // eslint-disable-next-line @eslint-react/no-array-index-key
         <Accordion.Item key={record[idField] ?? index} eventKey={String(record[idField] ?? index)}>
-          <Accordion.Header>{record[idField]}</Accordion.Header>
+          <Accordion.Header as="h4">{record[idField]}</Accordion.Header>
           <Accordion.Body>
             <FieldGrid record={record} fields={fields} />
           </Accordion.Body>

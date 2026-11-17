@@ -17,7 +17,7 @@ const { Container, Nav, NavDropdown, Navbar } = ReactBootstrap;
 // Top navigation: home, the user's open viewer connections, language and logout.
 // Pages that already load the connections pass them in; otherwise they are fetched here.
 function Header({ connections: providedConnections }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [loadedConnections, setConnections] = useState([]);
   const connections = providedConnections ?? loadedConnections;
   const isLoggedIn = Boolean(getAccessToken());
@@ -48,48 +48,73 @@ function Header({ connections: providedConnections }) {
     window.location.assign(ROUTES.user.connectionRun);
   };
 
+  // Keyboard users jump past the navigation to the page's <main>.
+  const skipToContent = (event) => {
+    const main = document.querySelector('main');
+    if (main) {
+      event.preventDefault();
+      main.setAttribute('tabindex', '-1');
+      main.focus();
+    }
+  };
+
   return (
-    <Navbar expand="lg" fixed="top" variant="dark">
-      <Container fluid className={isSmall ? 'header-small' : ''}>
-        <Navbar.Brand>
-          <img src={Logo} alt="Logo" />
-        </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="justify-content-end" style={{ width: '100%' }}>
-            {isLoggedIn && (
-              <>
-                <Nav.Link href={ROUTES.dashboard}>{t('home')}</Nav.Link>
-                <NavDropdown title={t('available_connections')} id="basic-nav-dropdown">
-                  {connections.length > 0 ? (
-                    connections.map((connection) => (
-                      <NavDropdown.Item key={connection.id_inst} as="button" onClick={() => openConnection(connection)}>
-                        {t('url-text') + connection.viewer_url}
-                      </NavDropdown.Item>
-                    ))
-                  ) : (
-                    <NavDropdown.Item as="span">{t('no-data-available')}</NavDropdown.Item>
-                  )}
-                </NavDropdown>
-              </>
-            )}
-            <NavDropdown title={t('language')} id="basic-nav-dropdown-additional">
-              <NavDropdown.Item as="button" onClick={() => changeLanguage('en')}>
-                EN
-              </NavDropdown.Item>
-              <NavDropdown.Item as="button" onClick={() => changeLanguage('de')}>
-                DE
-              </NavDropdown.Item>
-            </NavDropdown>
-            {isLoggedIn && (
-              <Nav.Link as="button" onClick={() => logout(ROUTES.login)}>
-                {t('logout')}
-              </Nav.Link>
-            )}
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+    <>
+      <a href="#main" className="skip-link" onClick={skipToContent}>
+        {t('skip-to-content')}
+      </a>
+      <Navbar expand="lg" fixed="top" variant="dark" aria-label={t('main-navigation')}>
+        <Container fluid className={isSmall ? 'header-small' : ''}>
+          <Navbar.Brand>
+            <img src={Logo} alt={t('logo-alt')} />
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="justify-content-end" style={{ width: '100%' }}>
+              {isLoggedIn && (
+                <>
+                  <Nav.Link href={ROUTES.dashboard}>{t('home')}</Nav.Link>
+                  <NavDropdown title={t('available_connections')} id="basic-nav-dropdown">
+                    {connections.length > 0 ? (
+                      connections.map((connection) => (
+                        <NavDropdown.Item
+                          key={connection.id_inst}
+                          as="button"
+                          onClick={() => openConnection(connection)}
+                        >
+                          {t('url-text') + connection.viewer_url}
+                        </NavDropdown.Item>
+                      ))
+                    ) : (
+                      <NavDropdown.Item as="span">{t('no-data-available')}</NavDropdown.Item>
+                    )}
+                  </NavDropdown>
+                </>
+              )}
+              <NavDropdown title={t('language')} id="basic-nav-dropdown-additional">
+                {['en', 'de'].map((lng) => (
+                  <NavDropdown.Item
+                    key={lng}
+                    as="button"
+                    lang={lng}
+                    active={i18n.resolvedLanguage === lng}
+                    aria-current={i18n.resolvedLanguage === lng ? 'true' : undefined}
+                    onClick={() => changeLanguage(lng)}
+                  >
+                    {t(`language-${lng}`)}
+                  </NavDropdown.Item>
+                ))}
+              </NavDropdown>
+              {isLoggedIn && (
+                <Nav.Link as="button" onClick={() => logout(ROUTES.login)}>
+                  {t('logout')}
+                </Nav.Link>
+              )}
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+    </>
   );
 }
 

@@ -33,7 +33,12 @@ function ObjectBaseImageSetup() {
   );
 
   return (
-    <SetupLayout id="objectBaseImageSetup" requestAlert={requestAlert} backTo={ROUTES.dashboard}>
+    <SetupLayout
+      id="objectBaseImageSetup"
+      title={t('expert-mode')}
+      requestAlert={requestAlert}
+      backTo={ROUTES.dashboard}
+    >
       <Row>
         <Col xs={12} className="text-left">
           <h3>{t('title-baseimage-create')}</h3>

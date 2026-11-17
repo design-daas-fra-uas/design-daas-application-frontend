@@ -27,6 +27,7 @@ function ViewerResult({ action, result }) {
 
 // Form of one action plus what its last successful request returned.
 function ActionPanel({ action, showRequestAlert, disabled }) {
+  const { t } = useTranslation();
   const { result, run } = useDaasAction(action, showRequestAlert);
   const [pending, setPending] = useState(false);
 
@@ -41,7 +42,7 @@ function ActionPanel({ action, showRequestAlert, disabled }) {
 
   let output = null;
   if (pending && action.result === 'viewer') {
-    output = <img src={LoadingSpinner} alt="Loading..." className="loading-spinner" />;
+    output = <img src={LoadingSpinner} alt={t('loading')} className="loading-spinner" />;
   } else if (result) {
     output =
       action.result === 'viewer' ? <ViewerResult action={action} result={result} /> : <ResultView data={result.data} />;

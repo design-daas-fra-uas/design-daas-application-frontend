@@ -16,14 +16,21 @@ function EntityList({ items, onSettings, onInfo, limit }) {
             <button
               type="button"
               className="icon-button"
-              aria-label={t('settings', 'Settings')}
+              aria-label={`${t('settings', 'Settings')}: ${item.name}`}
+              title={t('settings', 'Settings')}
               onClick={() => onSettings(item)}
             >
               <i className="fa-solid fa-gear" aria-hidden="true" />
             </button>
           </span>
           <span>
-            <button type="button" className="icon-button" aria-label={t('information')} onClick={() => onInfo(item)}>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={`${t('information')}: ${item.name}`}
+              title={t('information')}
+              onClick={() => onInfo(item)}
+            >
               <i className="fa-solid fa-circle-info" aria-hidden="true" />
             </button>
           </span>

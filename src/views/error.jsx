@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { getRole } from '../auth/tokenManager';
 import ErrorState from '../components/ErrorState';
 import Header from '../components/header';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { ROUTES } from '../routes';
 
 function NotFound() {
@@ -12,14 +13,16 @@ function NotFound() {
   const navigate = useNavigate();
   // Logged-in users go back to their dashboard, everyone else to the login
   const home = getRole() ? ROUTES.dashboard : ROUTES.login;
+  useDocumentTitle(t('Error-Title'));
 
   return (
     <>
       <Header />
-      <Container id="error" className="page page-narrow">
+      <Container as="main" id="error" className="page page-narrow">
         <ErrorState
           icon="fa-compass"
           tone="info"
+          headingLevel="h1"
           title={t('Error-Title')}
           actions={
             <>

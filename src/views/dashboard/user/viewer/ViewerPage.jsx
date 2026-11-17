@@ -17,7 +17,7 @@ function ViewerPage({ id, start }) {
   return (
     <>
       <Header />
-      <Container fluid id={id} className="page page-viewer">
+      <Container as="main" fluid id={id} className="page page-viewer">
         {status === 'failed' && (
           <Row>
             <Col xs={12} className="text-center" role="alert">
