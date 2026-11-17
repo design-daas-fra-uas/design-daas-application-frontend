@@ -26,7 +26,9 @@ function LimitField({ name, label, unit }) {
             name={name}
             type="number"
             min="0"
-            step={unit === 'bytes' ? '0.5' : '1'}
+            // Any GiB value: the defaults are shown rounded to 0.1 GiB (e.g. 17.6),
+            // and a step the value does not fit makes the browser block the submit.
+            step={unit === 'bytes' ? 'any' : '1'}
             value={unlimited ? '' : values[name]}
             placeholder={unlimited ? t('limit-unlimited') : ''}
             disabled={unlimited}
