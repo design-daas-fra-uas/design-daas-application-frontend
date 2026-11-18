@@ -30,7 +30,7 @@ ARG REACT_APP_LOG_LEVEL=
 RUN npm run build
 
 # ---- server: static files behind nginx ----
-FROM nginx:1.30.6-alpine AS server
+FROM nginx:1.31.7-alpine AS server
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/
