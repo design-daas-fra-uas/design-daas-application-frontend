@@ -15,7 +15,7 @@ function SettingsOverview() {
   ];
 
   return (
-    <PageLayout id="settingsOverview" title={t('user-management')}>
+    <PageLayout id="settingsOverview" title={t('user-management')} backTo={ROUTES.admin.root}>
       <Row>
         <Col xs={12}>
           <ul>

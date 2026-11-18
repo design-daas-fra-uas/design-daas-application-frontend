@@ -41,12 +41,22 @@ function LoginForm({ role, onLogin }) {
 
   return (
     <Formik initialValues={{ username: '', password: '' }} validationSchema={schema} onSubmit={handleSubmit}>
-      {({ isValid, dirty, isSubmitting }) => (
+      {({ isSubmitting }) => (
         <Form>
-          {loginError && <Alert variant="danger">{loginError}</Alert>}
+          {loginError && (
+            <Alert variant="danger" role="alert">
+              {loginError}
+            </Alert>
+          )}
           <Row>
-            <FormField name="username" label={t('username')} htmlFor={`${role}-username`} />
-            <FormField name="password" label={t('password')} htmlFor={`${role}-password`} type="password" />
+            <FormField name="username" label={t('username')} htmlFor={`${role}-username`} autoComplete="username" />
+            <FormField
+              name="password"
+              label={t('password')}
+              htmlFor={`${role}-password`}
+              type="password"
+              autoComplete="current-password"
+            />
           </Row>
 
           <Row>
@@ -55,7 +65,8 @@ function LoginForm({ role, onLogin }) {
                 type="submit"
                 variant="primary"
                 className="submit-full-width"
-                disabled={!isValid || !dirty || isSubmitting}
+                // Stays enabled while the form is invalid: submitting shows the field errors.
+                disabled={isSubmitting}
               >
                 {isSubmitting ? t('loading', 'Loading...') : t('submit')}
               </Button>

@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import AccountFields from '../../../components/AccountFields';
 import ActionLink from '../../../components/ActionLink';
 import AsyncContent from '../../../components/AsyncContent';
-import BackLink from '../../../components/BackLink';
 import EntityList from '../../../components/EntityList';
 import FormField from '../../../components/FormField';
 import FormModal from '../../../components/FormModal';
@@ -36,10 +35,10 @@ function SettingsUsers() {
     createUser({ name: name.trim(), email: email.trim(), password, groups: [Number(group)] });
 
   return (
-    <PageLayout id="dashboardAdminSettingsUser" title={t('user-management')} wrapTitle>
+    <PageLayout backTo={ROUTES.admin.root} id="dashboardAdminSettingsUser" title={t('user-management')}>
       <Row>
         <Col xs={12}>
-          <h4>{t('users')}</h4>
+          <h2 className="panel-title">{t('users')}</h2>
         </Col>
         <Col xs={12}>
           <AsyncContent status={status} onRetry={reload}>
@@ -54,7 +53,6 @@ function SettingsUsers() {
         </Col>
       </Row>
       <Row>
-        <BackLink to={ROUTES.admin.root} />
         <Col xs={12} md={6} lg={4}>
           <ActionLink onClick={() => setCreateModalOpen(true)}>{t('create-user')}</ActionLink>
         </Col>

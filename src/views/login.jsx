@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import Header from '../components/header';
 import LoginForm from '../components/LoginForm';
 import PageLink from '../components/PageLink';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 import { ROUTES } from '../routes';
 
 import { loginWithPassword } from '../api/auth';
@@ -17,6 +18,7 @@ function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('user');
+  useDocumentTitle(t('login'));
 
   useEffect(() => {
     if (getRole()) {
@@ -43,10 +45,10 @@ function Login() {
   return (
     <>
       <Header />
-      <Container id="login" className="page page-narrow">
+      <Container as="main" id="login" className="page page-narrow">
         <Row>
           <Col xs={12}>
-            <h2 className="page-title">{t('login')}</h2>
+            <h1 className="page-title">{t('login')}</h1>
           </Col>
         </Row>
 
@@ -61,7 +63,7 @@ function Login() {
         </Tabs>
 
         {activeTab === 'user' && (
-          <Row>
+          <Row className="mt-4">
             <Col xs={12}>
               <PageLink to={ROUTES.registration}>{t('validate-registration')}</PageLink>
             </Col>

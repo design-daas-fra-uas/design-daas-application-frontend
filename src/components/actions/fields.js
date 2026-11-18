@@ -1,11 +1,27 @@
 // Field definitions for config-driven DaaS forms (see ActionForm).
 //
-// A field is `{ name, label, type, required, options, initial, visible, param }`:
+// A field is `{ name, label, type, required, options, initial, visible, param, hint, pattern, invalid }`:
 // - `name` is the Formik value name and, unless `param` is given, the request parameter;
-// - `label` is an i18n key;
-// - `visible(values)` hides the field (and skips its validation and parameter) when false.
+// - `label` and `hint` (a short explanation under the input) are i18n keys;
+// - `visible(values)` hides the field (and skips its validation and parameter) when false;
+// - a non-empty value must match `pattern`, otherwise the i18n key `invalid` is shown;
+// - `suggest()` (text fields) resolves to `{ value, label, badge }` items (badge:
+//   `{ key, values }` of an i18n text) offered in a
+//   searchable list (see Combobox), while typing any other value stays possible;
+// - `scale` (number fields) multiplies the value before it is sent, e.g. GiB -> KiB.
 
 export const text = (name, label, options = {}) => ({ type: 'text', name, label, initial: '', ...options });
+
+// Whole number from 1 up.
+export const number = (name, label, options = {}) => ({
+  type: 'number',
+  name,
+  label,
+  initial: '',
+  pattern: /^[1-9]\d*$/,
+  invalid: 'field-positive-integer',
+  ...options,
+});
 
 export const checkbox = (name, label, options = {}) => ({ type: 'checkbox', name, label, initial: false, ...options });
 
@@ -47,6 +63,16 @@ export const VIEWER_SCALE = [
   ['down', 'Down'],
   ['both', 'Both'],
 ];
+// The screen sizes the viewer offers; 'max' fits the instance to the viewer window.
+export const VIEWER_RESOLUTIONS = [
+  ['max', 'Maximize (fit the viewer window)'],
+  ['1920x1080', '1920x1080'],
+  ['1680x1050', '1680x1050'],
+  ['1600x1200', '1600x1200'],
+  ['1280x800', '1280x800'],
+  ['1024x768', '1024x768'],
+  ['800x600', '800x600'],
+];
 export const ROOT_IMAGES = [
   ['x11vnc', 'x11vnc'],
   ['wine', 'wine'],
@@ -71,7 +97,7 @@ export const cephFields = (options) => [
 
 // Viewer settings shared by the VM, container and base image create forms.
 export const viewerFields = (options) => [
-  text('viewer_resolution', 'vm-resolution', options),
+  select('viewer_resolution', 'vm-resolution', VIEWER_RESOLUTIONS, options),
   select('viewer_contype', 'vm-contype', VIEWER_CONTYPES, options),
   select('viewer_resize', 'vm-resize', VIEWER_RESIZE, options),
   select('viewer_scale', 'vm-scale', VIEWER_SCALE, options),
@@ -83,16 +109,35 @@ export const initialValues = (fields) => Object.fromEntries(fields.map((field) =
 
 const isEmpty = (value) => value === undefined || value === null || String(value).trim() === '';
 
-// Formik `validate`: every visible required field needs a value.
-export const validate = (fields, message) => (values) =>
-  Object.fromEntries(
-    fields
-      .filter((field) => field.required && isVisible(field, values) && isEmpty(values[field.name]))
-      .map((field) => [field.name, message]),
-  );
+const fieldError = (field, value, message, translate) => {
+  if (isEmpty(value)) {
+    return field.required ? message : undefined;
+  }
+  return field.pattern && !field.pattern.test(String(value).trim()) ? translate(field.invalid) : undefined;
+};
+
+// Formik `validate`: every visible required field needs a value, and a value
+// must match the field's `pattern`. `translate` turns `invalid` keys into text.
+export const validate =
+  (fields, message, translate = (key) => key) =>
+  (values) =>
+    Object.fromEntries(
+      fields
+        .filter((field) => isVisible(field, values))
+        .map((field) => [field.name, fieldError(field, values[field.name], message, translate)])
+        .filter(([, error]) => error),
+    );
 
 // The DaaS backend reads checkboxes as 'on' / ''.
-const toParam = (field, value) => (field.type === 'checkbox' ? (value ? 'on' : '') : value);
+const toParam = (field, value) => {
+  if (field.type === 'checkbox') {
+    return value ? 'on' : '';
+  }
+  if (field.scale && !isEmpty(value)) {
+    return String(Number(value) * field.scale);
+  }
+  return value;
+};
 
 // Request parameters for the visible fields.
 export const toParams = (fields, values) =>

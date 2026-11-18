@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button, Col, Form, Row, Tab, Tabs } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-import BackLink from '../../../components/BackLink';
 import PageLayout from '../../../components/PageLayout';
 import RefreshButton from '../../../components/RefreshButton';
 import RequestAlert from '../../../components/RequestAlert';
@@ -32,7 +31,7 @@ function Monitoring() {
   };
 
   return (
-    <PageLayout id="monitoring" title={t('monitoring-overview')} wrapTitle>
+    <PageLayout backTo={ROUTES.admin.root} id="monitoring" title={t('monitoring-overview')}>
       <Tabs defaultActiveKey="user" id="monitoring-scopes">
         <Tab eventKey="user" title={t('user')}>
           <MonitoringCounts data={user.data} />
@@ -72,9 +71,6 @@ function Monitoring() {
         <Col xs={12}>
           <RequestAlert alert={requestAlert} />
         </Col>
-      </Row>
-      <Row>
-        <BackLink to={ROUTES.admin.root} />
       </Row>
       <RefreshButton onClick={refresh} />
     </PageLayout>

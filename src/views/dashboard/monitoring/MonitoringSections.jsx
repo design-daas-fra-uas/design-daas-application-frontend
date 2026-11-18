@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { CATEGORIES, RECORD_FIELDS, USAGE_GROUPS } from './monitoringConfig';
 
-const { Accordion, Col, Row, Tab, Tabs } = ReactBootstrap;
+const { Accordion, Alert, Col, Row, Tab, Tabs } = ReactBootstrap;
 
 const isEmpty = (value) => !value || (Array.isArray(value) ? value.length === 0 : Object.keys(value).length === 0);
 
@@ -67,7 +67,7 @@ function RecordList({ records, fields, idField }) {
         // Records come without an id now and then; the list is never reordered.
         // eslint-disable-next-line @eslint-react/no-array-index-key
         <Accordion.Item key={record[idField] ?? index} eventKey={String(record[idField] ?? index)}>
-          <Accordion.Header>{record[idField]}</Accordion.Header>
+          <Accordion.Header as="h4">{record[idField]}</Accordion.Header>
           <Accordion.Body>
             <FieldGrid record={record} fields={fields} />
           </Accordion.Body>
@@ -151,13 +151,14 @@ export function MonitoringCounts({ data }) {
     ['count-apps', data.apps.length],
   ];
   return (
-    <Row>
+    <div className="usage-stats">
       {counts.map(([label, count]) => (
-        <Col key={label} xs={12} md={4} lg={3} className="text-center">
-          {`${t(label)} ${count}`}
-        </Col>
+        <div key={label} className="usage-stat">
+          <span className="usage-stat-label">{t(label)}</span>
+          <span className="usage-stat-value">{count}</span>
+        </div>
       ))}
-    </Row>
+    </div>
   );
 }
 
@@ -168,7 +169,7 @@ export function MonitoringTabs({ data, id }) {
     <Tabs defaultActiveKey="complete" id={id}>
       <Tab eventKey="complete" title={t('complete-monitoring')}>
         {CATEGORIES.map(({ key, title }) => (
-          <section key={key}>
+          <section key={key} className="monitoring-section">
             <Title>{t(title)}</Title>
             <CategoryContent category={key} data={data} />
           </section>
@@ -180,5 +181,23 @@ export function MonitoringTabs({ data, id }) {
         </Tab>
       ))}
     </Tabs>
+  );
+}
+
+// Names the monitoring categories the endpoint permissions deny (see
+// useMonitoring) when only some are denied; renders nothing when all are allowed.
+export function MonitoringDenied({ denied }) {
+  const { t } = useTranslation();
+  if (denied.length === 0) {
+    return null;
+  }
+  const names = CATEGORIES.filter(({ key }) => denied.includes(key))
+    .map(({ title }) => t(title))
+    .join(', ');
+  return (
+    <Alert variant="warning">
+      <i className="fa-solid fa-user-lock me-2" aria-hidden="true" />
+      {t('monitoring-partly-denied', { names })}
+    </Alert>
   );
 }

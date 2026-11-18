@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Alert, Button, Col, Row } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-import ActionLink from '../../../components/ActionLink';
 import PageLayout from '../../../components/PageLayout';
 import UserInfoModal from '../../../components/UserInfoModal';
 import useAdminActions from '../../../hooks/useAdminActions';
@@ -32,7 +31,7 @@ function MainAdmin() {
   const closeGroupModal = () => setGroupModalOpen(false);
   const closeAccountModal = () => setAccountModalOpen(false);
 
-  const { saveError, clearSaveError, createGroup, updateGroup, createUserAccount, createAdminAccount } =
+  const { saveError, clearSaveError, createGroup, updateGroup, deleteGroup, createUserAccount, createAdminAccount } =
     useAdminActions({
       showNotice,
       refreshGroups,
@@ -52,65 +51,67 @@ function MainAdmin() {
   };
 
   return (
-    <PageLayout id="dashboardAdmin" title={t('user-management')}>
+    <PageLayout
+      id="dashboardAdmin"
+      title={t('admin-dashboard-title')}
+      backTo={ROUTES.dashboard}
+      actions={
+        <>
+          <Button variant="outline-primary" size="sm" onClick={openModal(setGroupModalOpen)}>
+            <i className="fa-solid fa-users-rectangle me-2" aria-hidden="true" />
+            {t('create-update-group')}
+          </Button>
+          <Button size="sm" onClick={openModal(setAccountModalOpen)}>
+            <i className="fa-solid fa-user-plus me-2" aria-hidden="true" />
+            {t('create-user')}
+          </Button>
+        </>
+      }
+    >
       {loading && (
-        <Row>
-          <Col xs={12}>
-            <p role="status">{t('loading', 'Loading...')}</p>
-          </Col>
-        </Row>
+        <p role="status" className="text-center text-muted">
+          {t('loading', 'Loading...')}
+        </p>
       )}
 
-      <Row>
-        <EntitySection
-          title={t('admins')}
-          allLink={ROUTES.admin.admins}
-          items={admins}
-          onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.name))}
-          onInfo={setSelectedUser}
-        />
-        <EntitySection
-          title={t('users')}
-          allLink={ROUTES.admin.users}
-          items={users}
-          onSettings={(user) => navigate(ROUTES.admin.userDetail(user.id))}
-          onInfo={setSelectedUser}
-        />
-      </Row>
-
       {loadErrors.length > 0 && (
-        <Row>
-          <Col xs={12}>
-            <Alert variant="danger" role="alert">
-              {t('load-error', 'Could not load the data. Please try again.')} (
-              {loadErrors.map((name) => t(SECTION_LABEL_KEYS[name])).join(', ')}){' '}
-              <Button variant="link" className="p-0 align-baseline" onClick={reload}>
-                {t('retry', 'Retry')}
-              </Button>
-            </Alert>
-          </Col>
-        </Row>
+        <Alert variant="danger" role="alert">
+          {t('load-error', 'Could not load the data. Please try again.')} (
+          {loadErrors.map((name) => t(SECTION_LABEL_KEYS[name])).join(', ')}){' '}
+          <Button variant="link" className="p-0 align-baseline" onClick={reload}>
+            {t('retry', 'Retry')}
+          </Button>
+        </Alert>
       )}
 
       {notice && (
-        <Row>
-          <Col xs={12}>
-            <div role="alert" className={notice.success ? 'request-success-alert' : 'request-fail-alert'}>
-              {t(notice.text, notice.fallback)}
-            </div>
-          </Col>
-        </Row>
+        <div role="alert" className={notice.success ? 'request-success-alert' : 'request-fail-alert'}>
+          {t(notice.text, notice.fallback)}
+        </div>
       )}
 
-      <Row>
-        <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={openModal(setGroupModalOpen)}>{t('create-update-group')}</ActionLink>
-        </Col>
-        <Col xs={12} md={6} lg={4}>
-          <ActionLink onClick={openModal(setAccountModalOpen)}>{t('create-user')}</ActionLink>
-        </Col>
-        <QuickLinks />
-      </Row>
+      <div className="card-columns-2">
+        <div className="panel">
+          <EntitySection
+            title={t('admins')}
+            allLink={ROUTES.admin.admins}
+            items={admins}
+            onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.id))}
+            onInfo={setSelectedUser}
+          />
+        </div>
+        <div className="panel">
+          <EntitySection
+            title={t('users')}
+            allLink={ROUTES.admin.users}
+            items={users}
+            onSettings={(user) => navigate(ROUTES.admin.userDetail(user.id))}
+            onInfo={setSelectedUser}
+          />
+        </div>
+      </div>
+
+      <QuickLinks />
 
       <GroupModal
         show={groupModalOpen}
@@ -119,6 +120,7 @@ function MainAdmin() {
         groups={groups}
         onCreate={createGroup}
         onUpdate={updateGroup}
+        onDelete={deleteGroup}
       />
       <CreateAccountModal
         show={accountModalOpen}

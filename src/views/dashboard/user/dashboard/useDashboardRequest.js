@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 
+import { isPermissionDenied, reportPermissionDenied } from '../../../../api/denied';
 import { describeError } from '../../../../api/errors';
 import { createLogger } from '../../../../utils/logger';
 
@@ -17,7 +18,11 @@ export default function useDashboardRequest(showRequestAlert) {
         return result;
       } catch (error) {
         log.error(`${name} failed`, error);
-        showRequestAlert(false, `${name}: ${describeError(error)}`);
+        if (isPermissionDenied(error)) {
+          reportPermissionDenied(error);
+        } else {
+          showRequestAlert(false, `${name}: ${describeError(error)}`);
+        }
         return undefined;
       }
     },

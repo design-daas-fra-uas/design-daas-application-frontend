@@ -3,6 +3,7 @@ import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
+import ConfirmDeleteModal from '../../../../components/ConfirmDeleteModal';
 import { ROUTES } from '../../../../routes';
 import { deleteEnvironment, stopEnvironment } from './dashboardApi';
 import { navigateLater, storeJson } from './navigation';
@@ -23,6 +24,7 @@ function EnvironmentControls({ environments, run, reload }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedKey, setSelectedKey] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const selected = environments.find((environment) => keyOf(environment) === selectedKey);
   // Environments of a system object (owner 0) can only be deleted by admins.
   const isSystemEnvironment = selected?.id_owner === 0;
@@ -88,11 +90,22 @@ function EnvironmentControls({ environments, run, reload }) {
         <Button variant="outline-primary" disabled={!selected} onClick={edit}>
           {t('edit-headline')}
         </Button>
-        <Button variant="outline-danger" disabled={!selected || isSystemEnvironment} onClick={remove}>
+        <Button
+          variant="outline-danger"
+          disabled={!selected || isSystemEnvironment}
+          onClick={() => setConfirmingDelete(true)}
+        >
           {t('delete-headline')}
         </Button>
       </div>
       {isSystemEnvironment && <p className="control-hint">{t('system-environment-hint')}</p>}
+      <ConfirmDeleteModal
+        show={confirmingDelete}
+        onHide={() => setConfirmingDelete(false)}
+        title={t('delete-environment')}
+        message={t('delete-environment-confirm', { name: selected?.name ?? '' })}
+        onConfirm={remove}
+      />
     </>
   );
 }

@@ -10,6 +10,7 @@ import './i18n';
 import { getRole, scheduleTokenRefresh, subscribeToSession } from './auth/tokenManager';
 import { ROUTES } from './routes';
 import ErrorBoundary from './components/ErrorBoundary';
+import PermissionDeniedModal from './components/PermissionDeniedModal';
 
 import Login from './views/login';
 import NotFound from './views/error';
@@ -34,6 +35,7 @@ const SettingsPhases = lazy(() => import('./views/dashboard/admin/settingsPhase'
 const Desktops = lazy(() => import('./views/dashboard/admin/desktops'));
 const DesktopDetail = lazy(() => import('./views/dashboard/admin/desktopDetail'));
 const DesktopGroups = lazy(() => import('./views/dashboard/admin/desktopGroups'));
+const Permissions = lazy(() => import('./views/dashboard/admin/permissions'));
 const SettingsAdminAssign = lazy(() => import('./views/dashboard/admin/settingsAdmin'));
 const SettingsApps = lazy(() => import('./views/dashboard/admin/settingsApps'));
 const SettingsFiles = lazy(() => import('./views/dashboard/admin/settingsFiles'));
@@ -97,6 +99,7 @@ const ADMIN_ROUTES = [
   [ROUTES.admin.desktops, Desktops],
   [`${ROUTES.admin.desktops}/:id`, DesktopDetail],
   [ROUTES.admin.desktopGroups, DesktopGroups],
+  [ROUTES.admin.permissions, Permissions],
   [ROUTES.admin.adminAssign, SettingsAdminAssign],
   [ROUTES.admin.apps, SettingsApps],
   [ROUTES.admin.files, SettingsFiles],
@@ -113,7 +116,12 @@ const renderRoutes = (routes) => routes.map(([path, Page]) => <Route key={path} 
 
 function PageFallback() {
   const { t } = useTranslation();
-  return <p role="status">{t('loading', 'Loading...')}</p>;
+  return (
+    <p role="status" className="page-loading">
+      <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+      {t('loading', 'Loading...')}
+    </p>
+  );
 }
 
 function App() {
@@ -146,6 +154,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        <PermissionDeniedModal />
       </ErrorBoundary>
     </Router>
   );

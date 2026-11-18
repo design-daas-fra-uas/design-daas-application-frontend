@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { isPermissionDenied } from '../../../../api/denied';
 import { getSession } from '../../../../api/session';
 import { createLogger } from '../../../../utils/logger';
 import { getCurrentUserId, ownedBy } from '../dashboardData';
@@ -16,13 +17,24 @@ const EMPTY = [];
 // the dashboard info. `reload()` refetches the dashboard info.
 export default function useUserDashboard() {
   const [info, setInfo] = useState(null);
+  // Request error when the dashboard info itself is not permitted
+  const [denied, setDenied] = useState(null);
+  // False until the first dashboard info request has finished
+  const [loaded, setLoaded] = useState(false);
   const [userId, setUserId] = useState(getCurrentUserId);
 
   const reload = useCallback(
     () =>
       fetchDashboardInfo()
-        .then(setInfo)
-        .catch((error) => log.error('Loading dashboard info failed', error)),
+        .then((loaded) => {
+          setInfo(loaded);
+          setDenied(null);
+        })
+        .catch((error) => {
+          log.error('Loading dashboard info failed', error);
+          setDenied(isPermissionDenied(error) ? error : null);
+        })
+        .finally(() => setLoaded(true)),
     [],
   );
 
@@ -42,6 +54,8 @@ export default function useUserDashboard() {
     const files = info?.available_files ?? EMPTY;
     return {
       info,
+      loaded,
+      denied,
       reload,
       objects: info?.available_objects ?? EMPTY,
       environments: info?.available_environments ?? EMPTY,
@@ -52,5 +66,5 @@ export default function useUserDashboard() {
       ownFiles: userId === null ? EMPTY : ownedBy(files, userId),
       sharedFiles: ownedBy(files, 0),
     };
-  }, [info, reload, userId]);
+  }, [info, loaded, denied, reload, userId]);
 }

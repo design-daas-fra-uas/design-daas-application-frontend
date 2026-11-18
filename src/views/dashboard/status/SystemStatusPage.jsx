@@ -1,9 +1,8 @@
-import { Badge, Row, Table } from 'react-bootstrap';
+import { Badge, Table } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import { getSystemStatus } from '../../../api/monitoring';
 import AsyncContent from '../../../components/AsyncContent';
-import BackLink from '../../../components/BackLink';
 import PageLayout from '../../../components/PageLayout';
 import RefreshButton from '../../../components/RefreshButton';
 import useResource from '../../../hooks/useResource';
@@ -23,7 +22,7 @@ function SystemStatusPage() {
   const { data, status, reload } = useResource(getSystemStatus);
 
   return (
-    <PageLayout id="system-status" title={t('status-title')}>
+    <PageLayout backTo={ROUTES.admin.root} id="system-status" title={t('status-title')}>
       <AsyncContent status={status} onRetry={reload}>
         {() => (
           <>
@@ -55,9 +54,6 @@ function SystemStatusPage() {
           </>
         )}
       </AsyncContent>
-      <Row>
-        <BackLink to={ROUTES.admin.root} />
-      </Row>
       <RefreshButton onClick={() => reload()} />
     </PageLayout>
   );

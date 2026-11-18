@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import LoadingSpinner from '../../assets/animation/loadingspinner.svg';
 import ViewerFrame from '../ViewerFrame';
@@ -6,13 +7,19 @@ import ActionForm from './ActionForm';
 import ResultView from './ResultView';
 import useDaasAction from './useDaasAction';
 
-// URL of the started viewer, plus the viewer itself unless the action has a
-// `connectField` checkbox that was left unticked.
+// The started instance (needed to stop it) and the URL of its viewer, plus the
+// viewer itself unless the action has a `connectField` checkbox that was left unticked.
 function ViewerResult({ action, result }) {
-  const connected = !action.connectField || result.values[action.connectField];
+  const { t } = useTranslation();
+  const connected = (!action.connectField || result.values[action.connectField]) && result.data.url;
   return (
     <>
-      <p className="result-url">URL: {result.data.url}</p>
+      {result.data.idInstance && (
+        <p className="result-instance">
+          {t('vm-id-instance')}: <code>{result.data.idInstance}</code>
+        </p>
+      )}
+      {result.data.url && <p className="result-url">URL: {result.data.url}</p>}
       {connected && <ViewerFrame request={result.data} />}
     </>
   );
@@ -20,6 +27,7 @@ function ViewerResult({ action, result }) {
 
 // Form of one action plus what its last successful request returned.
 function ActionPanel({ action, showRequestAlert, disabled }) {
+  const { t } = useTranslation();
   const { result, run } = useDaasAction(action, showRequestAlert);
   const [pending, setPending] = useState(false);
 
@@ -34,7 +42,7 @@ function ActionPanel({ action, showRequestAlert, disabled }) {
 
   let output = null;
   if (pending && action.result === 'viewer') {
-    output = <img src={LoadingSpinner} alt="Loading..." className="loading-spinner" />;
+    output = <img src={LoadingSpinner} alt={t('loading')} className="loading-spinner" />;
   } else if (result) {
     output =
       action.result === 'viewer' ? <ViewerResult action={action} result={result} /> : <ResultView data={result.data} />;

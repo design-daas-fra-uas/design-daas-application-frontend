@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { isPermissionDenied } from '../../../../api/denied';
 import { describeError } from '../../../../api/errors';
 import useRequestAlert from '../../../../hooks/useRequestAlert';
 import { ROUTES } from '../../../../routes';
@@ -12,7 +13,8 @@ const REDIRECT_AFTER_FAILURE_MS = 5000;
 
 // Runs `start` once on mount. `start` resolves to the viewer URL to show (or
 // nothing, if there is nothing to show). On failure an error is shown and the
-// user is sent back to the dashboard after a few seconds.
+// user is sent back to the dashboard after a few seconds; a missing permission
+// is shown as status 'denied' (with `error`) and the user stays to read it.
 export default function useViewerSession(start) {
   const navigate = useNavigate();
   const { requestAlert, showRequestAlert } = useRequestAlert();
@@ -32,6 +34,10 @@ export default function useViewerSession(start) {
       .catch((error) => {
         if (!active) return;
         log.error('Starting the viewer failed', error);
+        if (isPermissionDenied(error)) {
+          setSession({ status: 'denied', viewerRequest: null, error });
+          return;
+        }
         showRequestAlert(false, `Starting the viewer: ${describeError(error)}`);
         setSession({ status: 'failed', viewerRequest: null });
         redirectTimer = setTimeout(() => navigate(ROUTES.dashboard), REDIRECT_AFTER_FAILURE_MS);

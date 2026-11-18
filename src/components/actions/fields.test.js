@@ -1,4 +1,4 @@
-import { checkbox, file, initialValues, required, select, text, toParams, validate } from './fields';
+import { checkbox, file, initialValues, number, required, select, text, toParams, validate } from './fields';
 
 const isVm = (values) => values.type === 'vm';
 const fields = [
@@ -27,6 +27,28 @@ describe('action fields', () => {
     const check = validate(fields, 'required');
     expect(check({ id: ' ', type: 'vm', vm_name: '' })).toEqual({ id: 'required', vm_name: 'required' });
     expect(check({ id: '1', type: 'container', vm_name: '' })).toEqual({});
+  });
+
+  it('reject values that do not match the pattern, but not empty optional ones', () => {
+    const pattern = [
+      required(text('id', 'vm-id', { pattern: /^[a-z]+$/, invalid: 'bad-id' })),
+      text('note', 'note', { pattern: /^[a-z]+$/, invalid: 'bad-note' }),
+    ];
+    const check = validate(pattern, 'required', (key) => `t:${key}`);
+    expect(check({ id: 'ok', note: '' })).toEqual({});
+    expect(check({ id: 'Not ok', note: '1' })).toEqual({ id: 't:bad-id', note: 't:bad-note' });
+    expect(check({ id: '', note: '' })).toEqual({ id: 'required' });
+  });
+
+  it('accept whole numbers from 1 and send them scaled', () => {
+    const memory = [required(number('memsize', 'memory', { scale: 1024 ** 2 }))];
+    const check = validate(memory, 'required');
+    for (const bad of ['0', '-1', '2.5', 'abc']) {
+      expect(check({ memsize: bad })).toEqual({ memsize: 'field-positive-integer' });
+    }
+    expect(check({ memsize: 4 })).toEqual({});
+    expect(toParams(memory, { memsize: 4 })).toEqual({ memsize: '4194304' });
+    expect(toParams(memory, { memsize: '' })).toEqual({ memsize: '' });
   });
 
   it('send visible fields under their parameter name, with checkboxes as on/empty', () => {

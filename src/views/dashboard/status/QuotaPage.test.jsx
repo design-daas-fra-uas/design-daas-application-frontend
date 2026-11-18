@@ -36,8 +36,8 @@ it('shows each limit next to the usage', async () => {
   expect(screen.getByText('Default limits for all users (limits.toml).')).toBeInTheDocument();
   expect(screen.getByLabelText('Virtual machines 50 %')).toBeInTheDocument();
   expect(screen.getByText('1.0 GiB')).toBeInTheDocument();
-  expect(screen.getByText('4.0 GiB')).toBeInTheDocument();
-  expect(screen.getByText('No limit')).toBeInTheDocument();
+  expect(screen.getByText(/\/ 4\.0 GiB/)).toBeInTheDocument();
+  expect(screen.getByText(/\/ No limit/)).toBeInTheDocument();
   expect(screen.queryByText(/Overcommit/)).not.toBeInTheDocument();
 });
 
@@ -57,4 +57,18 @@ it('offers a retry after an error and reloads', async () => {
 
   expect(await screen.findByText('Virtual machines')).toBeInTheDocument();
   expect(getQuota).toHaveBeenCalledTimes(2);
+});
+
+it('shows -1 as "No limit" instead of the raw number', async () => {
+  getQuota.mockResolvedValue({
+    source: 'user',
+    overcommit: false,
+    items: [{ key: 'vms', used: 0, limit: -1, unit: 'count' }],
+  });
+  renderPage();
+
+  expect(await screen.findByText('Virtual machines')).toBeInTheDocument();
+  expect(screen.getByText(/\/ No limit/)).toBeInTheDocument();
+  expect(screen.queryByText(/-1/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
 });

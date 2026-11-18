@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 const OS_ICONS = {
   win10: 'fa-brands fa-microsoft',
   win11: 'fa-brands fa-microsoft',
@@ -25,8 +27,17 @@ export const ICON_LEGEND = [
   [FILE_ICON, 'file-text'],
 ];
 
+const LEGEND_TEXT = Object.fromEntries(ICON_LEGEND);
+
+// The icons are decorative; screen readers get the legend text instead.
 function AppIcons({ app }) {
-  return appIcons(app).map((icon) => <Icon key={icon} name={icon} />);
+  const { t } = useTranslation();
+  return appIcons(app).map((icon) => (
+    <span key={icon}>
+      <Icon name={icon} />
+      <span className="visually-hidden">{t(LEGEND_TEXT[icon])}</span>
+    </span>
+  ));
 }
 
 export default AppIcons;

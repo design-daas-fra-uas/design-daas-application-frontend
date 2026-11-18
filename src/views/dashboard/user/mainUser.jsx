@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 import { getRole } from '../../../auth/tokenManager';
 import Header from '../../../components/header';
+import PermissionDenied from '../../../components/PermissionDenied';
 import RequestAlert from '../../../components/RequestAlert';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import useRequestAlert from '../../../hooks/useRequestAlert';
 import { ROUTES } from '../../../routes';
 import ApplicationList from './dashboard/ApplicationList';
@@ -25,7 +27,7 @@ import useUserDashboard from './dashboard/useUserDashboard';
 function Panel({ title, children }) {
   return (
     <section className="panel">
-      <h3 className="panel-title">{title}</h3>
+      <h2 className="panel-title">{title}</h2>
       {children}
     </section>
   );
@@ -42,6 +44,7 @@ function MainUser() {
   const { info, reload } = dashboard;
   const [openModal, setOpenModal] = useState(null);
   const role = getRole();
+  useDocumentTitle(t('overview'));
 
   const closeModal = () => setOpenModal(null);
 
@@ -55,7 +58,7 @@ function MainUser() {
   const toolbar = [
     role === 'user' && {
       name: 'monitoring',
-      icon: 'fa-gear',
+      icon: 'fa-chart-line',
       label: 'monitoring',
       onClick: () => navigate(ROUTES.user.monitoring),
     },
@@ -95,10 +98,10 @@ function MainUser() {
   return (
     <>
       <Header connections={dashboard.connections} />
-      <Container id="dashboardUser" className="page page-with-toolbar">
+      <Container as="main" id="dashboardUser" className="page page-with-toolbar">
         <Row>
           <Col xs={12} className="text-center">
-            <h2 className="page-title">{t('overview')}</h2>
+            <h1 className="page-title">{t('overview')}</h1>
           </Col>
         </Row>
         {role === 'admin' && (
@@ -121,6 +124,13 @@ function MainUser() {
               <ApplicationList apps={dashboard.ownApps} onOpen={openApplication} />
             </Panel>
           </div>
+        ) : !dashboard.loaded ? (
+          <p role="status" aria-busy="true">
+            <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+            {t('loading', 'Loading...')}
+          </p>
+        ) : dashboard.denied ? (
+          <PermissionDenied error={dashboard.denied} showHome={false} onRetry={reload} />
         ) : (
           <p className="empty-state">{t('no-data-available')}</p>
         )}

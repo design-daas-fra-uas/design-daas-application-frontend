@@ -1,10 +1,13 @@
 import { Alert, Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-// Renders the loading / error / not-found / empty states of a `useResource`
-// status and the children only once the data is loaded. children may be a
+import PermissionDenied from './PermissionDenied';
+
+// Renders the loading / error / not-found / denied / empty states of a
+// `useResource` status (`error` is its request error, used for 'denied') and
+// the children only once the data is loaded. children may be a
 // function so it is only evaluated when the data is available.
-function AsyncContent({ status, onRetry, isEmpty = false, notFoundText, children }) {
+function AsyncContent({ status, error, onRetry, isEmpty = false, notFoundText, children }) {
   const { t } = useTranslation();
 
   if (status === 'loading') {
@@ -18,6 +21,10 @@ function AsyncContent({ status, onRetry, isEmpty = false, notFoundText, children
 
   if (status === 'not-found') {
     return <p role="alert">{notFoundText ?? t('not-found', 'Not found.')}</p>;
+  }
+
+  if (status === 'denied') {
+    return <PermissionDenied error={error} onRetry={onRetry} />;
   }
 
   if (status === 'error') {

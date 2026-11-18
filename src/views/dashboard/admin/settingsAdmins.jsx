@@ -4,7 +4,6 @@ import { Col, Row } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
 import AsyncContent from '../../../components/AsyncContent';
-import BackLink from '../../../components/BackLink';
 import EntityList from '../../../components/EntityList';
 import PageLayout from '../../../components/PageLayout';
 import UserInfoModal from '../../../components/UserInfoModal';
@@ -20,24 +19,20 @@ function SettingsAdmins() {
   const { data, status, reload } = useResource(getAdmins);
 
   return (
-    <PageLayout id="dashboardAdminSettingsAdmin" title={t('user-management')}>
+    <PageLayout backTo={ROUTES.admin.root} id="dashboardAdminSettingsAdmin" title={t('user-management')}>
       <Row>
         <Col xs={12}>
-          <h4>{t('admins')}</h4>
+          <h2 className="panel-title">{t('admins')}</h2>
         </Col>
         <Col xs={12}>
           <AsyncContent status={status} onRetry={reload}>
             <EntityList
               items={data ?? []}
-              onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.name))}
+              onSettings={(admin) => navigate(ROUTES.admin.adminDetail(admin.id))}
               onInfo={setSelectedAdmin}
             />
           </AsyncContent>
         </Col>
-      </Row>
-
-      <Row>
-        <BackLink to={ROUTES.admin.root} />
       </Row>
 
       <UserInfoModal user={selectedAdmin} onHide={() => setSelectedAdmin(null)} />

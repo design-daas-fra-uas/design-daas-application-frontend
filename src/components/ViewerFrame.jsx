@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 
 import { daasClient } from '../api/client';
+import { isPermissionDenied } from '../api/denied';
 import { createLogger } from '../utils/logger';
+import PermissionDenied from './PermissionDenied';
 
 const log = createLogger('ViewerFrame');
 
@@ -10,6 +12,8 @@ const log = createLogger('ViewerFrame');
 // `request` is `{ url }`; passing a new object reloads the viewer even for the same URL.
 function ViewerFrame({ request, id = 'viewer-desktop' }) {
   const [html, setHtml] = useState('');
+  // Request error when the viewer page itself is not permitted
+  const [denied, setDenied] = useState(null);
 
   useEffect(() => {
     if (!request?.url) {
@@ -21,13 +25,23 @@ function ViewerFrame({ request, id = 'viewer-desktop' }) {
       .then((response) => {
         if (active) {
           setHtml(response.data);
+          setDenied(null);
         }
       })
-      .catch((error) => log.error('Loading the viewer failed', error));
+      .catch((error) => {
+        log.error('Loading the viewer failed', error);
+        if (active && isPermissionDenied(error)) {
+          setDenied(error);
+        }
+      });
     return () => {
       active = false;
     };
   }, [request]);
+
+  if (denied) {
+    return <PermissionDenied error={denied} />;
+  }
 
   return (
     <iframe
